@@ -1,0 +1,7 @@
+{
+  "@@locale": "en",
+  "appTitle": "Rivo App",
+  "welcome": "Welcome",
+  "login": "Login",
+  "logout": "Logout"
+}
