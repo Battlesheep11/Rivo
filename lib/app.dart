@@ -18,18 +18,17 @@ class App extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-     locale: const Locale('he'), // ← Default language
+      locale: const Locale('he'), // ← Default language
       localeResolutionCallback: (locale, supportedLocales) {
-  // Force 'he' as fallback if the device locale isn't supported
-  if (locale == null) return const Locale('he');
+        if (locale == null) return const Locale('he');
 
-  for (final supportedLocale in supportedLocales) {
-    if (supportedLocale.languageCode == locale.languageCode) {
-      return supportedLocale;
-    }
-  }
-  return const Locale('he');
-},
+        for (final supportedLocale in supportedLocales) {
+          if (supportedLocale.languageCode == locale.languageCode) {
+            return supportedLocale;
+          }
+        }
+        return const Locale('he');
+      },
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
       themeMode: ThemeMode.system,

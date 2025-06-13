@@ -1,7 +1,10 @@
+import 'package:rivo_app/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:rivo_app/features/auth/data/datasources/auth_remote_data_source_provider.dart';
+import 'package:rivo_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'auth_repository_impl.dart';
-import '../../domain/repositories/auth_repository.dart';
+
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepositoryImpl();
+  final remoteDataSource = ref.read(authRemoteDataSourceProvider);
+  return AuthRepositoryImpl(remoteDataSource);
 });
