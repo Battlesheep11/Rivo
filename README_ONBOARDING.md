@@ -7,3 +7,4 @@
 - Custom edits:
   - Removed: sign_in_with_apple: ^5.0.0
   - Reason: Incompatible with compileSdk 35 & Android V2 embedding
+s

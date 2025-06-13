@@ -1,0 +1,30 @@
+import 'package:flutter/material.dart';
+import '../../../../../core/localization/app_localizations.dart';
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.appTitle),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(l10n.welcome),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {},
+              child: Text(l10n.login),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -49,3 +49,6 @@ app.*.map.json
 # TEMP local package extractions you might create temporarily (optional safety)
 .local_packages_temp/
 # BUT: we intentionally DO NOT exclude local_packages/ because we want to commit it.
+
+# Supabase related
+*.env

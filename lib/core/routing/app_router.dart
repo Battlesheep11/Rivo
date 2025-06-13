@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../features/auth/presentation/home_screen.dart';
+import 'package:rivo_app/features/auth/presentation/auth_screen.dart';
 
 
 class AppRouter {
@@ -14,7 +14,7 @@ class AppRouter {
     routes: [
       GoRoute(
         path: '/',
-        builder: (context, state) => const Placeholder(), // TODO: replace with actual screen
+        builder: (context, state) => const AuthScreen(),  // ✅ This is the change!
       ),
     ],
   );
