@@ -1,23 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'core/supabase/supabase_client.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    await dotenv.load(fileName: ".env");
-  } catch (e) {
-    debugPrint('Failed to load .env file: $e');
-  }
+  // טוען את קובץ הסודות
+  await dotenv.load(fileName: ".env");
 
-  await SupabaseClientManager.initialize();
-
-  runApp(
-    const ProviderScope(
-      child: App(),
-    ),
+  // נאתחל את Supabase בצורה בטוחה
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
+
+  // מריץ את האפליקציה אחרי שכל התלויות מאותחלות
+  runApp(const ProviderScope(child: App()));
 }

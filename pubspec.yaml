@@ -45,7 +45,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
-
+  assets:
+    - .env
 dependency_overrides:
   sign_in_with_apple: ^7.0.1
   sign_in_with_apple_platform_interface: ^2.0.0
