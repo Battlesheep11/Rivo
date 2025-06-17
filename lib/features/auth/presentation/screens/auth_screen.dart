@@ -5,6 +5,7 @@ import 'package:rivo_app/features/auth/presentation/providers/signup_form_provid
 import 'package:rivo_app/features/auth/presentation/providers/google_signin_provider.dart';
 import 'package:rivo_app/features/auth/presentation/providers/signin_form_provider.dart';
 import 'package:rivo_app/core/design_system/design_system.dart';
+import 'package:go_router/go_router.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -28,17 +29,25 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   void _onEmailChanged() {
     if (_authMode == AuthMode.signIn) {
-      ref.read(signinFormViewModelProvider(context).notifier).onEmailChanged(emailController.text);
+      ref
+          .read(signinFormViewModelProvider(context).notifier)
+          .onEmailChanged(emailController.text);
     } else {
-      ref.read(signupFormViewModelProvider(context).notifier).onEmailChanged(emailController.text);
+      ref
+          .read(signupFormViewModelProvider(context).notifier)
+          .onEmailChanged(emailController.text);
     }
   }
 
   void _onPasswordChanged() {
     if (_authMode == AuthMode.signIn) {
-      ref.read(signinFormViewModelProvider(context).notifier).onPasswordChanged(passwordController.text);
+      ref
+          .read(signinFormViewModelProvider(context).notifier)
+          .onPasswordChanged(passwordController.text);
     } else {
-      ref.read(signupFormViewModelProvider(context).notifier).onPasswordChanged(passwordController.text);
+      ref
+          .read(signupFormViewModelProvider(context).notifier)
+          .onPasswordChanged(passwordController.text);
     }
   }
 
@@ -51,10 +60,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-   final signinState = ref.watch(signinFormViewModelProvider(context));
-   final signupState = ref.watch(signupFormViewModelProvider(context));
-   final googleLoading = ref.watch(googleSignInViewModelProvider(context));
-
+    final signinState = ref.watch(signinFormViewModelProvider(context));
+    final signupState = ref.watch(signupFormViewModelProvider(context));
+    final googleLoading = ref.watch(googleSignInViewModelProvider(context));
 
     final bool isSubmitting;
     final bool isValid;
@@ -74,18 +82,28 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
 
     final VoidCallback? onSubmit = (isValid && !isSubmitting)
-        ? () {
+        ? () async {
+            bool success = false;
+
             if (_authMode == AuthMode.signIn) {
-              ref.read(signinFormViewModelProvider(context).notifier).submit();
+              success = await ref
+                  .read(signinFormViewModelProvider(context).notifier)
+                  .submit();
             } else {
-              ref.read(signupFormViewModelProvider(context).notifier).submit();
+              success = await ref
+                  .read(signupFormViewModelProvider(context).notifier)
+                  .submit();
+            }
+
+            if (success && context.mounted) {
+              context.go('/home');
             }
           }
         : null;
 
     return Scaffold(
       body: AppFormContainer(
-        isLoading: isSubmitting,  
+        isLoading: isSubmitting,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -93,12 +111,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             const SizedBox(height: 32),
             AppTextField(controller: emailController, hintText: 'Email'),
             const SizedBox(height: 16),
-            AppTextField(controller: passwordController, hintText: 'Password', obscureText: true),
+            AppTextField(
+              controller: passwordController,
+              hintText: 'Password',
+              obscureText: true,
+            ),
             const SizedBox(height: 16),
             AppButton(
               text: _authMode == AuthMode.signIn ? 'Sign In' : 'Sign Up',
               onPressed: onSubmit,
-              isLoading: isSubmitting, 
+              isLoading: isSubmitting,
             ),
             if (isFailure && errorMessage != null)
               AppErrorText(message: errorMessage),
@@ -106,7 +128,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  _authMode = _authMode == AuthMode.signIn ? AuthMode.signUp : AuthMode.signIn;
+                  _authMode = _authMode == AuthMode.signIn
+                      ? AuthMode.signUp
+                      : AuthMode.signIn;
                   emailController.clear();
                   passwordController.clear();
                 });
@@ -123,7 +147,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             AppButton(
               text: "Continue with Google",
               onPressed: () {
-                ref.read(googleSignInViewModelProvider(context).notifier).signInWithGoogle();
+                ref
+                    .read(googleSignInViewModelProvider(context).notifier)
+                    .signInWithGoogle();
               },
               isLoading: googleLoading,
             ),

@@ -76,8 +76,8 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
     );
   }
 
-  Future<void> submit() async {
-    if (!state.isValid) return;
+  Future<bool> submit() async {
+    if (!state.isValid) return false;
 
     final overlay = ref.read(loadingOverlayProvider);
     state = state.copyWith(isSubmitting: true, isFailure: false, isSuccess: false);
@@ -91,15 +91,21 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
 
     overlay.hide();
 
+    bool success = false;
+
     result.fold(
       (failure) {
         state = state.copyWith(isSubmitting: false, isFailure: true, errorMessage: failure);
         ToastService().showError(failure);
+        success = false;
       },
       (user) {
         state = state.copyWith(isSubmitting: false, isSuccess: true);
         ToastService().showSuccess("Success");
+        success = true;
       },
     );
+
+    return success;
   }
 }

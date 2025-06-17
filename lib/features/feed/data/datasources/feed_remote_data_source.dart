@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../domain/entities/feed_post_entity.dart';
+import 'package:rivo_app/features/feed/domain/entities/feed_post_entity.dart';
 
 class FeedRemoteDataSource {
   final SupabaseClient client;

@@ -3,13 +3,18 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:rivo_app/core/widgets/app_nav_bar.dart';
+import 'package:rivo_app/features/auth/presentation/screens/auth_screen.dart';
 import 'package:rivo_app/features/feed/presentation/screens/feed_screen.dart';
 
 class AppRouter {
   static GoRouter createRouter(WidgetRef ref) {
     return GoRouter(
-      initialLocation: '/home',
+      initialLocation: '/auth', // ← מתחילים במסך ה־Auth
       routes: [
+        GoRoute(
+          path: '/auth',
+          builder: (context, state) => const AuthScreen(),
+        ),
         ShellRoute(
           builder: (context, state, child) {
             final location = state.uri.path;
