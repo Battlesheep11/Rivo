@@ -7,29 +7,32 @@ environment:
   sdk: ^3.8.1
 
 dependencies:
+  video_player: ^2.7.0
+  flutter_riverpod: ^2.5.1
   dartz: ^0.10.1
-  supabase_flutter: ^1.10.25
+  supabase_flutter: ^2.9.1
   flutter_dotenv: ^5.1.0
   freezed_annotation: ^2.4.1
   flutter:
     sdk: flutter
+  device_preview: ^1.1.0  
 
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2
 
   hooks_riverpod: ^2.4.10
-  go_router: ^13.1.0
+  go_router: ^15.2.0
   dio: ^5.4.3
-  formz: ^0.6.1
+  formz: ^0.8.0
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.2.2
   url_launcher: ^6.2.5
   webview_flutter: ^4.4.2
   path_provider: ^2.1.2
-  app_links: ^3.3.0
+  app_links: ^6.4.0
 
-  # 👇 Local supabase_flutter path (we'll prepare this folder in the next steps)
+  
   #supabase_flutter:
    # path: local_packages/supabase_flutter
 
@@ -40,14 +43,20 @@ dev_dependencies:
     sdk: flutter
   mocktail: ^1.0.3
   json_serializable: ^6.8.0
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
   generate: true
   assets:
     - .env
+    - assets/fonts/
+  fonts:
+    - family: Pacifico
+      fonts:
+        - asset: assets/fonts/Pacifico-Regular.ttf  
 dependency_overrides:
   sign_in_with_apple: ^7.0.1
   sign_in_with_apple_platform_interface: ^2.0.0
   sign_in_with_apple_web: ^3.0.0
+

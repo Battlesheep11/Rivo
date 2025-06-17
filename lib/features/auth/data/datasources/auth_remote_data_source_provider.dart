@@ -1,7 +1,8 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_remote_data_source.dart';
-import 'package:rivo_app/core/supabase/supabase_client.dart';
 
 final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
-  return AuthRemoteDataSource(client: SupabaseClientManager.client);
+  final supabase = Supabase.instance.client;
+  return AuthRemoteDataSource(client: supabase);
 });

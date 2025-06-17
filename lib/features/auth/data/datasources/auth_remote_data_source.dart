@@ -6,7 +6,15 @@ class AuthRemoteDataSource {
 
   AuthRemoteDataSource({required this.client});
 
-  Future<UserEntity> signUp({
+  Stream<UserEntity?> authStateChanges() {
+      return client.auth.onAuthStateChange.map((event) {
+        final user = event.session?.user;
+        if (user == null) return null;
+       return UserEntity(id: user.id, email: user.email ?? '');
+      });
+    }
+
+  Future<AuthResponse> signUp({
     required String email,
     required String password,
   }) async {
@@ -14,18 +22,10 @@ class AuthRemoteDataSource {
       email: email,
       password: password,
     );
-
-    if (response.user == null) {
-      throw Exception('Signup failed.');
-    }
-
-    return UserEntity(
-      id: response.user!.id,
-      email: response.user!.email ?? '',
-    );
+    return response;
   }
 
-  Future<UserEntity> signIn({
+  Future<AuthResponse> signIn({
     required String email,
     required String password,
   }) async {
@@ -33,30 +33,25 @@ class AuthRemoteDataSource {
       email: email,
       password: password,
     );
-
-    if (response.user == null) {
-      throw Exception('Login failed.');
-    }
-
-    return UserEntity(
-      id: response.user!.id,
-      email: response.user!.email ?? '',
-    );
+    return response;
   }
 
   Future<void> signOut() async {
     await client.auth.signOut();
   }
 
-  Future<UserEntity?> getCurrentUser() async {
-    final user = client.auth.currentUser;
-
-    if (user == null) return null;
-
-    return UserEntity(
-      id: user.id,
-      email: user.email ?? '',
-    );
+  User? getCurrentUser() {
+    return client.auth.currentUser;
   }
-  
+
+
+Future<void> signInWithGoogle() async {
+  await client.auth.signInWithOAuth(
+    OAuthProvider.google,
+    redirectTo: 'com.example.rivo_app://login-callback',
+  );
+}
+
+
+
 }

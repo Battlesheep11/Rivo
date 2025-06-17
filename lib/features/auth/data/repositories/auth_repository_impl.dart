@@ -6,42 +6,87 @@ import '../datasources/auth_remote_data_source.dart';
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
 
-  AuthRepositoryImpl(this.remoteDataSource);
-
-@override
-Future<Either<String, UserEntity>> signIn({
-  required String email,
-  required String password,
-}) async {
-  try {
-    final user = await remoteDataSource.signIn(email: email, password: password);
-    return Right(user);
-  } catch (e) {
-    return Left(e.toString());
-  }
-}
-
-@override
-Future<Either<String, UserEntity>> signUp({
-  required String email,
-  required String password,
-}) async {
-  try {
-    final user = await remoteDataSource.signUp(email: email, password: password);
-    return Right(user);
-  } catch (e) {
-    return Left(e.toString());
-  }
-}
-
+  AuthRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<void> signOut() async {
-    await remoteDataSource.signOut();
+  Future<Either<String, UserEntity>> signUp({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await remoteDataSource.signUp(
+        email: email,
+        password: password,
+      );
+
+      final user = response.user;
+      if (user == null) {
+        return left('Signup failed: user is null');
+      }
+
+      return right(UserEntity(
+        id: user.id,
+        email: user.email ?? '',
+      ));
+    } catch (e) {
+      return left('Signup failed: ${e.toString()}');
+    }
   }
 
   @override
-  Future<UserEntity?> getCurrentUser() async {
-    return remoteDataSource.getCurrentUser();
+  Future<Either<String, UserEntity>> signIn({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await remoteDataSource.signIn(
+        email: email,
+        password: password,
+      );
+
+      final user = response.user;
+      if (user == null) {
+        return left('Login failed: user is null');
+      }
+
+      return right(UserEntity(
+        id: user.id,
+        email: user.email ?? '',
+      ));
+    } catch (e) {
+      return left('Login failed: ${e.toString()}');
+    }
   }
+
+  @override
+  Future<Either<String, void>> signOut() async {
+    try {
+      await remoteDataSource.signOut();
+      return right(null);
+    } catch (e) {
+      return left('Sign out failed: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<Either<String, UserEntity?>> getCurrentUser() async {
+    try {
+      final user = remoteDataSource.getCurrentUser();
+      if (user == null) return right(null);
+
+      return right(UserEntity(
+        id: user.id,
+        email: user.email ?? '',
+      ));
+    } catch (e) {
+      return left('Get current user failed: ${e.toString()}');
+    }
+  }
+
+
+@override
+  Future<void> signInWithGoogle() async {
+    await remoteDataSource.signInWithGoogle();
+  }
+
 }

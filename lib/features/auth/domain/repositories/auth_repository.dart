@@ -1,5 +1,6 @@
+import 'package:rivo_app/features/auth/domain/entities/user_entity.dart';
 import 'package:dartz/dartz.dart';
-import '../entities/user_entity.dart';
+
 
 abstract class AuthRepository {
   Future<Either<String, UserEntity>> signUp({
@@ -12,7 +13,9 @@ abstract class AuthRepository {
     required String password,
   });
 
-  Future<void> signOut();
+  Future<Either<String, void>> signOut();
 
-  Future<UserEntity?> getCurrentUser();
+  Future<Either<String, UserEntity?>> getCurrentUser();
+
+  Future<void> signInWithGoogle();
 }
