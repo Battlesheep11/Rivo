@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
-import 'core/localization/app_localizations.dart';
+import 'core/localization/supported_locales.dart';
+import 'package:rivo_app/core/localization/generated/app_localizations.dart';
+import 'core/localization/locale_provider.dart';
 import 'core/routing/app_router.dart';
+
 final GlobalKey<ScaffoldMessengerState> messengerKey = GlobalKey<ScaffoldMessengerState>();
 
 class App extends ConsumerWidget {
@@ -12,31 +14,29 @@ class App extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = AppRouter.createRouter(ref);
+    final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       routerConfig: router,
+      scaffoldMessengerKey: messengerKey,
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.system,
+      locale: locale,
+      supportedLocales: SupportedLocales.locales,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      locale: const Locale('he'), // ← Default language
-      localeResolutionCallback: (locale, supportedLocales) {
-        if (locale == null) return const Locale('he');
-
-        for (final supportedLocale in supportedLocales) {
-          if (supportedLocale.languageCode == locale.languageCode) {
-            return supportedLocale;
-          }
-        }
-        return const Locale('he');
+      builder: (context, child) {
+        return Directionality(
+          textDirection: locale.textDirection,
+          child: child!,
+        );
       },
-      scaffoldMessengerKey: messengerKey,
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
-      themeMode: ThemeMode.system,
     );
   }
 }

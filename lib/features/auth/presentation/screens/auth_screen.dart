@@ -6,6 +6,8 @@ import 'package:rivo_app/features/auth/presentation/providers/google_signin_prov
 import 'package:rivo_app/features/auth/presentation/providers/signin_form_provider.dart';
 import 'package:rivo_app/core/design_system/design_system.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rivo_app/core/localization/widgets/language_selector.dart';
+import 'package:rivo_app/core/localization/generated/app_localizations.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -102,59 +104,77 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         : null;
 
     return Scaffold(
-      body: AppFormContainer(
-        isLoading: isSubmitting,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const AppLogo(),
-            const SizedBox(height: 32),
-            AppTextField(controller: emailController, hintText: 'Email'),
-            const SizedBox(height: 16),
-            AppTextField(
-              controller: passwordController,
-              hintText: 'Password',
-              obscureText: true,
-            ),
-            const SizedBox(height: 16),
-            AppButton(
-              text: _authMode == AuthMode.signIn ? 'Sign In' : 'Sign Up',
-              onPressed: onSubmit,
-              isLoading: isSubmitting,
-            ),
-            if (isFailure && errorMessage != null)
-              AppErrorText(message: errorMessage),
-            const SizedBox(height: 24),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _authMode = _authMode == AuthMode.signIn
-                      ? AuthMode.signUp
-                      : AuthMode.signIn;
-                  emailController.clear();
-                  passwordController.clear();
-                });
-              },
-              child: Text(
-                _authMode == AuthMode.signIn
-                    ? "Don't have an account? Sign Up"
-                    : "Already have an account? Sign In",
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Align(
+              alignment: AlignmentDirectional.topEnd,
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(top: 16.0, end: 24.0),
+                child: const LanguageSelector(),
               ),
             ),
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 16),
-            AppButton(
-              text: "Continue with Google",
-              onPressed: () {
-                ref
-                    .read(googleSignInViewModelProvider(context).notifier)
-                    .signInWithGoogle();
-              },
-              isLoading: googleLoading,
+          ),
+          Center(
+            child: AppFormContainer(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const AppLogo(),
+                  const SizedBox(height: 32),
+                  AppTextField(
+                    controller: emailController,
+                    hintText: AppLocalizations.of(context)!.email,
+                  ),
+                  const SizedBox(height: 16),
+                  AppTextField(
+                    controller: passwordController,
+                    hintText: AppLocalizations.of(context)!.password,
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 16),
+                  AppButton(
+                    text: _authMode == AuthMode.signIn
+                        ? AppLocalizations.of(context)!.signIn
+                        : AppLocalizations.of(context)!.signUp,
+                    onPressed: onSubmit,
+                  ),
+                  if (isFailure && errorMessage != null)
+                    AppErrorText(message: errorMessage),
+                  const SizedBox(height: 24),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _authMode = _authMode == AuthMode.signIn
+                            ? AuthMode.signUp
+                            : AuthMode.signIn;
+                        emailController.clear();
+                        passwordController.clear();
+                      });
+                    },
+                    child: Text(
+                      _authMode == AuthMode.signIn
+                          ? AppLocalizations.of(context)!.dontHaveAccountText
+                          : AppLocalizations.of(context)!.alreadyHaveAccountText,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  AppButton(
+                    text: AppLocalizations.of(context)!.continueWithGoogleText,
+                    onPressed: () {
+                      ref
+                          .read(googleSignInViewModelProvider(context).notifier)
+                          .signInWithGoogle();
+                    },
+                    isLoading: googleLoading,
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -1,7 +1,11 @@
 {
   "@@locale": "he",
-  "appTitle": "ריבו אפ",
-  "welcome": "ברוכים הבאים",
-  "login": "התחברות",
-  "logout": "התנתקות"
+  "email": "אימייל",
+  "password": "סיסמה",
+  "signIn": "התחברות",
+  "signUp": "הרשמה",
+  "dontHaveAccountText": "אין לך חשבון? הירשם",
+  "alreadyHaveAccountText": "כבר יש לך חשבון? התחבר",
+  "continueWithGoogleText": "המשך עם Google",
+  "logoText": "ריבו"
 }

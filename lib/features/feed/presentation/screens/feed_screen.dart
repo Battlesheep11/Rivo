@@ -12,6 +12,7 @@ class FeedScreen extends ConsumerWidget {
     final feedAsync = ref.watch(feedViewModelProvider);
 
     return Scaffold(
+      extendBody: true,
       body: feedAsync.when(
         data: (posts) => PageView.builder(
           scrollDirection: Axis.vertical,

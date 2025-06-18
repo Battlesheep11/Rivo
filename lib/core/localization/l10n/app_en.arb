@@ -1,7 +1,11 @@
 {
   "@@locale": "en",
-  "appTitle": "Rivo App",
-  "welcome": "Welcome",
-  "login": "Login",
-  "logout": "Logout"
+  "email": "Email",
+  "password": "Password",
+  "signIn": "Sign In",
+  "signUp": "Sign Up",
+  "dontHaveAccountText": "Don't have an account? Sign Up",
+  "alreadyHaveAccountText": "Already have an account? Sign In",
+  "continueWithGoogleText": "Continue with Google",
+  "logoText": "RIVO"
 }
