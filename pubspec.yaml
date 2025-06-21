@@ -7,6 +7,7 @@ environment:
   sdk: ^3.8.1
 
 dependencies:
+  equatable: ^2.0.5
   video_player: ^2.7.0
   flutter_riverpod: ^2.5.1
   dartz: ^0.10.1
@@ -14,7 +15,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   freezed_annotation: ^2.4.1
   flutter:
-    sdk: flutter
+    sdk: flutter 
   device_preview: ^1.1.0  
 
   flutter_localizations:

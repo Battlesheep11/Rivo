@@ -23,7 +23,7 @@ class AppNavBar extends ConsumerWidget {
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 1,
         selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
         showSelectedLabels: false,
         showUnselectedLabels: false,
         items: const [
