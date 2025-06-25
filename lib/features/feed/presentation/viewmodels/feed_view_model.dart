@@ -99,7 +99,6 @@ Future<void> toggleLike(String postId) async {
       await repository.likePost(postId);
     }
   } catch (e, stackTrace) {
-    print('🔴 LIKE FAILED: $e');
     developer.log('Failed to toggle like: $e', name: _logName, error: e, stackTrace: stackTrace);
     // במקרה של כשלון – חזרה למצב הקודם
     final revertedPosts = [...posts]..[index] = currentPost;
