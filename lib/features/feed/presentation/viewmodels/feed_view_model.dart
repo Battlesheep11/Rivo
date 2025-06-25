@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rivo_app/core/error_handling/app_exception.dart';
 import 'package:rivo_app/features/feed/domain/entities/feed_post_entity.dart';
 import 'package:rivo_app/features/feed/domain/repositories/feed_repository_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 class FeedState {
   final bool isLoading;
@@ -67,6 +69,49 @@ class FeedViewModel extends StateNotifier<FeedState> {
   Future<void> refresh() async {
     await loadFeed();
   }
+
+Future<void> toggleLike(String postId) async {
+  final repository = ref.read(feedRepositoryProvider);
+  final userId = Supabase.instance.client.auth.currentUser?.id;
+  if (userId == null) return;
+
+  final posts = state.posts;
+  if (posts == null) return;
+
+  final index = posts.indexWhere((p) => p.id == postId);
+  if (index == -1) return;
+
+  final currentPost = posts[index];
+  final isLiked = currentPost.isLikedByMe;
+
+  // אופטימיסטי: עדכון מיידי של UI
+  final updatedPost = currentPost.copyWith(
+    isLikedByMe: !isLiked,
+    likeCount: currentPost.likeCount + (isLiked ? -1 : 1),
+  );
+  final updatedPosts = [...posts]..[index] = updatedPost;
+  state = state.copyWith(posts: updatedPosts);
+
+  try {
+    if (isLiked) {
+      await repository.unlikePost(postId);
+    } else {
+      await repository.likePost(postId);
+    }
+  } catch (e, stackTrace) {
+    print('🔴 LIKE FAILED: $e');
+    developer.log('Failed to toggle like: $e', name: _logName, error: e, stackTrace: stackTrace);
+    // במקרה של כשלון – חזרה למצב הקודם
+    final revertedPosts = [...posts]..[index] = currentPost;
+    state = state.copyWith(posts: revertedPosts);
+  }
+}
+
+
+
+  
+
+
 }
 
 final feedViewModelProvider =

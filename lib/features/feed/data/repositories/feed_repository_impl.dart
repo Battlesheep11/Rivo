@@ -9,6 +9,13 @@ class FeedRepositoryImpl implements FeedRepository {
   FeedRepositoryImpl({required this.remoteDataSource});
 
   @override
+Future<void> likePost(String postId) => remoteDataSource.likePost(postId);
+
+@override
+Future<void> unlikePost(String postId) => remoteDataSource.unlikePost(postId);
+
+
+  @override
   Future<List<FeedPostEntity>> getFeedPosts() async {
     try {
       final result = await remoteDataSource.getFeedPosts();

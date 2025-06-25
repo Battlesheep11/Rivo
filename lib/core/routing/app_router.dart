@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:rivo_app/core/widgets/app_nav_bar.dart';
 import 'package:rivo_app/features/auth/presentation/screens/auth_screen.dart';
 import 'package:rivo_app/features/feed/presentation/screens/feed_screen.dart';
+import 'package:rivo_app/features/post/presentation/screens/post_upload_screen.dart';
 
 class AppRouter {
   static GoRouter createRouter(WidgetRef ref) {
     return GoRouter(
-      initialLocation: '/auth', // ← מתחילים במסך ה־Auth
+      initialLocation: '/auth',
       routes: [
         GoRoute(
           path: '/auth',
           builder: (context, state) => const AuthScreen(),
+        ),
+        GoRoute(
+          path: '/upload',
+          builder: (context, state) => const PostUploadScreen(),
         ),
         ShellRoute(
           builder: (context, state, child) {
@@ -29,6 +35,20 @@ class AppRouter {
                   if (path != location) {
                     context.go(path);
                   }
+                },
+              ),
+              floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+              floatingActionButton: FutureBuilder<bool>(
+                future: _isSeller(),
+                builder: (context, snapshot) {
+                  final isSeller = snapshot.data ?? false;
+                  if (!isSeller) return const SizedBox.shrink();
+                  return FloatingActionButton(
+                    onPressed: () {
+                      context.go('/upload');
+                    },
+                    child: const Icon(Icons.add),
+                  );
                 },
               ),
             );
@@ -92,6 +112,19 @@ class AppRouter {
       default:
         return '/home';
     }
+  }
+
+  static Future<bool> _isSeller() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return false;
+
+    final profile = await Supabase.instance.client
+        .from('profiles')
+        .select('is_seller')
+        .eq('id', userId)
+        .maybeSingle();
+
+    return profile != null && profile['is_seller'] == true;
   }
 }
 

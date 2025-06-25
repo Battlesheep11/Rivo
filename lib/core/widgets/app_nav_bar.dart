@@ -13,46 +13,57 @@ class AppNavBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MediaQuery.removePadding(
-      context: context,
-      removeBottom: true,
-      child: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: onTap,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        elevation: 1,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            activeIcon: Icon(Icons.search),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bookmark_border),
-            activeIcon: Icon(Icons.bookmark),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart_outlined),
-            activeIcon: Icon(Icons.shopping_cart),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: '',
-          ),
-        ],
+    return BottomAppBar(
+      shape: const CircularNotchedRectangle(),
+      notchMargin: 8,
+      child: SizedBox(
+        height: 60,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _navItem(
+              context,
+              index: 0,
+              icon: Icons.home_outlined,
+              activeIcon: Icons.home,
+            ),
+            _navItem(
+              context,
+              index: 1,
+              icon: Icons.search,
+              activeIcon: Icons.search,
+            ),
+            const SizedBox(width: 48), // Notch spacer for FAB
+            _navItem(
+              context,
+              index: 3,
+              icon: Icons.favorite_border,
+              activeIcon: Icons.favorite,
+            ),
+            _navItem(
+              context,
+              index: 4,
+              icon: Icons.person_outline,
+              activeIcon: Icons.person,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _navItem(
+    BuildContext context, {
+    required int index,
+    required IconData icon,
+    required IconData activeIcon,
+  }) {
+    final isSelected = index == currentIndex;
+    return IconButton(
+      onPressed: () => onTap(index),
+      icon: Icon(
+        isSelected ? activeIcon : icon,
+        color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
       ),
     );
   }

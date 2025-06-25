@@ -9,6 +9,8 @@ import 'package:go_router/go_router.dart';
 import 'package:rivo_app/core/localization/widgets/language_selector.dart';
 import 'package:rivo_app/core/localization/generated/app_localizations.dart';
 
+
+
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
 

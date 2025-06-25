@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../viewmodels/feed_view_model.dart';
@@ -13,33 +12,26 @@ class FeedScreen extends ConsumerStatefulWidget {
 }
 
 class _FeedScreenState extends ConsumerState<FeedScreen> {
-  
-
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       ref.read(feedViewModelProvider.notifier).loadFeed();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-
-
     final state = ref.watch(feedViewModelProvider);
     final viewModel = ref.read(feedViewModelProvider.notifier);
-
-
 
     return Scaffold(
       extendBody: true,
       body: _buildBody(state, viewModel, context),
     );
   }
-
-
 
   Widget _buildBody(FeedState state, FeedViewModel viewModel, BuildContext context) {
     if (state.isLoading && state.posts == null) {
@@ -109,9 +101,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     return Stack(
       children: [
         if (post.mediaUrls.isNotEmpty)
-          MediaRendererWidget(
-urls: post.mediaUrls,
-          ),
+          MediaRendererWidget(urls: post.mediaUrls),
         Positioned(
           bottom: 40,
           left: 16,
@@ -120,9 +110,14 @@ urls: post.mediaUrls,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               CircleAvatar(
-                backgroundImage: post.avatarUrl != null ? NetworkImage(post.avatarUrl!) : null,
-                child: post.avatarUrl == null ? const Icon(Icons.person) : null,
-              ),
+  backgroundImage: post.avatarUrl != null && post.avatarUrl!.startsWith('http')
+      ? NetworkImage(post.avatarUrl!)
+      : null,
+  child: (post.avatarUrl == null || !post.avatarUrl!.startsWith('http'))
+      ? const Icon(Icons.person)
+      : null,
+),
+
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -156,9 +151,12 @@ urls: post.mediaUrls,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.favorite_border, color: Colors.white),
+                    icon: Icon(
+                      post.isLikedByMe ? Icons.favorite : Icons.favorite_border,
+                      color: post.isLikedByMe ? Colors.red : Colors.white,
+                    ),
                     onPressed: () {
-                      // TODO: Implement like functionality
+                      ref.read(feedViewModelProvider.notifier).toggleLike(post.id);
                     },
                   ),
                   Text(

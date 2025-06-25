@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,41 +10,23 @@ final GlobalKey<ScaffoldMessengerState> messengerKey = GlobalKey<ScaffoldMesseng
 
 Future<void> main() async {
   try {
-    developer.log('🚀 Starting app initialization...');
-    
-    // Ensure Flutter binding is initialized
     WidgetsFlutterBinding.ensureInitialized();
-    developer.log('✅ Flutter binding initialized');
 
-    // Load environment variables
-    developer.log('🔧 Loading environment variables...');
     await dotenv.load(fileName: ".env");
-    
+
     final supabaseUrl = dotenv.env['SUPABASE_URL'];
     final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
-    
+
     if (supabaseUrl == null || supabaseAnonKey == null) {
       throw Exception('Missing Supabase configuration in .env file');
     }
-    
-    developer.log('✅ Environment variables loaded');
-    developer.log('🌐 Supabase URL: ${supabaseUrl.substring(0, 20)}...');
-    
-    // Initialize Supabase
-    developer.log('🔌 Initializing Supabase...');
+
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabaseAnonKey,
     );
-    developer.log('✅ Supabase initialized successfully');
 
-    // Initialize Toast Service
-    developer.log('🍞 Initializing Toast Service...');
     ToastService().init(messengerKey);
-    developer.log('✅ Toast Service initialized');
-
-    // Run the app
-    developer.log('🚀 Running the app...');
     runApp(
       ProviderScope(
         child: DevicePreview(
@@ -54,12 +35,7 @@ Future<void> main() async {
         ),
       ),
     );
-    developer.log('✅ App started successfully');
-  } catch (e, stackTrace) {
-    developer.log('❌ Error during app initialization: $e');
-    developer.log('📝 Stack trace: $stackTrace');
-    
-    // Show error UI if possible
+  } catch (e) {
     runApp(
       MaterialApp(
         home: Scaffold(
