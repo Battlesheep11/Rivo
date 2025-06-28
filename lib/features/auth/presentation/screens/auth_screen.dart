@@ -100,7 +100,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             }
 
             if (success && context.mounted) {
-              context.go('/home');
+              context.go('/redirect');
             }
           }
         : null;
