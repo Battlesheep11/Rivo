@@ -53,5 +53,8 @@
 "tagSchool": "School",
 "tagOffice": "Office",
 "tagDateNight": "Date Night",
-"tagLocalBrands": "Local Brands"
+"tagLocalBrands": "Local Brands",
+  "mediaPickerUpload": "Upload",
+  "mediaPickerUploading": "Uploading...",
+  "mediaPickerFailed": "Failed to upload media"
 }

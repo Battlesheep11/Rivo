@@ -11,7 +11,7 @@ class UploadPostState {
   final String? description;
   final double? price;
   final String? categoryId;
-  final List<String> tagNames; 
+  final List<String> tagNames;
   final double? chest;
   final double? waist;
   final double? length;
@@ -34,9 +34,7 @@ class UploadPostState {
   });
 
   bool get isValid =>
-      price != null &&
-      categoryId != null &&
-      media.isNotEmpty;
+      price != null && categoryId != null && media.isNotEmpty;
 
   UploadPostState copyWith({
     String? title,
@@ -81,6 +79,8 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
   void setWaist(double? value) => state = state.copyWith(waist: value);
   void setLength(double? value) => state = state.copyWith(length: value);
   void setCaption(String? value) => state = state.copyWith(caption: value);
+
+  // 📌 זו הפונקציה היחידה שצריכה להיקרא מה־MediaPicker
   void setMedia(List<MediaFile> media) => state = state.copyWith(media: media);
 
   Future<void> submit() async {
@@ -92,19 +92,18 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
 
     try {
       final payload = UploadPostPayload(
-  hasProduct: true,
-  productTitle: state.title!,
-  productDescription: state.description ?? '',
-  productPrice: state.price!,
-  categoryId: state.categoryId!,
-  chest: state.chest,
-  waist: state.waist,
-  length: state.length,
-  caption: state.caption,
-  media: state.media,
-  tags: state.tagNames.map((name) => TagEntity(name: name)).toList(),
-);
-
+        hasProduct: true,
+        productTitle: state.title!,
+        productDescription: state.description ?? '',
+        productPrice: state.price!,
+        categoryId: state.categoryId!,
+        chest: state.chest,
+        waist: state.waist,
+        length: state.length,
+        caption: state.caption,
+        media: state.media,
+        tags: state.tagNames.map((name) => TagEntity(name: name)).toList(),
+      );
 
       final result = await useCase(payload);
       result.fold((failure) => throw failure, (_) {});
@@ -117,7 +116,6 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
     }
   }
 }
-
 
 final uploadPostViewModelProvider =
     StateNotifierProvider.autoDispose<UploadPostViewModel, UploadPostState>(

@@ -15,11 +15,11 @@ class OnboardingViewModel extends StateNotifier<OnboardingState> {
   final SubmitUserTagsUseCase submitTagsUseCase;
 
   OnboardingViewModel({
-    required this.getTagsUseCase,
-    required this.submitTagsUseCase,
-  }) : super(OnboardingState.initial()) {
-    loadTags();
-  }
+  required this.getTagsUseCase,
+  required this.submitTagsUseCase,
+}) : super(OnboardingState.initial()); 
+
+
 
   Future<void> loadTags() async {
     state = state.copyWith(isLoading: true);

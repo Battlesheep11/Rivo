@@ -24,28 +24,44 @@ class _AuthRedirectorScreenState extends ConsumerState<AuthRedirectorScreen> {
   }
 
   Future<void> _handleRedirect() async {
-    final user = Supabase.instance.client.auth.currentUser;
+  final user = Supabase.instance.client.auth.currentUser;
 
-    if (user == null) {
-      if (mounted) context.go('/auth');
-      return;
-    }
+  debugPrint('[AuthRedirector] Current user: ${user?.id}');
 
+  if (user == null) {
+    debugPrint('[AuthRedirector] No user found – redirecting to /auth');
+    if (mounted) context.go('/auth');
+    return;
+  }
+
+  try {
     final userTagRows = await Supabase.instance.client
         .from('user_tags')
         .select('tag_id')
         .eq('user_id', user.id);
 
+
     final hasTags = userTagRows.isNotEmpty;
+    
 
     if (!mounted) return;
 
     if (hasTags) {
+      
       context.go('/home');
     } else {
+      
       context.go('/onboarding');
     }
+  } catch (e) {
+    
+
+    if (!mounted) return;
+    context.go('/onboarding'); // fallback
   }
+}
+
+
 
   @override
   Widget build(BuildContext context) {

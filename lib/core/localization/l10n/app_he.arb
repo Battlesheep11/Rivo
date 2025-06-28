@@ -53,5 +53,8 @@
 "tagSchool": "לבית ספר",
 "tagOffice": "למשרד",
 "tagDateNight": "לדייט",
-"tagLocalBrands": "מותגים מקומיים"
+"tagLocalBrands": "מותגים מקומיים",
+  "mediaPickerUpload": "העלאה",
+  "mediaPickerUploading": "מעלה...",
+  "mediaPickerFailed": "נכשל בהעלאת מדיה"
 }

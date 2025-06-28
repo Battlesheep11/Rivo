@@ -19,7 +19,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    ref.read(onboardingViewModelProvider.notifier).loadTags();
+
+   
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(onboardingViewModelProvider.notifier).loadTags();
+    });
   }
 
   void _goToNextPage() {

@@ -14,10 +14,9 @@ class _MediaRendererWidgetState extends State<MediaRendererWidget> {
   int _currentIndex = 0;
 
   bool _isVideo(String url) {
-  final path = Uri.parse(url).path.toLowerCase();
-  return path.contains('.mp4') || path.contains('.mov') || path.contains('.webm');
-}
-
+    final path = Uri.parse(url).path.toLowerCase();
+    return path.contains('.mp4') || path.contains('.mov') || path.contains('.webm');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,20 +30,23 @@ class _MediaRendererWidgetState extends State<MediaRendererWidget> {
     if (_isVideo(currentUrl)) {
       mediaWidget = VideoPlayerWidget(url: currentUrl);
     } else {
-      mediaWidget = Image.network(
-        currentUrl,
-        fit: BoxFit.cover,
+      mediaWidget = Container(
+        color: Colors.black12,
         width: double.infinity,
         height: double.infinity,
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(child: Icon(Icons.broken_image));
-        },
-        loadingBuilder: (context, child, progress) {
-          if (progress == null) {
-            return child;
-          }
-          return const Center(child: CircularProgressIndicator());
-        },
+        child: Image.network(
+          currentUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(child: Icon(Icons.broken_image));
+          },
+          loadingBuilder: (context, child, progress) {
+            if (progress == null) {
+              return child;
+            }
+            return const Center(child: CircularProgressIndicator());
+          },
+        ),
       );
     }
 

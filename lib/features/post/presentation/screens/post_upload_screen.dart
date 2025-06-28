@@ -56,13 +56,10 @@ class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
 
     try {
       await viewModel.submit();
-if (!mounted) return;
-
-context.go('/home');
-
+      if (!mounted) return;
+      context.go('/home');
     } on AppException catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
@@ -93,9 +90,12 @@ context.go('/home');
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            MediaPickerWidget(
-              onMediaUploaded: viewModel.setMedia,
-            ),
+            RepaintBoundary(
+  child: MediaPickerWidget(
+    onSelected: viewModel.setMedia,
+  ),
+),
+
             const SizedBox(height: 16),
             const CategoryDropdown(),
             const SizedBox(height: 12),

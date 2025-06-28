@@ -8,87 +8,85 @@ class PostRemoteDataSource {
   PostRemoteDataSource({required this.client});
 
   Future<void> uploadPost(UploadPostPayload payload) async {
-  try {
-    final userId = client.auth.currentUser?.id;
-    if (userId == null) {
-      throw AppException.unauthorized('User not logged in');
+    try {
+      final userId = client.auth.currentUser?.id;
+      if (userId == null) {
+        throw AppException.unauthorized('User not logged in');
+      }
+
+      String? productId;
+
+      if (payload.hasProduct) {
+        productId = await _uploadProduct(payload, userId);
+      }
+
+      await _uploadFeedPost(payload, userId, productId);
+    } on PostgrestException catch (e) {
+      throw AppException.unexpected(
+        'Supabase error: ${e.message}',
+        code: 'upload_post_error',
+      );
+    } catch (e) {
+      throw AppException.unexpected(
+        'Unexpected error occurred',
+        code: 'upload_post_error',
+      );
     }
-
-    String? productId;
-
-    if (payload.hasProduct) {
-      productId = await _uploadProduct(payload, userId);
-    }
-
-    await _uploadFeedPost(payload, userId, productId);
-
-  } on PostgrestException catch (e) {
-    throw AppException.unexpected(
-      'Supabase error: ${e.message}',
-      code: 'upload_post_error',
-    );
-  } catch (e) {
-    throw AppException.unexpected(
-      'Unexpected error occurred',
-      code: 'upload_post_error',
-    );
   }
-}
 
-Future<String> _uploadProduct(UploadPostPayload payload, String userId) async {
-  // 1. Insert product
-  final productResponse = await client
-      .from('products')
-      .insert({
-        'seller_id': userId,
-        'title': payload.productTitle,
-        'description': payload.productDescription,
-        'price': payload.productPrice,
-        'chest': payload.chest,
-        'waist': payload.waist,
-        'length': payload.length,
-        'category_id': payload.categoryId,
-      })
-      .select('id')
-      .single();
-
-  final productId = productResponse['id'] as String;
-
-  // 2. Insert media → media + product_media
-  for (final media in payload.media) {
-    final mediaInsert = await client
-        .from('media')
+  Future<String> _uploadProduct(UploadPostPayload payload, String userId) async {
+    // 1. Insert product
+    final productResponse = await client
+        .from('products')
         .insert({
-          'media_url': media.url,
-          'media_type': media.type,
+          'seller_id': userId,
+          'title': payload.productTitle,
+          'description': payload.productDescription,
+          'price': payload.productPrice,
+          'chest': payload.chest,
+          'waist': payload.waist,
+          'length': payload.length,
+          'category_id': payload.categoryId,
         })
         .select('id')
         .single();
 
-    final mediaId = mediaInsert['id'] as String;
+    final productId = productResponse['id'] as String;
 
-    await client.from('product_media').insert({
-      'product_id': productId,
-      'media_id': mediaId,
-      'sort_order': media.sortOrder ?? 0,
-    });
+    // 2. Insert media → media + product_media
+    for (final media in payload.media) {
+      final mediaInsert = await client
+          .from('media')
+          .insert({
+            'media_url': media.url,
+            'media_type': media.type,
+          })
+          .select('id')
+          .single();
+
+      final mediaId = mediaInsert['id'] as String;
+
+      await client.from('product_media').insert({
+        'product_id': productId,
+        'media_id': mediaId,
+        'sort_order': media.sortOrder ?? 0,
+      });
+    }
+
+    // 3. Insert tags → product_tags
+    for (final tag in payload.tags) {
+      final tagId = await _getOrCreateTagByName(tag.name);
+
+      await client.from('product_tags').insert({
+        'product_id': productId,
+        'tag_id': tagId,
+      });
+    }
+
+    return productId;
   }
 
-  // 3. Insert tags → product_tags
-  for (final tag in payload.tags) {
-    final tagId = await _getOrCreateTagByName(tag.name);
-
-    await client.from('product_tags').insert({
-      'product_id': productId,
-      'tag_id': tagId,
-    });
-  }
-
-  return productId;
-}
-
-
-Future<void> _uploadFeedPost(
+  Future<void> _uploadFeedPost(
   UploadPostPayload payload,
   String userId,
   String? productId,
@@ -115,9 +113,9 @@ Future<void> _uploadFeedPost(
       'tag_id': tagId,
     });
   }
+
+  
 }
-
-
 
 
   Future<String> _getOrCreateTagByName(String tagName) async {

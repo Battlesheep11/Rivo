@@ -3,7 +3,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
-import 'package:device_preview/device_preview.dart';
 import 'package:rivo_app/core/toast/toast_service.dart';
 
 final GlobalKey<ScaffoldMessengerState> messengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -29,10 +28,7 @@ Future<void> main() async {
     ToastService().init(messengerKey);
     runApp(
       ProviderScope(
-        child: DevicePreview(
-          enabled: true,
-          builder: (context) => const App(),
-        ),
+        child: const App(), // ⬅️ כאן הסרנו את DevicePreview
       ),
     );
   } catch (e) {
