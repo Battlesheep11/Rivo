@@ -9,6 +9,8 @@ import 'package:rivo_app/features/post/presentation/widgets/tags_input_field.dar
 import 'package:rivo_app/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app/core/error_handling/app_exception.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rivo_app/features/post/domain/entities/media_file.dart';
+
 
 class PostUploadScreen extends ConsumerStatefulWidget {
   const PostUploadScreen({super.key});
@@ -91,11 +93,22 @@ class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
         child: Column(
           children: [
             RepaintBoundary(
-  child: MediaPickerWidget(
-    onSelected: viewModel.setMedia,
-  ),
-),
+              child: MediaPickerWidget(
+                onSelected: (mediaFiles) {
+                  final converted = mediaFiles.map((file) {
+                    return MediaFile(
+                      id: file.asset.id,
+                      type: file.asset.type.name,
+                      url: '', // ייקבע לאחר העלאה בפועל ל־Supabase
+                      asset: file.asset,
+                      bytes: file.bytes,
+                    );
+                  }).toList();
 
+                  viewModel.setMedia(converted);
+                },
+              ),
+            ),
             const SizedBox(height: 16),
             const CategoryDropdown(),
             const SizedBox(height: 12),

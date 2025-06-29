@@ -80,7 +80,7 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
   void setLength(double? value) => state = state.copyWith(length: value);
   void setCaption(String? value) => state = state.copyWith(caption: value);
 
-  // 📌 זו הפונקציה היחידה שצריכה להיקרא מה־MediaPicker
+
   void setMedia(List<MediaFile> media) => state = state.copyWith(media: media);
 
   Future<void> submit() async {
