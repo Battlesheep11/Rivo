@@ -50,11 +50,19 @@
 "tagEthical": "אתי",
 "tagHandmade": "תוצרת יד",
 "tagFestival": "פסטיבלים",
+"tagEthical": "אתי",
 "tagSchool": "לבית ספר",
 "tagOffice": "למשרד",
 "tagDateNight": "לדייט",
 "tagLocalBrands": "מותגים מקומיים",
   "mediaPickerUpload": "העלאה",
   "mediaPickerUploading": "מעלה...",
-  "mediaPickerFailed": "נכשל בהעלאת מדיה"
+  "mediaPickerFailed": "נכשל בהעלאת מדיה",
+  "pickOfTheDay": "בחירת היום",
+"explore": "גלה את הבחירות של היום",
+"discover": "דיסקבר",
+"curatedForYou": "נוצר עבורך",
+"trendingNow": "טרנדי עכשיו",
+"items": "פריטים"
+
 }

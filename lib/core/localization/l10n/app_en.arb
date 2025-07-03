@@ -56,5 +56,12 @@
 "tagLocalBrands": "Local Brands",
   "mediaPickerUpload": "Upload",
   "mediaPickerUploading": "Uploading...",
-  "mediaPickerFailed": "Failed to upload media"
+  "mediaPickerFailed": "Failed to upload media",
+  "pickOfTheDay": "Pick of the Day",
+"explore": "Explore Today's Pick",
+"discover": "Discover",
+"curatedForYou": "Curated For You",
+"trendingNow": "Trending Now",
+"items": "items"
+
 }

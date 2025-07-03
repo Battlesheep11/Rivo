@@ -9,6 +9,7 @@ import 'package:rivo_app/features/onboarding/presentation/screens/onboarding_scr
 import 'package:rivo_app/features/post/presentation/screens/post_upload_screen.dart';
 import 'package:rivo_app/features/feed/presentation/screens/feed_screen.dart';
 import 'package:rivo_app/core/widgets/app_nav_bar.dart';
+import 'package:rivo_app/features/discovery/presentation/screens/discovery_screen.dart';
 
 class AppRouter {
   static GoRouter createRouter(WidgetRef ref) {
@@ -65,6 +66,10 @@ class AppRouter {
               builder: (context, state) => const FeedScreen(),
             ),
             GoRoute(
+              path: '/discovery',
+              builder: (context, state) => const DiscoveryScreen(),
+            ),
+            GoRoute(
               path: '/search',
               builder: (context, state) => const PlaceholderScreen(title: 'Search'),
             ),
@@ -90,7 +95,7 @@ class AppRouter {
     switch (location) {
       case '/home':
         return 0;
-      case '/search':
+      case '/discovery':
         return 1;
       case '/saved':
         return 2;
@@ -108,7 +113,7 @@ class AppRouter {
       case 0:
         return '/home';
       case 1:
-        return '/search';
+        return '/discovery';
       case 2:
         return '/saved';
       case 3:

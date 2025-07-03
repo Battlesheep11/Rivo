@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static ThemeData lightTheme = ThemeData(
+    useMaterial3: true,
     scaffoldBackgroundColor: const Color(0xFFF8F8F8),
     primaryColor: const Color(0xFF2B6CB0),
     colorScheme: ColorScheme.light(
@@ -48,4 +49,9 @@ class AppTheme {
       errorStyle: const TextStyle(color: Color(0xFFE53E3E)),
     ),
   );
+
+  // Optional: colors you can use inside glass components
+  static const Color glassBackground = Color.fromRGBO(255, 255, 255, 0.15);
+  static const Color glassBorder = Color.fromRGBO(255, 255, 255, 0.2);
+  static const Color darkGlassBackground = Color.fromRGBO(30, 30, 30, 0.25);
 }

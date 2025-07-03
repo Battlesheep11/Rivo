@@ -3,17 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:rivo_app/features/post/domain/entities/media_file.dart';
 
-
-
 class MediaPickerWidget extends StatefulWidget {
   final void Function(List<MediaFile>) onSelected;
 
-
   const MediaPickerWidget({
-  super.key,
-  required this.onSelected,
-});
-
+    super.key,
+    required this.onSelected,
+  });
 
   @override
   State<MediaPickerWidget> createState() => _MediaPickerWidgetState();
@@ -31,9 +27,7 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget> {
 
   Future<void> _requestPermissionsAndLoadAssets() async {
     final permission = await PhotoManager.requestPermissionExtend();
-    if (!permission.isAuth) {
-      return;
-    }
+    if (!permission.isAuth) return;
 
     final albums = await PhotoManager.getAssetPathList(
       type: RequestType.common,
@@ -64,9 +58,10 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget> {
     final result = <MediaFile>[];
     for (final asset in _selectedAssets) {
       final bytes = await asset.originBytes;
-      result.add(MediaFile.fromAsset(asset, bytes!));
+      if (bytes != null) {
+        result.add(MediaFile.fromAsset(asset, bytes));
+      }
     }
-
     widget.onSelected(result);
   }
 
@@ -77,8 +72,11 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget> {
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
+        // ✅ גובה קבוע ל־Grid ימנע קריסה ב־SingleChildScrollView
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.4,
           child: GridView.builder(
             itemCount: _mediaAssets.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
