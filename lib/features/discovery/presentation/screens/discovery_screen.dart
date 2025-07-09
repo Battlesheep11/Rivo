@@ -5,6 +5,7 @@ import 'package:rivo_app/features/discovery/presentation/widgets/featured_produc
 import 'package:rivo_app/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app/features/discovery/presentation/widgets/trending_tag_grid.dart';
 import 'package:rivo_app/features/discovery/presentation/widgets/curated_collection_grid.dart';
+import 'package:go_router/go_router.dart';
 
 class DiscoveryScreen extends ConsumerStatefulWidget {
   const DiscoveryScreen({super.key});
@@ -24,8 +25,18 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.discover),
-      ),
+  title: Text(AppLocalizations.of(context)!.discover),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.search),
+      tooltip: AppLocalizations.of(context)!.searchTooltip,
+      onPressed: () {
+        context.push('/search');
+      },
+    ),
+  ],
+),
+
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,7 +55,10 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
             const SizedBox(height: 32),
 
             // 🔤 Trending Now – localized
-            Padding(
+
+            
+
+           Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 AppLocalizations.of(context)!.trendingNow,

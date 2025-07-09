@@ -63,6 +63,21 @@
 "discover": "דיסקבר",
 "curatedForYou": "נוצר עבורך",
 "trendingNow": "טרנדי עכשיו",
-"items": "פריטים"
-
+"items": "פריטים",
+"searchTitle": "חיפוש",
+  "searchHint": "חיפוש מוצרים, תגיות או מוכרים",
+  "searchResults": "תוצאות",
+  "filter": "סנן",
+  "searchEmptyResults": "יאללה לחפש משהו שאוהבים",
+  "tabProducts": "מוצרים",
+  "tabUsers": "משתמשים",
+  "tabTags": "תגיות",
+  "searchNoResults": "לא נמצאו תוצאות",
+  "searchTooltip": "חיפוש",
+  "curatedCollectionsTitle": "אוספים מומלצים",
+  "popularSellers": "מוכרים פופולריים",
+  "recommendedSellersTitle": "מוכרים מומלצים",
+  "noMatchingSellers": "לא נמצאו מוכרים מתאימים",
+"errorOccurred": "אירעה שגיאה:",
+"noMatchingTags": "לא נמצאו תגיות מתאימות"
 }

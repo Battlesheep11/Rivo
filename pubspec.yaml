@@ -7,6 +7,7 @@ environment:
   sdk: ^3.8.1
 
 dependencies:
+  flutter_hooks: ^0.20.0
   flutter_svg: ^2.0.7
   google_fonts: ^6.1.0
   photo_manager: ^3.0.0
@@ -61,6 +62,9 @@ flutter:
     - family: Pacifico
       fonts:
         - asset: assets/fonts/Pacifico-Regular.ttf  
+    - family: NotoSansHebrew
+      fonts:
+        - asset: assets/fonts/NotoSansHebrew-Regular.ttf    
 dependency_overrides:
   sign_in_with_apple: ^7.0.1
   sign_in_with_apple_platform_interface: ^2.0.0

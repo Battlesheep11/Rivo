@@ -10,6 +10,8 @@ import 'package:rivo_app/features/post/presentation/screens/post_upload_screen.d
 import 'package:rivo_app/features/feed/presentation/screens/feed_screen.dart';
 import 'package:rivo_app/core/widgets/app_nav_bar.dart';
 import 'package:rivo_app/features/discovery/presentation/screens/discovery_screen.dart';
+import 'package:rivo_app/features/discovery/presentation/pages/search_screen.dart';
+
 
 class AppRouter {
   static GoRouter createRouter(WidgetRef ref) {
@@ -71,7 +73,7 @@ class AppRouter {
             ),
             GoRoute(
               path: '/search',
-              builder: (context, state) => const PlaceholderScreen(title: 'Search'),
+              builder: (context, state) => const SearchScreen(),
             ),
             GoRoute(
               path: '/saved',

@@ -3,7 +3,7 @@ import 'package:rivo_app/features/discovery/domain/repositories/discovery_reposi
 import 'package:rivo_app/features/discovery/data/datasources/discovery_remote_data_source.dart';
 import 'package:rivo_app/features/discovery/domain/entities/discovery_product_entity.dart';
 import 'package:rivo_app/features/discovery/domain/entities/curated_collection_entity.dart';
-
+import 'package:rivo_app/features/discovery/domain/entities/seller_entity.dart';
 
 class DiscoveryRepositoryImpl implements DiscoveryRepository {
   final DiscoveryRemoteDataSource remoteDataSource;
@@ -28,7 +28,10 @@ Future<List<DiscoveryTagEntity>> getTrendingTags({int limit = 4}) {
 Future<List<CuratedCollectionEntity>> getCuratedCollections() {
   return remoteDataSource.getCuratedCollections();
 }
-
+@override
+Future<List<SellerEntity>> getPopularSellers() {
+  return remoteDataSource.getPopularSellers();
+}
 
 
 }

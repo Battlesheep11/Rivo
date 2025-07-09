@@ -62,6 +62,21 @@
 "discover": "Discover",
 "curatedForYou": "Curated For You",
 "trendingNow": "Trending Now",
-"items": "items"
-
+"items": "items",
+"searchTitle": "Search",
+  "searchHint": "Search products, tags, or sellers",
+  "searchResults": "Results",
+  "filter": "Filter",
+  "searchEmptyResults": "Start by searching for something you love",
+  "tabProducts": "Products",
+  "tabUsers": "Users",
+  "tabTags": "Tags",
+  "searchNoResults": "No matching products found.",
+  "searchTooltip": "Search",
+  "curatedCollectionsTitle": "Featured Collections",
+  "popularSellers": "Popular Sellers",
+  "recommendedSellersTitle": "Top Sellers",
+  "noMatchingSellers": "No matching sellers found",
+"errorOccurred": "An error occurred:",
+"noMatchingTags": "No matching tags found"
 }

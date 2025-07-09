@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rivo_app/features/discovery/domain/entities/discovery_tag_entity.dart';
 import 'package:rivo_app/features/discovery/domain/entities/discovery_product_entity.dart';
 import 'package:rivo_app/features/discovery/domain/entities/curated_collection_entity.dart';
+import 'package:rivo_app/features/discovery/domain/entities/seller_entity.dart';
 
 
 class DiscoveryRemoteDataSource {
@@ -95,6 +96,18 @@ Future<List<CuratedCollectionEntity>> getCuratedCollections() async {
   }).toList();
 }
 
+Future<List<SellerEntity>> getPopularSellers() async {
+  final response = await _client
+      .from('profiles')
+      .select('id, username, avatar_url, is_seller')
+      .eq('is_seller', true)
+      .order('created_at', ascending: false)
+      .limit(10);
+
+  return (response as List).map((e) => SellerEntity.fromMap(e)).toList();
+
+
+}
 
 
 
