@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:rivo_app/core/localization/generated/app_localizations.dart';
-import 'package:rivo_app/features/post/presentation/viewmodels/upload_post_viewmodel.dart';
+import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
+import 'package:rivo_app_beta/features/post/presentation/viewmodels/upload_post_viewmodel.dart';
 
 class TagsInputField extends ConsumerStatefulWidget {
   const TagsInputField({super.key});

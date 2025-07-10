@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
-import 'package:rivo_app/features/post/domain/entities/media_file.dart';
+import 'package:rivo_app_beta/features/post/domain/entities/media_file.dart';
 
 class MediaPickerWidget extends StatefulWidget {
   final void Function(List<MediaFile>) onSelected;

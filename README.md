@@ -1,4 +1,4 @@
-# rivo_app
+# rivo_app_beta
 
 A new Flutter project.
 

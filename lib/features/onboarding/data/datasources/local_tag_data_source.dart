@@ -1,4 +1,4 @@
-import 'package:rivo_app/features/onboarding/domain/entities/tag_entity.dart';
+import 'package:rivo_app_beta/features/onboarding/domain/entities/tag_entity.dart';
 
 class LocalTagDataSource {
   List<TagEntity> getAvailableTags() {

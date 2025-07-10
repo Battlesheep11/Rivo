@@ -1,6 +1,6 @@
 {
-    "name": "rivo_app",
-    "short_name": "rivo_app",
+    "name": "rivo_app_beta",
+    "short_name": "rivo_app_beta",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

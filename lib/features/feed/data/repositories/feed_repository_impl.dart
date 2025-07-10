@@ -1,6 +1,6 @@
-import 'package:rivo_app/core/error_handling/app_exception.dart';
-import 'package:rivo_app/features/feed/domain/entities/feed_post_entity.dart';
-import 'package:rivo_app/features/feed/domain/repositories/feed_repository.dart';
+import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
+import 'package:rivo_app_beta/features/feed/domain/entities/feed_post_entity.dart';
+import 'package:rivo_app_beta/features/feed/domain/repositories/feed_repository.dart';
 import '../datasources/feed_remote_data_source.dart';
 
 class FeedRepositoryImpl implements FeedRepository {

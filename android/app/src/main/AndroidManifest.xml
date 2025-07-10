@@ -4,7 +4,7 @@
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="rivo_app"
+        android:label="rivo_app_beta"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -22,7 +22,7 @@
                <category android:name="android.intent.category.DEFAULT" />
               <category android:name="android.intent.category.BROWSABLE" />
                  <data
-                    android:scheme="com.example.rivo_app"
+                    android:scheme="com.example.rivo_app_beta"
                     android:host="login-callback" />
             </intent-filter>
 

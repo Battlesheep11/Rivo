@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rivo_app/core/error_handling/app_exception.dart';
-import 'package:rivo_app/features/post/domain/entities/media_file.dart';
-import 'package:rivo_app/features/post/domain/entities/upload_post_payload.dart';
-import 'package:rivo_app/features/post/domain/usecases/upload_post_use_case.dart';
-import 'package:rivo_app/features/post/domain/entities/tag_entity.dart';
-import 'package:rivo_app/features/post/domain/providers/post_providers.dart';
+import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
+import 'package:rivo_app_beta/features/post/domain/entities/media_file.dart';
+import 'package:rivo_app_beta/features/post/domain/entities/upload_post_payload.dart';
+import 'package:rivo_app_beta/features/post/domain/usecases/upload_post_use_case.dart';
+import 'package:rivo_app_beta/features/post/domain/entities/tag_entity.dart';
+import 'package:rivo_app_beta/features/post/domain/providers/post_providers.dart';
 
 class UploadPostState {
   final String? title;

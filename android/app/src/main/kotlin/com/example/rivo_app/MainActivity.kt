@@ -1,4 +1,4 @@
-package com.example.rivo_app
+package com.example.rivo_app_beta
 
 import io.flutter.embedding.android.FlutterActivity
 

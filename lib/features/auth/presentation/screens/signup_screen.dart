@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rivo_app/features/auth/presentation/providers/signup_form_provider.dart';
-import 'package:rivo_app/core/design_system/design_system.dart';
+import 'package:rivo_app_beta/features/auth/presentation/providers/signup_form_provider.dart';
+import 'package:rivo_app_beta/core/design_system/design_system.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});

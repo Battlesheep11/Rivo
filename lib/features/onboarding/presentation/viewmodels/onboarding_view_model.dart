@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rivo_app/features/onboarding/domain/usecases/get_visible_tags_usecase.dart';
-import 'package:rivo_app/features/onboarding/domain/usecases/submit_user_tags_usecase.dart';
+import 'package:rivo_app_beta/features/onboarding/domain/usecases/get_visible_tags_usecase.dart';
+import 'package:rivo_app_beta/features/onboarding/domain/usecases/submit_user_tags_usecase.dart';
 
 final onboardingViewModelProvider =
     StateNotifierProvider<OnboardingViewModel, OnboardingState>(

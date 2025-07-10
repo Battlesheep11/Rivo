@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rivo_app/features/auth/presentation/state/auth_state.dart';
-import 'package:rivo_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:rivo_app_beta/features/auth/presentation/state/auth_state.dart';
+import 'package:rivo_app_beta/features/auth/domain/repositories/auth_repository.dart';
 class AuthViewModel extends StateNotifier<AuthState> {
   final AuthRepository repository;
 

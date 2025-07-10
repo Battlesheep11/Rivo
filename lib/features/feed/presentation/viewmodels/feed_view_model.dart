@@ -1,8 +1,8 @@
 import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rivo_app/core/error_handling/app_exception.dart';
-import 'package:rivo_app/features/feed/domain/entities/feed_post_entity.dart';
-import 'package:rivo_app/features/feed/domain/repositories/feed_repository_provider.dart';
+import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
+import 'package:rivo_app_beta/features/feed/domain/entities/feed_post_entity.dart';
+import 'package:rivo_app_beta/features/feed/domain/repositories/feed_repository_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 

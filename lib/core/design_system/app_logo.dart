@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rivo_app/core/localization/generated/app_localizations.dart';
+import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 
 class AppLogo extends StatelessWidget {
   const AppLogo({super.key});

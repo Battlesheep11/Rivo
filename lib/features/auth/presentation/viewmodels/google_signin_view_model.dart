@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:rivo_app/core/loading/loading_overlay_provider.dart';
-import 'package:rivo_app/core/toast/toast_service.dart';
-import 'package:rivo_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:rivo_app_beta/core/loading/loading_overlay_provider.dart';
+import 'package:rivo_app_beta/core/toast/toast_service.dart';
+import 'package:rivo_app_beta/features/auth/domain/repositories/auth_repository.dart';
 
 class GoogleSignInViewModel extends StateNotifier<bool> {
   final AuthRepository repository;

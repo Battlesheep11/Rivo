@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:device_preview/device_preview.dart';
 
 import 'app.dart';
-import 'package:rivo_app/core/toast/toast_service.dart';
+import 'package:rivo_app_beta/core/toast/toast_service.dart';
 
 final GlobalKey<ScaffoldMessengerState> messengerKey = GlobalKey<ScaffoldMessengerState>();
 

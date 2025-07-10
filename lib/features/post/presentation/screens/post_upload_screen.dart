@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rivo_app/core/design_system/app_button.dart';
-import 'package:rivo_app/core/design_system/app_text_field.dart';
-import 'package:rivo_app/core/widgets/media_picker_widget.dart';
-import 'package:rivo_app/features/post/presentation/viewmodels/upload_post_viewmodel.dart';
-import 'package:rivo_app/features/post/presentation/widgets/category_dropdown.dart';
-import 'package:rivo_app/features/post/presentation/widgets/tags_input_field.dart';
-import 'package:rivo_app/core/localization/generated/app_localizations.dart';
-import 'package:rivo_app/core/error_handling/app_exception.dart';
+import 'package:rivo_app_beta/core/design_system/app_button.dart';
+import 'package:rivo_app_beta/core/design_system/app_text_field.dart';
+import 'package:rivo_app_beta/core/widgets/media_picker_widget.dart';
+import 'package:rivo_app_beta/features/post/presentation/viewmodels/upload_post_viewmodel.dart';
+import 'package:rivo_app_beta/features/post/presentation/widgets/category_dropdown.dart';
+import 'package:rivo_app_beta/features/post/presentation/widgets/tags_input_field.dart';
+import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
+import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rivo_app/features/post/domain/entities/media_file.dart';
+import 'package:rivo_app_beta/features/post/domain/entities/media_file.dart';
 
 
 class PostUploadScreen extends ConsumerStatefulWidget {

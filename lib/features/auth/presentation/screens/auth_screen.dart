@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rivo_app/features/auth/presentation/state/auth_mode.dart';
-import 'package:rivo_app/features/auth/presentation/providers/signup_form_provider.dart';
-import 'package:rivo_app/features/auth/presentation/providers/google_signin_provider.dart';
-import 'package:rivo_app/features/auth/presentation/providers/signin_form_provider.dart';
-import 'package:rivo_app/core/design_system/design_system.dart';
+import 'package:rivo_app_beta/features/auth/presentation/state/auth_mode.dart';
+import 'package:rivo_app_beta/features/auth/presentation/providers/signup_form_provider.dart';
+import 'package:rivo_app_beta/features/auth/presentation/providers/google_signin_provider.dart';
+import 'package:rivo_app_beta/features/auth/presentation/providers/signin_form_provider.dart';
+import 'package:rivo_app_beta/core/design_system/design_system.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rivo_app/core/localization/widgets/language_selector.dart';
-import 'package:rivo_app/core/localization/generated/app_localizations.dart';
+import 'package:rivo_app_beta/core/localization/widgets/language_selector.dart';
+import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 
 
 

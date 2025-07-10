@@ -3,14 +3,13 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:rivo_app/features/auth/presentation/screens/auth_screen.dart';
-import 'package:rivo_app/features/auth/presentation/screens/auth_redirector_screen.dart';
-import 'package:rivo_app/features/onboarding/presentation/screens/onboarding_screen.dart';
-import 'package:rivo_app/features/post/presentation/screens/post_upload_screen.dart';
-import 'package:rivo_app/features/feed/presentation/screens/feed_screen.dart';
-import 'package:rivo_app/core/widgets/app_nav_bar.dart';
-import 'package:rivo_app/features/discovery/presentation/screens/discovery_screen.dart';
-import 'package:rivo_app/features/discovery/presentation/pages/search_screen.dart';
+import 'package:rivo_app_beta/features/auth/presentation/screens/auth_screen.dart';
+import 'package:rivo_app_beta/features/auth/presentation/screens/auth_redirector_screen.dart';
+import 'package:rivo_app_beta/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:rivo_app_beta/features/post/presentation/screens/post_upload_screen.dart';
+import 'package:rivo_app_beta/features/feed/presentation/screens/feed_screen.dart';
+import 'package:rivo_app_beta/core/widgets/app_nav_bar.dart';
+
 
 
 class AppRouter {
@@ -68,12 +67,8 @@ class AppRouter {
               builder: (context, state) => const FeedScreen(),
             ),
             GoRoute(
-              path: '/discovery',
-              builder: (context, state) => const DiscoveryScreen(),
-            ),
-            GoRoute(
               path: '/search',
-              builder: (context, state) => const SearchScreen(),
+              builder: (context, state) => PlaceholderScreen(title: 'Search'),
             ),
             GoRoute(
               path: '/saved',
@@ -97,7 +92,7 @@ class AppRouter {
     switch (location) {
       case '/home':
         return 0;
-      case '/discovery':
+      case '/search':
         return 1;
       case '/saved':
         return 2;
@@ -115,7 +110,7 @@ class AppRouter {
       case 0:
         return '/home';
       case 1:
-        return '/discovery';
+        return '/search';
       case 2:
         return '/saved';
       case 3:

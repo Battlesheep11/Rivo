@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:rivo_app/core/localization/generated/app_localizations.dart';
-import 'package:rivo_app/features/onboarding/presentation/viewmodels/onboarding_view_model.dart';
-import 'package:rivo_app/features/onboarding/domain/entities/tag_entity.dart';
+import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
+import 'package:rivo_app_beta/features/onboarding/presentation/viewmodels/onboarding_view_model.dart';
+import 'package:rivo_app_beta/features/onboarding/domain/entities/tag_entity.dart';
 
 class TagSelectorWidget extends ConsumerWidget {
   const TagSelectorWidget({super.key});

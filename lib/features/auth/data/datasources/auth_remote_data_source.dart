@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:rivo_app/features/auth/domain/entities/user_entity.dart';
+import 'package:rivo_app_beta/features/auth/domain/entities/user_entity.dart';
 
 class AuthRemoteDataSource {
   final SupabaseClient client;
@@ -48,7 +48,7 @@ class AuthRemoteDataSource {
 Future<void> signInWithGoogle() async {
   await client.auth.signInWithOAuth(
     OAuthProvider.google,
-    redirectTo: 'com.example.rivo_app://login-callback',
+    redirectTo: 'com.example.rivo_app_beta://login-callback',
   );
 }
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:rivo_app/core/localization/generated/app_localizations.dart';
+import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rivo_app/features/onboarding/presentation/viewmodels/onboarding_view_model.dart';
-import 'package:rivo_app/features/onboarding/presentation/widgets/tag_selector_widget.dart';
+import 'package:rivo_app_beta/features/onboarding/presentation/viewmodels/onboarding_view_model.dart';
+import 'package:rivo_app_beta/features/onboarding/presentation/widgets/tag_selector_widget.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
