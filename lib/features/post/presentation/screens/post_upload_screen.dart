@@ -12,7 +12,6 @@ import 'package:go_router/go_router.dart';
 import 'package:rivo_app_beta/features/post/presentation/widgets/selected_media_preview.dart';
 import 'package:rivo_app_beta/features/post/presentation/viewmodels/form_status.dart';
 
-
 class PostUploadScreen extends ConsumerStatefulWidget {
   const PostUploadScreen({super.key});
 
@@ -21,7 +20,6 @@ class PostUploadScreen extends ConsumerStatefulWidget {
 }
 
 class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
-
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _priceController;
@@ -29,6 +27,8 @@ class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
   late final TextEditingController _waistController;
   late final TextEditingController _lengthController;
   late final TextEditingController _captionController;
+
+  bool _didSetupListener = false;
 
   @override
   void initState() {
@@ -41,24 +41,6 @@ class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
     _waistController = TextEditingController(text: state.waist?.toString() ?? '');
     _lengthController = TextEditingController(text: state.length?.toString() ?? '');
     _captionController = TextEditingController(text: state.caption);
-
-    ref.listen(uploadPostViewModelProvider, (prev, next) {
-      final wasSubmitting = prev?.isSubmitting ?? false;
-      final isSubmitting = next.isSubmitting;
-
-      if (wasSubmitting && !isSubmitting) {
-        final l = AppLocalizations.of(context)!;
-        if (next.status == FormStatus.success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l.uploadSuccess)),
-          );
-        } else if (next.status == FormStatus.failure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l.uploadFailure)),
-          );
-        }
-      }
-    });
   }
 
   @override
@@ -75,7 +57,6 @@ class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
 
   Future<void> _submitForm() async {
     final viewModel = ref.read(uploadPostViewModelProvider.notifier);
-
     try {
       await viewModel.submit();
       if (!mounted) return;
@@ -93,6 +74,27 @@ class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
     final state = ref.watch(uploadPostViewModelProvider);
     final viewModel = ref.read(uploadPostViewModelProvider.notifier);
     final localizations = AppLocalizations.of(context)!;
+
+    // ✅ להאזין לשינוי סטטוס פעם אחת
+    if (!_didSetupListener) {
+      _didSetupListener = true;
+      ref.listen(uploadPostViewModelProvider, (prev, next) {
+        final wasSubmitting = prev?.isSubmitting ?? false;
+        final isSubmitting = next.isSubmitting;
+
+        if (wasSubmitting && !isSubmitting) {
+          if (next.status == FormStatus.success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(localizations.uploadSuccess)),
+            );
+          } else if (next.status == FormStatus.failure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(localizations.uploadFailure)),
+            );
+          }
+        }
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -113,9 +115,7 @@ class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
         child: Column(
           children: [
             RepaintBoundary(
-              child: MediaPickerWidget(
-                onSelected: viewModel.setMedia,
-              ),
+              child: MediaPickerWidget(onSelected: viewModel.setMedia),
             ),
             const SizedBox(height: 12),
             const SelectedMediaPreview(),
@@ -141,40 +141,32 @@ class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
               controller: _priceController,
               hintText: localizations.price,
               keyboardType: TextInputType.number,
-              onChanged: (value) {
-                final price = double.tryParse(value);
-                viewModel.setPrice(price);
-              },
+              onChanged: (value) =>
+                  viewModel.setPrice(double.tryParse(value)),
             ),
             const SizedBox(height: 12),
             AppTextField(
               controller: _chestController,
               hintText: localizations.chestMeasurementLabel,
               keyboardType: TextInputType.number,
-              onChanged: (value) {
-                final chest = double.tryParse(value);
-                viewModel.setChest(chest);
-              },
+              onChanged: (value) =>
+                  viewModel.setChest(double.tryParse(value)),
             ),
             const SizedBox(height: 12),
             AppTextField(
               controller: _waistController,
               hintText: localizations.waistMeasurementLabel,
               keyboardType: TextInputType.number,
-              onChanged: (value) {
-                final waist = double.tryParse(value);
-                viewModel.setWaist(waist);
-              },
+              onChanged: (value) =>
+                  viewModel.setWaist(double.tryParse(value)),
             ),
             const SizedBox(height: 12),
             AppTextField(
               controller: _lengthController,
               hintText: localizations.lengthMeasurementLabel,
               keyboardType: TextInputType.number,
-              onChanged: (value) {
-                final length = double.tryParse(value);
-                viewModel.setLength(length);
-              },
+              onChanged: (value) =>
+                  viewModel.setLength(double.tryParse(value)),
             ),
             const SizedBox(height: 12),
             AppTextField(

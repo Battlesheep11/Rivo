@@ -1,32 +1,37 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:video_compress/video_compress.dart';
 
 class VideoUtils {
-  static Future<Uint8List> convertToWebm(Uint8List originalBytes) async {
+  static Future<Uint8List> compressVideo(Uint8List originalBytes) async {
+    VideoCompress.setLogLevel(0); // Disable logs
+
     final tempDir = await getTemporaryDirectory();
-
     final inputFile = File('${tempDir.path}/input.mp4');
-    final outputFile = File('${tempDir.path}/output.webm');
-
     await inputFile.writeAsBytes(originalBytes);
 
-    final session = await FFmpegKit.execute(
-      '-i "${inputFile.path}" -c:v libvpx-vp9 -b:v 1M -c:a libopus "${outputFile.path}"',
-    );
+    try {
+      final info = await VideoCompress.compressVideo(
+        inputFile.path,
+        quality: VideoQuality.MediumQuality,
+        deleteOrigin: false,
+        includeAudio: true,
+      );
 
-    final returnCode = await session.getReturnCode();
+      if (info == null || info.file == null) {
+        throw Exception('Video compression failed.');
+      }
 
-    if (returnCode == null || !returnCode.isValueSuccess()) {
-      throw Exception('Video conversion to WEBM failed.');
+      final resultBytes = await info.file!.readAsBytes();
+
+      // Cleanup
+      await inputFile.delete();
+      await info.file!.delete();
+
+      return resultBytes;
+    } finally {
+      VideoCompress.dispose();
     }
-
-    final convertedBytes = await outputFile.readAsBytes();
-
-    await inputFile.delete();
-    await outputFile.delete();
-
-    return convertedBytes;
   }
 }

@@ -7,6 +7,8 @@ import 'package:rivo_app_beta/features/post/domain/entities/media_file.dart';
 import 'package:rivo_app_beta/features/post/presentation/screens/media_gallery_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:rivo_app_beta/core/widgets/permission_dialog.dart';
+import 'dart:io';
+
 
 class MediaPickerWidget extends StatelessWidget {
   final void Function(List<MediaFile>) onSelected;
@@ -107,35 +109,48 @@ class MediaPickerWidget extends StatelessWidget {
   }
 
   Future<void> _pickFromCamera(BuildContext context, {required bool isVideo}) async {
-    final tr = AppLocalizations.of(context)!;
-    final dialogContext = context; 
+  final tr = AppLocalizations.of(context)!;
+  final dialogContext = context;
 
-    final hasPermission = await PermissionUtils.requestCameraPermission();
+  final hasPermission = await PermissionUtils.requestCameraPermission();
 
-    if (!hasPermission) {
-      final isPermanentlyDenied = await Permission.camera.isPermanentlyDenied;
-      if (isPermanentlyDenied && dialogContext.mounted) {
-        await PermissionDialog.show(
-          dialogContext,
-          title: tr.cameraPermissionTitle,
-          message: tr.cameraPermissionMessage,
-        );
-      }
+  if (!hasPermission) {
+    final isPermanentlyDenied = await Permission.camera.isPermanentlyDenied;
+    if (isPermanentlyDenied && dialogContext.mounted) {
+      await PermissionDialog.show(
+        dialogContext,
+        title: tr.cameraPermissionTitle,
+        message: tr.cameraPermissionMessage,
+      );
+    }
+    return;
+  }
+
+  final picker = ImagePicker();
+  final XFile? file = isVideo
+      ? await picker.pickVideo(source: ImageSource.camera)
+      : await picker.pickImage(source: ImageSource.camera);
+
+  if (file != null) {
+  try {
+    final asset = isVideo
+        ? await PhotoManager.editor.saveVideo(File(file.path))
+        : await PhotoManager.editor.saveImageWithPath(file.path);
+
+    final bytes = await asset.originBytes;
+    if (bytes == null) {
+      debugPrint('⚠️ Failed to load bytes from saved asset');
       return;
     }
 
-    final picker = ImagePicker();
-    final XFile? file = isVideo
-        ? await picker.pickVideo(source: ImageSource.camera)
-        : await picker.pickImage(source: ImageSource.camera);
-
-    if (file != null) {
-      final savedAsset = await PhotoManager.editor.saveImageWithPath(file.path);
-      final fileBytes = await savedAsset.originBytes;
-      final mediaFile = MediaFile.fromAsset(savedAsset, fileBytes!);
-      onSelected([mediaFile]);
-    }
+    final mediaFile = MediaFile.fromAsset(asset, bytes);
+    onSelected([mediaFile]);
+  } catch (e) {
+    debugPrint('❌ Failed to save captured media: $e');
   }
+}
+}
+
 
   @override
   Widget build(BuildContext context) {

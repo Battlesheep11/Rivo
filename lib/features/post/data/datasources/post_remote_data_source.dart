@@ -1,17 +1,15 @@
-import 'dart:typed_data'; 
-import 'package:rivo_app_beta/features/post/domain/entities/uploadable_media.dart';
+import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
 import 'package:rivo_app_beta/features/post/domain/entities/upload_post_payload.dart';
-import 'package:rivo_app_beta/core/utils/image_utils.dart'; 
+import 'package:rivo_app_beta/features/post/domain/entities/uploadable_media.dart';
+import 'package:rivo_app_beta/core/utils/image_utils.dart';
 import 'package:rivo_app_beta/core/utils/video_utils.dart';
-
 
 class PostRemoteDataSource {
   final SupabaseClient client;
 
   PostRemoteDataSource({required this.client});
-
 
   Future<void> uploadPost(
     UploadPostPayload payload, {
@@ -27,7 +25,12 @@ class PostRemoteDataSource {
       String? productId;
 
       if (payload.hasProduct) {
-        productId = await _uploadProduct(payload, userId, onMediaUploaded,onMediaStatusChanged);
+        productId = await _uploadProduct(
+          payload,
+          userId,
+          onMediaUploaded,
+          onMediaStatusChanged,
+        );
       }
 
       await _uploadFeedPost(payload, userId, productId);
@@ -44,14 +47,12 @@ class PostRemoteDataSource {
     }
   }
 
-
   Future<String> _uploadProduct(
-  UploadPostPayload payload,
-  String userId,
-  void Function(int uploaded, int total)? onMediaUploaded,
-  void Function(String mediaPath, UploadMediaStatus status)? onMediaStatusChanged,
-) async {
-
+    UploadPostPayload payload,
+    String userId,
+    void Function(int uploaded, int total)? onMediaUploaded,
+    void Function(String mediaPath, UploadMediaStatus status)? onMediaStatusChanged,
+  ) async {
     final productResponse = await client
         .from('products')
         .insert({
@@ -70,67 +71,66 @@ class PostRemoteDataSource {
     final productId = productResponse['id'] as String;
 
     for (int i = 0; i < payload.media.length; i++) {
-  final media = payload.media[i];
-  String? mediaUrl = media.url;
+      final media = payload.media[i];
+      String? mediaUrl = media.url;
 
-  try {
-    onMediaStatusChanged?.call(media.path, UploadMediaStatus.uploading);
+      try {
+        onMediaStatusChanged?.call(media.path, UploadMediaStatus.uploading);
 
-    if (mediaUrl.isEmpty) {
-      final ext = media.type == 'video' ? 'webm' : 'jpg';
-      final uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
-      final filename = '${userId}_$uniqueId.$ext';
-      final path = 'media/$filename';
-      Uint8List bytesToUpload = media.bytes;
+        if (mediaUrl.isEmpty) {
+          final ext = media.type == 'video' ? 'webm' : 'jpg';
+          final uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
+          final filename = '${userId}_$uniqueId.$ext';
+          final path = 'media/$filename';
 
-      if (media.type == 'image') {
-        bytesToUpload = await ImageUtils.compressImage(media.bytes);
-      } else if (media.type == 'video') {
-        try {
-          bytesToUpload = await VideoUtils.convertToWebm(media.bytes);
-        } catch (_) {
-          bytesToUpload = media.bytes;
+          Uint8List bytesToUpload = media.bytes;
+
+          if (media.type == 'image') {
+            bytesToUpload = await ImageUtils.compressImage(media.bytes);
+          } else if (media.type == 'video') {
+            try {
+              bytesToUpload = await VideoUtils.compressVideo(media.bytes);
+            } catch (_) {
+              bytesToUpload = media.bytes;
+            }
+          }
+
+          await client.storage.from('media').uploadBinary(
+            path,
+            bytesToUpload,
+            fileOptions: FileOptions(
+              contentType: media.type == 'video' ? 'video/webm' : 'image/jpeg',
+              upsert: true,
+            ),
+          );
+
+          mediaUrl = client.storage.from('media').getPublicUrl(path);
         }
+
+        final mediaInsert = await client
+            .from('media')
+            .insert({
+              'media_url': mediaUrl,
+              'media_type': media.type,
+            })
+            .select('id')
+            .single();
+
+        final mediaId = mediaInsert['id'] as String;
+
+        await client.from('product_media').insert({
+          'product_id': productId,
+          'media_id': mediaId,
+          'sort_order': media.sortOrder ?? 0,
+        });
+
+        onMediaUploaded?.call(i + 1, payload.media.length);
+        onMediaStatusChanged?.call(media.path, UploadMediaStatus.uploaded);
+      } catch (e) {
+        onMediaStatusChanged?.call(media.path, UploadMediaStatus.failed);
+        continue;
       }
-
-      await client.storage.from('media').uploadBinary(
-        path,
-        bytesToUpload,
-        fileOptions: FileOptions(
-          contentType: media.type == 'video' ? 'video/webm' : 'image/jpeg',
-          upsert: true,
-        ),
-      );
-
-      mediaUrl = client.storage.from('media').getPublicUrl(path);
     }
-
-    final mediaInsert = await client
-        .from('media')
-        .insert({
-          'media_url': mediaUrl,
-          'media_type': media.type,
-        })
-        .select('id')
-        .single();
-
-    final mediaId = mediaInsert['id'] as String;
-
-    await client.from('product_media').insert({
-      'product_id': productId,
-      'media_id': mediaId,
-      'sort_order': media.sortOrder ?? 0,
-    });
-
-    onMediaUploaded?.call(i + 1, payload.media.length);
-    onMediaStatusChanged?.call(media.path, UploadMediaStatus.uploaded); 
-  } catch (e) {
-    onMediaStatusChanged?.call(media.path, UploadMediaStatus.failed); 
-    continue;
-  }
-}
-
-
 
     for (final tag in payload.tags) {
       final tagId = await _getOrCreateTagByName(tag.name);

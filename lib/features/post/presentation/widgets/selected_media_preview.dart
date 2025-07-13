@@ -41,6 +41,14 @@ class SelectedMediaPreview extends ConsumerWidget {
               ),
               Positioned(
                 top: 4,
+                left: 4,
+                child: media.type.toLowerCase().contains('video')
+                    ? const Icon(Icons.videocam, color: Colors.white, size: 16)
+                    : const SizedBox.shrink(),
+              ),
+
+              Positioned(
+                top: 4,
                 right: 4,
                 child: GestureDetector(
                   onTap: () => viewModel.removeMedia(media),
@@ -75,6 +83,7 @@ class SelectedMediaPreview extends ConsumerWidget {
   }
 
   Widget _buildMediaThumbnail(MediaFile media) {
+    print('[Preview] bytes length: ${media.bytes.length}');
     if (media.type.toLowerCase().contains('video')) {
       return _VideoThumbnail(bytes: media.bytes);
     } else {
