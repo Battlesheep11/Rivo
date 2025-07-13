@@ -7,6 +7,11 @@ environment:
   sdk: ^3.8.1
 
 dependencies:
+  mime: ^1.0.4
+  result_dart: ^1.1.0
+  ffmpeg_kit_flutter: ^6.0.2
+  image: ^4.0.17
+  image_picker: ^1.1.0
   flutter_hooks: ^0.20.0
   flutter_svg: ^2.0.7
   google_fonts: ^6.1.0
@@ -23,6 +28,7 @@ dependencies:
   flutter:
     sdk: flutter 
   device_preview: ^1.1.0  
+  permission_handler: ^11.0.1 
 
   flutter_localizations:
     sdk: flutter

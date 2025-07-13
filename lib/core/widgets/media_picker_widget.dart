@@ -1,9 +1,14 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
+import 'package:rivo_app_beta/core/utils/permission_utils.dart';
 import 'package:rivo_app_beta/features/post/domain/entities/media_file.dart';
+import 'package:rivo_app_beta/features/post/presentation/screens/media_gallery_screen.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:rivo_app_beta/core/widgets/permission_dialog.dart';
 
-class MediaPickerWidget extends StatefulWidget {
+class MediaPickerWidget extends StatelessWidget {
   final void Function(List<MediaFile>) onSelected;
 
   const MediaPickerWidget({
@@ -11,129 +16,135 @@ class MediaPickerWidget extends StatefulWidget {
     required this.onSelected,
   });
 
-  @override
-  State<MediaPickerWidget> createState() => _MediaPickerWidgetState();
-}
+  void _showMediaSourcePicker(BuildContext context) {
+    final tr = AppLocalizations.of(context)!;
 
-class _MediaPickerWidgetState extends State<MediaPickerWidget> {
-  List<AssetEntity> _mediaAssets = [];
-  final Set<AssetEntity> _selectedAssets = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _requestPermissionsAndLoadAssets();
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: Text(tr.mediaPickerGallery),
+              onTap: () {
+                Navigator.of(context).pop();
+                _pickFromGallery(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: Text(tr.mediaPickerCamera),
+              onTap: () {
+                Navigator.of(context).pop();
+                _showCameraOptions(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  Future<void> _requestPermissionsAndLoadAssets() async {
-    final permission = await PhotoManager.requestPermissionExtend();
-    if (!permission.isAuth) return;
+  void _showCameraOptions(BuildContext context) {
+    final tr = AppLocalizations.of(context)!;
 
-    final albums = await PhotoManager.getAssetPathList(
-      type: RequestType.common,
-      hasAll: true,
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: Text(tr.takePhoto),
+              onTap: () {
+                Navigator.of(context).pop();
+                _pickFromCamera(context, isVideo: false);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.videocam),
+              title: Text(tr.recordVideo),
+              onTap: () {
+                Navigator.of(context).pop();
+                _pickFromCamera(context, isVideo: true);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickFromGallery(BuildContext context) async {
+    final tr = AppLocalizations.of(context)!;
+    final navigator = Navigator.of(context); 
+    final dialogContext = context; 
+
+    final permission = await Permission.photos.request();
+
+    if (!permission.isGranted) {
+      final isPermanentlyDenied = await Permission.photos.isPermanentlyDenied;
+      if (isPermanentlyDenied && dialogContext.mounted) {
+        await PermissionDialog.show(
+          dialogContext,
+          title: tr.galleryPermissionTitle,
+          message: tr.galleryPermissionMessage,
+        );
+      }
+      return;
+    }
+
+    final result = await navigator.push<List<MediaFile>>(
+      MaterialPageRoute(
+        builder: (_) => const MediaGalleryScreen(),
+      ),
     );
 
-    final recentAlbum = albums.firstOrNull;
-    if (recentAlbum == null) return;
-
-    final assets = await recentAlbum.getAssetListPaged(page: 0, size: 100);
-
-    setState(() {
-      _mediaAssets = assets;
-    });
-  }
-
-  void _toggleSelection(AssetEntity asset) {
-    setState(() {
-      if (_selectedAssets.contains(asset)) {
-        _selectedAssets.remove(asset);
-      } else {
-        _selectedAssets.add(asset);
-      }
-    });
-  }
-
-  Future<void> _handleNextPressed() async {
-    final result = <MediaFile>[];
-    for (final asset in _selectedAssets) {
-      final bytes = await asset.originBytes;
-      if (bytes != null) {
-        result.add(MediaFile.fromAsset(asset, bytes));
-      }
+    if (result != null && result.isNotEmpty) {
+      onSelected(result);
     }
-    widget.onSelected(result);
+  }
+
+  Future<void> _pickFromCamera(BuildContext context, {required bool isVideo}) async {
+    final tr = AppLocalizations.of(context)!;
+    final dialogContext = context; 
+
+    final hasPermission = await PermissionUtils.requestCameraPermission();
+
+    if (!hasPermission) {
+      final isPermanentlyDenied = await Permission.camera.isPermanentlyDenied;
+      if (isPermanentlyDenied && dialogContext.mounted) {
+        await PermissionDialog.show(
+          dialogContext,
+          title: tr.cameraPermissionTitle,
+          message: tr.cameraPermissionMessage,
+        );
+      }
+      return;
+    }
+
+    final picker = ImagePicker();
+    final XFile? file = isVideo
+        ? await picker.pickVideo(source: ImageSource.camera)
+        : await picker.pickImage(source: ImageSource.camera);
+
+    if (file != null) {
+      final savedAsset = await PhotoManager.editor.saveImageWithPath(file.path);
+      final fileBytes = await savedAsset.originBytes;
+      final mediaFile = MediaFile.fromAsset(savedAsset, fileBytes!);
+      onSelected([mediaFile]);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_mediaAssets.isEmpty) {
-      return const Center(child: Text('No media found in gallery'));
-    }
+    final tr = AppLocalizations.of(context)!;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // ✅ גובה קבוע ל־Grid ימנע קריסה ב־SingleChildScrollView
-        SizedBox(
-          height: MediaQuery.of(context).size.height * 0.4,
-          child: GridView.builder(
-            itemCount: _mediaAssets.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 2,
-              crossAxisSpacing: 2,
-            ),
-            itemBuilder: (context, index) {
-              final asset = _mediaAssets[index];
-              final isSelected = _selectedAssets.contains(asset);
-
-              return GestureDetector(
-                onTap: () => _toggleSelection(asset),
-                child: Stack(
-                  children: [
-                    FutureBuilder<Uint8List?>(
-                      future: asset.thumbnailDataWithSize(const ThumbnailSize(200, 200)),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-                        return Image.memory(
-                          snapshot.data!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                        );
-                      },
-                    ),
-                    if (isSelected)
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withAlpha((0.8 * 255).toInt()),
-                            shape: BoxShape.circle,
-                          ),
-                          padding: const EdgeInsets.all(4),
-                          child: const Icon(Icons.check, size: 16, color: Colors.white),
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-        if (_selectedAssets.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: ElevatedButton(
-              onPressed: _handleNextPressed,
-              child: const Text('Next'),
-            ),
-          ),
-      ],
+    return ElevatedButton.icon(
+      icon: const Icon(Icons.add_photo_alternate),
+      label: Text(tr.selectMedia),
+      onPressed: () => _showMediaSourcePicker(context),
     );
   }
 }

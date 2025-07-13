@@ -1,7 +1,12 @@
-import 'package:dartz/dartz.dart';
-import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
 import 'package:rivo_app_beta/features/post/domain/entities/upload_post_payload.dart';
+import 'package:rivo_app_beta/features/post/domain/entities/uploadable_media.dart';
 
 abstract class PostRepository {
-  Future<Either<AppException, void>> uploadPost(UploadPostPayload payload);
+  Future<void> uploadPost(
+    UploadPostPayload payload, {
+    void Function(int uploaded, int total)? onMediaUploaded,
+    void Function(String mediaPath, UploadMediaStatus status)? onMediaStatusChanged, 
+  });
 }
+
+

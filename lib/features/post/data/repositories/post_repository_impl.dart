@@ -1,8 +1,9 @@
-import 'package:dartz/dartz.dart';
-import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
+
 import 'package:rivo_app_beta/features/post/domain/entities/upload_post_payload.dart';
 import 'package:rivo_app_beta/features/post/domain/repositories/post_repository.dart';
 import 'package:rivo_app_beta/features/post/data/datasources/post_remote_data_source.dart';
+import 'package:rivo_app_beta/features/post/domain/entities/uploadable_media.dart';
+
 
 class PostRepositoryImpl implements PostRepository {
   final PostRemoteDataSource remoteDataSource;
@@ -10,14 +11,17 @@ class PostRepositoryImpl implements PostRepository {
   PostRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<AppException, void>> uploadPost(UploadPostPayload payload) async {
-    try {
-      await remoteDataSource.uploadPost(payload);
-      return right(null);
-    } on AppException catch (e) {
-      return left(e);
-    } catch (e) {
-      return left(AppException.unexpected('Unexpected error occurred'));
-    }
-  }
+Future<void> uploadPost(
+  UploadPostPayload payload, {
+  void Function(int uploaded, int total)? onMediaUploaded,
+  void Function(String mediaPath, UploadMediaStatus status)? onMediaStatusChanged, 
+}) {
+  return remoteDataSource.uploadPost(
+    payload,
+    onMediaUploaded: onMediaUploaded,
+    onMediaStatusChanged: onMediaStatusChanged, 
+  );
+}
+
+
 }

@@ -1,38 +1,27 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'media_file.dart';
 import 'tag_entity.dart';
 
-class UploadPostPayload {
-  // האם לכלול מוצר כחלק מהפוסט
-  final bool hasProduct;
+part 'upload_post_payload.freezed.dart';
 
-  // שדות מוצר (אם hasProduct == true)
-  final String? productTitle;
-  final String? productDescription;
-  final double? productPrice;
-  final String? categoryId;
-  final double? chest;
-  final double? waist;
-  final double? length;
+@freezed
+class UploadPostPayload with _$UploadPostPayload {
+  const factory UploadPostPayload({
+    required bool hasProduct,
+    String? productTitle,
+    String? productDescription,
+    double? productPrice,
+    String? categoryId,
+    double? chest,
+    double? waist,
+    double? length,
+    String? caption,
+    required List<MediaFile> media,
+    required List<TagEntity> tags,
+  }) = _UploadPostPayload;
+}
 
-  // שדות פוסט (משותפים)
-  final String? caption;
-  final List<MediaFile> media;
-  final List<TagEntity> tags;
-
-  UploadPostPayload({
-    required this.hasProduct,
-    this.productTitle,
-    this.productDescription,
-    this.productPrice,
-    this.categoryId,
-    this.chest,
-    this.waist,
-    this.length,
-    required this.caption,
-    required this.media,
-    required this.tags,
-  });
-
+extension UploadPostPayloadX on UploadPostPayload {
   bool get isValid =>
       media.isNotEmpty &&
       (hasProduct

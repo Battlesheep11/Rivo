@@ -9,7 +9,8 @@ import 'package:rivo_app_beta/features/post/presentation/widgets/tags_input_fiel
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rivo_app_beta/features/post/domain/entities/media_file.dart';
+import 'package:rivo_app_beta/features/post/presentation/widgets/selected_media_preview.dart';
+import 'package:rivo_app_beta/features/post/presentation/viewmodels/form_status.dart';
 
 
 class PostUploadScreen extends ConsumerStatefulWidget {
@@ -20,6 +21,7 @@ class PostUploadScreen extends ConsumerStatefulWidget {
 }
 
 class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
+
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _priceController;
@@ -39,6 +41,24 @@ class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
     _waistController = TextEditingController(text: state.waist?.toString() ?? '');
     _lengthController = TextEditingController(text: state.length?.toString() ?? '');
     _captionController = TextEditingController(text: state.caption);
+
+    ref.listen(uploadPostViewModelProvider, (prev, next) {
+      final wasSubmitting = prev?.isSubmitting ?? false;
+      final isSubmitting = next.isSubmitting;
+
+      if (wasSubmitting && !isSubmitting) {
+        final l = AppLocalizations.of(context)!;
+        if (next.status == FormStatus.success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l.uploadSuccess)),
+          );
+        } else if (next.status == FormStatus.failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l.uploadFailure)),
+          );
+        }
+      }
+    });
   }
 
   @override
@@ -94,21 +114,11 @@ class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
           children: [
             RepaintBoundary(
               child: MediaPickerWidget(
-                onSelected: (mediaFiles) {
-                  final converted = mediaFiles.map((file) {
-                    return MediaFile(
-                      id: file.asset.id,
-                      type: file.asset.type.name,
-                      url: '', // ייקבע לאחר העלאה בפועל ל־Supabase
-                      asset: file.asset,
-                      bytes: file.bytes,
-                    );
-                  }).toList();
-
-                  viewModel.setMedia(converted);
-                },
+                onSelected: viewModel.setMedia,
               ),
             ),
+            const SizedBox(height: 12),
+            const SelectedMediaPreview(),
             const SizedBox(height: 16),
             const CategoryDropdown(),
             const SizedBox(height: 12),
@@ -181,6 +191,17 @@ class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
               AppButton(
                 onPressed: state.isValid ? _submitForm : null,
                 text: localizations.upload,
+              ),
+            if (state.isSubmitting &&
+                state.uploadedMediaCount < state.totalMediaCount &&
+                state.totalMediaCount > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  '${localizations.uploadingMedia} ${state.uploadedMediaCount}/${state.totalMediaCount}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
               ),
           ],
         ),

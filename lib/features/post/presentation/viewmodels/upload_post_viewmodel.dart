@@ -4,66 +4,12 @@ import 'package:rivo_app_beta/features/post/domain/entities/media_file.dart';
 import 'package:rivo_app_beta/features/post/domain/entities/upload_post_payload.dart';
 import 'package:rivo_app_beta/features/post/domain/usecases/upload_post_use_case.dart';
 import 'package:rivo_app_beta/features/post/domain/entities/tag_entity.dart';
+import 'package:rivo_app_beta/features/post/data/datasources/upload_post_state.dart';
 import 'package:rivo_app_beta/features/post/domain/providers/post_providers.dart';
+import 'package:rivo_app_beta/features/post/domain/entities/uploadable_media.dart';
 
-class UploadPostState {
-  final String? title;
-  final String? description;
-  final double? price;
-  final String? categoryId;
-  final List<String> tagNames;
-  final double? chest;
-  final double? waist;
-  final double? length;
-  final List<MediaFile> media;
-  final String? caption;
-  final bool isSubmitting;
-
-  const UploadPostState({
-    this.title,
-    this.description,
-    this.price,
-    this.categoryId,
-    this.tagNames = const [],
-    this.chest,
-    this.waist,
-    this.length,
-    this.media = const [],
-    this.caption,
-    this.isSubmitting = false,
-  });
-
-  bool get isValid =>
-      price != null && categoryId != null && media.isNotEmpty;
-
-  UploadPostState copyWith({
-    String? title,
-    String? description,
-    double? price,
-    String? categoryId,
-    List<String>? tagNames,
-    double? chest,
-    double? waist,
-    double? length,
-    List<MediaFile>? media,
-    String? caption,
-    bool? isSubmitting,
-  }) {
-    return UploadPostState(
-      title: title ?? this.title,
-      description: description ?? this.description,
-      price: price ?? this.price,
-      categoryId: categoryId ?? this.categoryId,
-      tagNames: tagNames ?? this.tagNames,
-      chest: chest ?? this.chest,
-      waist: waist ?? this.waist,
-      length: length ?? this.length,
-      media: media ?? this.media,
-      caption: caption ?? this.caption,
-      isSubmitting: isSubmitting ?? this.isSubmitting,
-    );
-  }
-}
+import 'dart:io';
+import 'package:rivo_app_beta/core/utils/media_validator.dart'; 
 
 class UploadPostViewModel extends StateNotifier<UploadPostState> {
   final UploadPostUseCase useCase;
@@ -81,7 +27,47 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
   void setCaption(String? value) => state = state.copyWith(caption: value);
 
 
-  void setMedia(List<MediaFile> media) => state = state.copyWith(media: media);
+  void setMedia(List<MediaFile> selectedMedia) {
+    final processed = selectedMedia.map((media) {
+      final file = File(media.path);
+      final validation = MediaValidator.validate(file);
+
+      return validation.fold(
+        (_) => UploadableMedia(
+          media: media,
+          file: file,
+          status: UploadMediaStatus.valid,
+        ),
+        (error) => UploadableMedia(
+          media: media,
+          file: file,
+          status: UploadMediaStatus.invalid,
+          errorMessage: error.toString(),
+        ),
+      );
+    }).toList();
+
+    state = state.copyWith(media: processed);
+  }
+
+  void removeMedia(MediaFile file) {
+    state = state.copyWith(
+      media: List.from(state.media)..removeWhere((m) => m.media.path == file.path),
+    );
+  }
+
+  void updateMediaStatus(String mediaPath, UploadMediaStatus status) {
+  final updated = state.media.map((item) {
+    if (item.media.path == mediaPath) {
+      return item.copyWith(status: status);
+    }
+    return item;
+  }).toList();
+
+  state = state.copyWith(media: updated);
+}
+
+
 
   Future<void> submit() async {
     if (!state.isValid) {
@@ -91,6 +77,10 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
     state = state.copyWith(isSubmitting: true);
 
     try {
+      final validMedia = state.media
+          .where((m) => m.status == UploadMediaStatus.valid)
+          .toList();
+
       final payload = UploadPostPayload(
         hasProduct: true,
         productTitle: state.title!,
@@ -101,11 +91,22 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
         waist: state.waist,
         length: state.length,
         caption: state.caption,
-        media: state.media,
+        media: validMedia.map((m) => m.media).toList(),
         tags: state.tagNames.map((name) => TagEntity(name: name)).toList(),
       );
 
-      final result = await useCase(payload);
+      final result = await useCase(
+  payload,
+  onMediaUploaded: (current, total) {
+    state = state.copyWith(
+      uploadedMediaCount: current,
+      totalMediaCount: total,
+    );
+  },
+  onMediaStatusChanged: updateMediaStatus, 
+);
+
+
       result.fold((failure) => throw failure, (_) {});
     } on AppException {
       rethrow;
