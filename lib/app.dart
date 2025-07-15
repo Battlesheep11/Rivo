@@ -21,8 +21,6 @@ class App extends ConsumerWidget {
       routerConfig: router,
       scaffoldMessengerKey: messengerKey,
       theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
-      themeMode: ThemeMode.system,
       locale: locale,
       supportedLocales: SupportedLocales.locales,
       localizationsDelegates: const [

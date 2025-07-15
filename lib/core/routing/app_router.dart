@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -39,23 +40,60 @@ class AppRouter {
             final index = _calculateIndex(location);
 
             return Scaffold(
-              body: child,
-              bottomNavigationBar: AppNavBar(
-                currentIndex: index,
-                onTap: (selectedIndex) {
-                  final target = _getPath(selectedIndex);
-                  if (target != location) context.go(target);
-                },
+              body: Stack(
+                children: [
+                  child,
+                  Positioned(
+                    bottom: 20,
+                    left: 20,
+                    right: 20,
+                    child: AppNavBar(
+                      currentIndex: index,
+                      onTap: (selectedIndex) {
+                        final target = _getPath(selectedIndex);
+                        if (target != location) context.go(target);
+                      },
+                    ),
+                  ),
+                ],
               ),
-              floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+              // Use centerFloat to place FAB above the floating nav bar
+              floatingActionButtonLocation: FloatingActionButtonLocation.centerTop,
               floatingActionButton: FutureBuilder<bool>(
                 future: _isSeller(),
                 builder: (context, snapshot) {
                   final isSeller = snapshot.data ?? false;
                   if (!isSeller) return const SizedBox.shrink();
-                  return FloatingActionButton(
-                    onPressed: () => context.go('/upload'),
-                    child: const Icon(Icons.add),
+                  // FAB floats above nav bar with extra bottom padding for visual harmony
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 300.0, bottom: 16.0),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => context.go('/upload'),
+                        borderRadius: BorderRadius.circular(24),
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(26),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.add,
+                            color: Colors.black87,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ),
                   );
                 },
               ),
@@ -68,19 +106,16 @@ class AppRouter {
             ),
             GoRoute(
               path: '/search',
-              builder: (context, state) => PlaceholderScreen(title: 'Search'),
+              builder: (context, state) => PlaceholderScreen(title: AppLocalizations.of(context)!.navBarSearch),
             ),
             GoRoute(
               path: '/saved',
-              builder: (context, state) => const PlaceholderScreen(title: 'Saved'),
+              builder: (context, state) => PlaceholderScreen(title: AppLocalizations.of(context)!.navBarFavorites),
             ),
-            GoRoute(
-              path: '/cart',
-              builder: (context, state) => const PlaceholderScreen(title: 'Cart'),
-            ),
+
             GoRoute(
               path: '/profile',
-              builder: (context, state) => const PlaceholderScreen(title: 'Profile'),
+              builder: (context, state) => PlaceholderScreen(title: AppLocalizations.of(context)!.navBarProfile),
             ),
           ],
         ),
@@ -96,10 +131,8 @@ class AppRouter {
         return 1;
       case '/saved':
         return 2;
-      case '/cart':
-        return 3;
       case '/profile':
-        return 4;
+        return 3;
       default:
         return 0;
     }
@@ -114,8 +147,6 @@ class AppRouter {
       case 2:
         return '/saved';
       case 3:
-        return '/cart';
-      case 4:
         return '/profile';
       default:
         return '/home';
@@ -144,7 +175,7 @@ class PlaceholderScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: Text('$title Screen')),
+      body: Center(child: Text(AppLocalizations.of(context)!.placeholderScreenTitle(title))),
     );
   }
 }

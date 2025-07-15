@@ -1,5 +1,5 @@
+import 'package:flutter/foundation.dart';
 import 'package:rivo_app_beta/core/utils/temp_file_utils.dart';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rivo_app_beta/features/post/domain/entities/media_file.dart';
@@ -83,7 +83,7 @@ class SelectedMediaPreview extends ConsumerWidget {
   }
 
   Widget _buildMediaThumbnail(MediaFile media) {
-    print('[Preview] bytes length: ${media.bytes.length}');
+        debugPrint('[Preview] bytes length: ${media.bytes.length}');
     if (media.type.toLowerCase().contains('video')) {
       return _VideoThumbnail(bytes: media.bytes);
     } else {

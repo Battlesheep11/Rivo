@@ -96,5 +96,21 @@
 "cameraPermissionTitle": "Camera permission required",
 "cameraPermissionMessage": "To take photos or videos, camera access is required. You can enable it from settings.",
 "galleryPermissionTitle": "Gallery permission required",
-"galleryPermissionMessage": "To pick media from your gallery, photo access is required. You can enable it from settings."
+"galleryPermissionMessage": "To pick media from your gallery, photo access is required. You can enable it from settings.",
+  "feedError": "Error: {error}",
+  "@feedError": {
+    "description": "Error message shown when the feed fails to load",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "retry": "Retry",
+  "noPostsAvailable": "No posts available",
+  "placeholderScreenTitle": "{title} Screen",
+  "navBarHome": "Home",
+  "navBarSearch": "Search",
+  "navBarFavorites": "Favorites",
+  "navBarProfile": "Profile"
 }

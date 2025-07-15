@@ -97,5 +97,22 @@
 "cameraPermissionTitle": "נדרשת הרשאה לצלם",
 "cameraPermissionMessage": "ללא הרשאה לצלם, לא תוכל להעלות תמונות או וידאו.",
 "galleryPermissionTitle": "נדרשת הרשאה לגלריה",
-"galleryPermissionMessage": "כדי לבחור תמונה מהגלריה, נדרשת הרשאה. אפשר לאפשר אותה דרך ההגדרות."
+"galleryPermissionMessage": "כדי לבחור תמונה מהגלריה, נדרשת הרשאה. אפשר לאפשר אותה דרך ההגדרות.",
+"feedError": "תקלה: {error}",
+  "@feedError": {
+    "description": "הודעת תקלה מוצגת כי הפיד נכשל בטעינתו",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "retry": "נסה בשנית",
+  "noPostsAvailable": "אין פוסטים זמינים",
+  "placeholderScreenTitle": "{title} מסך",
+  "navBarHome": "בית",
+  "navBarSearch": "חיפוש",
+  "navBarFavorites": "מועדפים",
+  "navBarProfile": "פרופיל"
 }
+

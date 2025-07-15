@@ -50,9 +50,11 @@ class _MediaRendererWidgetState extends State<MediaRendererWidget> {
       );
     }
 
-    return Stack(
-      children: [
-        Positioned.fill(child: mediaWidget),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Stack(
+        children: [
+          Positioned.fill(child: mediaWidget),
         if (widget.urls.length > 1)
           Positioned(
             bottom: 16,
@@ -78,7 +80,8 @@ class _MediaRendererWidgetState extends State<MediaRendererWidget> {
               }),
             ),
           ),
-      ],
+        ],
+      ),
     );
   }
 }

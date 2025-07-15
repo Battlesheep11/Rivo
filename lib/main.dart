@@ -1,9 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:device_preview/device_preview.dart';
 
 import 'app.dart';
 import 'package:rivo_app_beta/core/toast/toast_service.dart';
@@ -32,10 +30,7 @@ Future<void> main() async {
 
     runApp(
       ProviderScope(
-        child: DevicePreview(
-          enabled: !kReleaseMode, // רק במצבי פיתוח
-          builder: (context) => const App(),
-        ),
+        child: App(),
       ),
     );
   } catch (e) {
