@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'video_player_widget.dart';
 
 class MediaRendererWidget extends StatefulWidget {
@@ -30,23 +31,26 @@ class _MediaRendererWidgetState extends State<MediaRendererWidget> {
     if (_isVideo(currentUrl)) {
       mediaWidget = VideoPlayerWidget(url: currentUrl);
     } else {
-      mediaWidget = Container(
-        color: Colors.black12,
-        width: double.infinity,
-        height: double.infinity,
-        child: Image.network(
-          currentUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return const Center(child: Icon(Icons.broken_image));
-          },
-          loadingBuilder: (context, child, progress) {
-            if (progress == null) {
-              return child;
-            }
-            return const Center(child: CircularProgressIndicator());
-          },
+      // Use CachedNetworkImage for efficient image loading and caching
+      mediaWidget = CachedNetworkImage(
+        imageUrl: currentUrl,
+        // Cover the entire container while maintaining aspect ratio
+        fit: BoxFit.cover,
+        // Show loading indicator while image loads
+        placeholder: (context, url) => Container(
+          color: Colors.black12,
+          child: const Center(child: CircularProgressIndicator()),
         ),
+        // Show broken image icon if loading fails
+        errorWidget: (context, url, error) => Container(
+          color: Colors.black12,
+          child: const Center(child: Icon(Icons.broken_image)),
+        ),
+        // Enable disk caching for offline access
+        cacheKey: currentUrl,
+        // Quick fade transitions for smooth experience
+        fadeOutDuration: const Duration(milliseconds: 100),
+        fadeInDuration: const Duration(milliseconds: 100),
       );
     }
 

@@ -30,20 +30,11 @@ class AppNavBar extends ConsumerStatefulWidget {
 }
 
 class _AppNavBarState extends ConsumerState<AppNavBar> {
-  bool _isHolding = false;
-  double _dragPosition = 0.0;
+
 
   void _handleTap(int index) {
-    if (widget.currentIndex == index) {
-      setState(() {
-        _isHolding = false;
-      });
-      return;
-    }
+    if (widget.currentIndex == index) return;
     widget.onTap(index);
-    setState(() {
-      _isHolding = false;
-    });
   }
 
   @override
@@ -53,7 +44,6 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
     final navItems = [
       _NavItem(label: localizations.navBarHome, icon: Icons.home_outlined, activeIcon: Icons.home),
       _NavItem(label: localizations.navBarSearch, icon: Icons.search_outlined, activeIcon: Icons.search),
-
       _NavItem(label: localizations.navBarProfile, icon: Icons.person_outline, activeIcon: Icons.person),
     ];
 
@@ -81,7 +71,7 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
     return Align(
       alignment: Alignment.bottomLeft,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 18.0),
+        padding: const EdgeInsets.fromLTRB(0, 0, 80, 10),
         child: GestureDetector(
           onTap: () => ref.read(navBarVisibilityProvider.notifier).state = true,
           child: Material(
@@ -91,10 +81,10 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
             child: GlassContainer(
               height: 56,
               width: 56,
-              borderRadius: BorderRadius.circular(28),
-              blur: 25,
-              borderWidth: 0,
-              color: Colors.white.withAlpha(120),
+                borderRadius: BorderRadius.circular(28),
+                blur: 25,
+                borderWidth: 0,
+                color: Colors.white.withAlpha(120),
               borderGradient: LinearGradient(
                 colors: [Colors.white.withAlpha(60), Colors.white.withAlpha(20)],
                 begin: Alignment.topLeft,
@@ -102,7 +92,7 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
               ),
               child: Icon(
                 Icons.home,
-                color: theme.colorScheme.primary,
+                color: const Color(0xFF007AFF),
                 size: 32,
               ),
             ),
@@ -114,116 +104,34 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
 
   /// Builds the main nav bar UI with glass effect and animated indicator
   Widget _buildNavBar(BuildContext context, ThemeData theme, List<_NavItem> navItems) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final navBarWidth = constraints.maxWidth;
-        final buttonWidth = navBarWidth / navItems.length;
-
-        final double selectedPosition = widget.currentIndex * buttonWidth;
-
-        final double indicatorPosition = _isHolding
-            ? _dragPosition - (buttonWidth / 2)
-            : selectedPosition;
-
-        final clampedPosition = indicatorPosition.clamp(0.0, navBarWidth - buttonWidth);
-
-        return GestureDetector(
-          onHorizontalDragStart: (details) {
-            setState(() {
-              _isHolding = true;
-              _dragPosition = details.localPosition.dx;
-            });
-          },
-          onHorizontalDragUpdate: (details) {
-            setState(() {
-              _dragPosition = details.localPosition.dx;
-            });
-          },
-          onHorizontalDragEnd: (details) {
-            // Calculate the center position of each button
-            double minDistance = double.infinity;
-            int selectedIndex = widget.currentIndex; // Default to current index if no better match found
-            
-            for (int i = 0; i < navItems.length; i++) {
-              // Calculate the center x-coordinate of this button
-              final buttonCenter = (i * buttonWidth) + (buttonWidth / 2);
-              // Calculate distance from touch position to button center
-              final distance = (_dragPosition - buttonCenter).abs();
-              
-              // If this button is closer than any previous one, select it
-              if (distance < minDistance) {
-                minDistance = distance;
-                selectedIndex = i;
-              }
-            }
-            
-            // Clamp the index to be safe (shouldn't be needed but good practice)
-            selectedIndex = selectedIndex.clamp(0, navItems.length - 1);
-            
-            // Only trigger a change if we're selecting a different index
-            if (selectedIndex != widget.currentIndex) {
-              widget.onTap(selectedIndex);
-            }
-            
-            // Reset the holding state
-            setState(() {
-              _isHolding = false;
-            });
-          },
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              GlassContainer(
-                height: 70,
-                width: double.infinity,
-                borderRadius: BorderRadius.circular(50),
-                blur: 25,
-                borderWidth: 0,
-                color: Colors.white.withAlpha(75), // 30% opacity
-                borderGradient: LinearGradient(
-                  colors: [Colors.white.withAlpha(25), Colors.white.withAlpha(12)], // 10% and 5% opacity
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              AnimatedPositioned(
-                duration: _isHolding ? Duration.zero : const Duration(milliseconds: 120),
-                curve: Curves.easeOutQuad,
-                left: clampedPosition,  // Always use left positioning
-                width: buttonWidth,
-                height: 70,
-                child: Container(
-                  margin: const EdgeInsets.all(5.0),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(50),
-                    color: Colors.white.withAlpha(50), // 20% opacity
-                    border: Border.all(
-                      color: Colors.white.withAlpha(75), // 30% opacity
-                      width: 1.5,
-                    ),
-                  ),
-                ),
-              ),
-              Directionality(
-                // Force LTR for the navigation items to maintain order
-                textDirection: TextDirection.ltr,
-                child: Row(
-                  children: List.generate(
-                    navItems.length,
-                    (index) => _buildNavButton(
-                      index,
-                      navItems[index].label,
-                      navItems[index].icon,
-                      navItems[index].activeIcon,
-                      theme,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+    return GlassContainer(
+      height: 70,
+      width: double.infinity,
+      borderRadius: BorderRadius.circular(50),
+      blur: 25,
+      borderWidth: 0,
+      color: Colors.white.withAlpha(75), // 30% opacity
+      borderGradient: LinearGradient(
+        colors: [Colors.white.withAlpha(25), Colors.white.withAlpha(12)], // 10% and 5% opacity
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      child: Directionality(
+        // Force LTR for the navigation items to maintain order
+        textDirection: TextDirection.ltr,
+        child: Row(
+          children: List.generate(
+            navItems.length,
+            (index) => _buildNavButton(
+              index,
+              navItems[index].label,
+              navItems[index].icon,
+              navItems[index].activeIcon,
+              theme,
+            ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 

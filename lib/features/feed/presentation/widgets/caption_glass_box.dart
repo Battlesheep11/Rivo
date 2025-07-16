@@ -120,6 +120,7 @@ class CaptionGlassBox extends StatelessWidget {
             height: height,
             blur: 6, // matches CSS blur(6px)
             frostedOpacity: 0.07,
+            borderWidth: 0,
             // Only round the bottom corners to mirror card style in mockup
             borderRadius: const BorderRadius.only(
               bottomLeft: Radius.circular(12),
@@ -132,15 +133,18 @@ class CaptionGlassBox extends StatelessWidget {
             height: double.infinity,
             width: double.infinity,
             decoration: BoxDecoration(
-              // Gradient copied from CSS `linear-gradient(transparent, rgba(0,0,0,0.1) 10%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,0.95))`
+              // More dramatic gradient with deeper contrast
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withAlpha(153), // 0.6 * 255 ≈ 153 alpha value
-                  Colors.black.withAlpha(102), // 0.4 * 255 ≈ 102 alpha value
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.1),   // 10% opacity at 10%
+                  Colors.black.withValues(alpha: 0.8),   // 80% opacity at 60%
+                  Colors.black.withValues(alpha: 0.95),  // 95% opacity at 100%
                 ],
-                stops: [0.0, 1.0],
+                stops: const [0.0, 0.1, 0.6, 1.0],
+                tileMode: TileMode.clamp,
               ),
             ),
           ),

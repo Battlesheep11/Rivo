@@ -219,7 +219,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               if (post.mediaUrls.isNotEmpty && post.mediaUrls.length > 1)
                 Positioned.fill(
                   child: ImageGallery(
-                    urls: post.mediaUrls,
+                    urls: post.mediaUrls.reversed.toList(),
                     onUserScroll: () {
                       // Set a flag to ignore nav bar logic during gallery scroll
                       _isGalleryScrolling = true;

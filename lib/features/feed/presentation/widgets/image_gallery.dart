@@ -23,14 +23,10 @@ class _ImageGalleryState extends State<ImageGallery> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
-    _pageController.addListener(() {
-      if (_pageController.page?.round() != _currentIndex) {
-        setState(() {
-          _currentIndex = _pageController.page!.round();
-        });
-      }
-    });
+    // Initialize the page controller with initialPage: 0 to ensure it starts at the first image
+    _pageController = PageController(initialPage: 0);
+    _currentIndex = 0; // Explicitly set initial index to 0
+
   }
 
   @override
@@ -63,6 +59,8 @@ class _ImageGalleryState extends State<ImageGallery> {
               controller: _pageController,
               itemCount: widget.urls.length,
               physics: const PageScrollPhysics(), // No animation on load, normal scroll
+              scrollDirection: Axis.horizontal,
+              pageSnapping: true,
               onPageChanged: (i) => setState(() => _currentIndex = i),
               itemBuilder: (context, i) => MediaRendererWidget(urls: [widget.urls[i]]),
             ),

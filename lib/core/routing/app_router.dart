@@ -8,15 +8,36 @@ import 'package:rivo_app_beta/features/auth/presentation/screens/auth_screen.dar
 import 'package:rivo_app_beta/features/auth/presentation/screens/auth_redirector_screen.dart';
 import 'package:rivo_app_beta/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:rivo_app_beta/features/post/presentation/screens/post_upload_screen.dart';
+import 'package:rivo_app_beta/features/auth/presentation/providers/auth_session_provider.dart';
 import 'package:rivo_app_beta/features/feed/presentation/screens/feed_screen.dart';
+import 'package:rivo_app_beta/features/profile/presentation/screens/profile_screen.dart';
 import 'package:rivo_app_beta/core/widgets/app_nav_bar.dart';
 
 
 
 class AppRouter {
   static GoRouter createRouter(WidgetRef ref) {
+    final authState = ref.watch(authSessionProvider);
+
     return GoRouter(
-      initialLocation: '/auth', 
+      initialLocation: '/redirect',
+      redirect: (context, state) {
+        // If the user is not logged in, they are redirected to the /auth screen
+        final loggedIn = authState.asData?.value != null;
+        final loggingIn = state.matchedLocation == '/auth';
+
+        if (!loggedIn) {
+          return '/auth';
+        }
+
+        // if the user is logged in but still on the login page, send them to
+        // the home page
+        if (loggingIn) {
+          return '/home';
+        }
+
+        return null;
+      },
       routes: [
         GoRoute(
           path: '/auth',
@@ -113,9 +134,9 @@ class AppRouter {
             ),
 
 
-            GoRoute(
+                        GoRoute(
               path: '/profile',
-              builder: (context, state) => PlaceholderScreen(title: AppLocalizations.of(context)!.navBarProfile),
+              builder: (context, state) => const ProfileScreen(),
             ),
           ],
         ),

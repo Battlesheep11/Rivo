@@ -2,71 +2,62 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AuthRedirectorScreen extends ConsumerStatefulWidget {
+
+import 'package:rivo_app_beta/features/auth/presentation/providers/auth_session_provider.dart';
+import 'package:rivo_app_beta/features/auth/presentation/providers/user_tags_provider.dart';
+
+class AuthRedirectorScreen extends ConsumerWidget {
   const AuthRedirectorScreen({super.key});
 
   @override
-  ConsumerState<AuthRedirectorScreen> createState() => _AuthRedirectorScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authSessionProvider);
 
-class _AuthRedirectorScreenState extends ConsumerState<AuthRedirectorScreen> {
-  @override
-  void initState() {
-    super.initState();
+    return authState.when(
+      data: (user) {
+        if (user == null) {
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            context.go('/auth');
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      Future.microtask(() async {
-        await _handleRedirect();
-      });
-    });
-  }
-
-  Future<void> _handleRedirect() async {
-  final user = Supabase.instance.client.auth.currentUser;
-
-  debugPrint('[AuthRedirector] Current user: ${user?.id}');
-
-  if (user == null) {
-    debugPrint('[AuthRedirector] No user found – redirecting to /auth');
-    if (mounted) context.go('/auth');
-    return;
-  }
-
-  try {
-    final userTagRows = await Supabase.instance.client
-        .from('user_tags')
-        .select('tag_id')
-        .eq('user_id', user.id);
-
-
-    final hasTags = userTagRows.isNotEmpty;
-    
-
-    if (!mounted) return;
-
-    if (hasTags) {
-      
-      context.go('/home');
-    } else {
-      
-      context.go('/onboarding');
-    }
-  } catch (e) {
-    
-
-    if (!mounted) return;
-    context.go('/onboarding'); // fallback
-  }
-}
-
-
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
+        final hasTagsProvider = ref.watch(userHasTagsProvider);
+        return hasTagsProvider.when(
+          data: (hasTags) {
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              if (hasTags) {
+                context.go('/home');
+              } else {
+                context.go('/onboarding');
+              }
+            });
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          },
+          loading: () => const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          ),
+          error: (err, stack) => const Scaffold(
+            body: Center(child: Text('Error checking user tags')),
+          ),
+        );
+      },
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stackTrace) {
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          context.go('/auth');
+        });
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      },
     );
   }
 }
