@@ -78,6 +78,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final viewModel = ref.read(feedViewModelProvider.notifier);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
       extendBody: true,
       appBar: AppBar(
         title: Align(
@@ -185,7 +186,27 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         widget.onGlassBoxToggled?.call();
         
       },
-      child: Padding(
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.black.withAlpha(13), width: 1), // 0.05 * 255 ≈ 13 alpha value
+          boxShadow: [
+            // Primary shadow (0 10px 25px -5px rgba(0,0,0,0.1))
+            BoxShadow(
+              color: Colors.black.withAlpha(26), // 0.1 * 255 ≈ 26 alpha value
+              blurRadius: 25,
+              offset: const Offset(0, 10),
+            ),
+            // Secondary shadow (0 8px 10px -6px rgba(0,0,0,0.1))
+            BoxShadow(
+              color: Colors.black.withAlpha(26), // 0.1 * 255 ≈ 26 alpha value
+              blurRadius: 10,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
         // Padding for the entire post card.
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
         child: ClipRRect(

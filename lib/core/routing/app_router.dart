@@ -47,12 +47,15 @@ class AppRouter {
                     bottom: 20,
                     left: 20,
                     right: 20,
-                    child: AppNavBar(
+                    child: FractionallySizedBox(
+                      widthFactor: 0.75,
+                      child: AppNavBar(
                       currentIndex: index,
                       onTap: (selectedIndex) {
                         final target = _getPath(selectedIndex);
                         if (target != location) context.go(target);
                       },
+                    ),
                     ),
                   ),
                 ],
@@ -108,10 +111,7 @@ class AppRouter {
               path: '/search',
               builder: (context, state) => PlaceholderScreen(title: AppLocalizations.of(context)!.navBarSearch),
             ),
-            GoRoute(
-              path: '/saved',
-              builder: (context, state) => PlaceholderScreen(title: AppLocalizations.of(context)!.navBarFavorites),
-            ),
+
 
             GoRoute(
               path: '/profile',
@@ -129,10 +129,9 @@ class AppRouter {
         return 0;
       case '/search':
         return 1;
-      case '/saved':
-        return 2;
+
       case '/profile':
-        return 3;
+        return 2;
       default:
         return 0;
     }
@@ -144,9 +143,8 @@ class AppRouter {
         return '/home';
       case 1:
         return '/search';
+
       case 2:
-        return '/saved';
-      case 3:
         return '/profile';
       default:
         return '/home';

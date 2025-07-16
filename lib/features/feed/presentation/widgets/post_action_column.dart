@@ -23,14 +23,14 @@ class PostActionColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(bottom: 150),
+      padding: const EdgeInsets.only(bottom: 80),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Like button: uses red icon if liked, otherwise default ActionGlassButton color
           ActionGlassButton(
             icon: isLikedByMe ? Icons.favorite : Icons.favorite_border,
-            iconColor: isLikedByMe ? Colors.red : Colors.black87,
+            iconColor: isLikedByMe ? Colors.red : Colors.white,
             backgroundColor: Colors.white, // matches ActionGlassButton default
             count: likeCount,
             onPressed: onLike,
@@ -39,7 +39,7 @@ class PostActionColumn extends StatelessWidget {
           const SizedBox(height: 12),
           
           // Comment button: uses ActionGlassButton defaults
-          // TODO: Replace with actual comment count from post data when available
+          // TODO(comments): Implement comment count functionality - currently using placeholder value of 0
           ActionGlassButton(
             icon: Icons.comment_bank_outlined,
             onPressed: onComment,

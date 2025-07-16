@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui'; // For ImageFilter
 
 /// A circular solid white action button with icon and optional count.
 class ActionGlassButton extends StatelessWidget {
@@ -12,31 +13,30 @@ class ActionGlassButton extends StatelessWidget {
     super.key,
     required this.icon,
     this.count,
-    this.iconColor = Colors.black87,
+    this.iconColor = Colors.white,
     this.backgroundColor = Colors.white,
     required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Reverted to a simpler button style to fix theming issues.
+    // Re-introducing glass effect as requested.
     return GestureDetector(
       onTap: onPressed,
-      child: Container(
-        height: 48,
-        width: 48,
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha((255 * 0.1).round()),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24.0), // Half of width/height to make it circular
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              // Semi-transparent white for the glass effect
+              color: Colors.white.withAlpha(51), // 0.2 * 255 ≈ 51 alpha value
+              shape: BoxShape.circle,
             ),
-          ],
-        ),
-        child: Column(
+            child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: iconColor, size: 24),
@@ -46,15 +46,17 @@ class ActionGlassButton extends StatelessWidget {
                 child: Text(
                   _formatCount(count!),
                   style: TextStyle(
-                    color: iconColor.withAlpha((255 * 0.8).round()),
+                    color: iconColor.withAlpha(51), // 80% opacity of the original color
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
           ],
-        ),
-      ),
+        ), // Close Column
+          ), // Close Container
+        ), // Close BackdropFilter
+      ), // Close ClipRRect
     );
   }
 

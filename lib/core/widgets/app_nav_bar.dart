@@ -53,7 +53,7 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
     final navItems = [
       _NavItem(label: localizations.navBarHome, icon: Icons.home_outlined, activeIcon: Icons.home),
       _NavItem(label: localizations.navBarSearch, icon: Icons.search_outlined, activeIcon: Icons.search),
-      _NavItem(label: localizations.navBarFavorites, icon: Icons.favorite_border, activeIcon: Icons.favorite),
+
       _NavItem(label: localizations.navBarProfile, icon: Icons.person_outline, activeIcon: Icons.person),
     ];
 
@@ -231,7 +231,7 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
   /// Builds a single navigation button with icon and label
   Widget _buildNavButton(int index, String label, IconData icon, IconData activeIcon, ThemeData theme) {
     final bool isActive = widget.currentIndex == index;
-    final activeColor = theme.colorScheme.primary;
+    final activeColor = const Color(0xFF007AFF);
     final inactiveColor = theme.textTheme.bodyLarge?.color?.withAlpha((255 * 0.7).round()) ?? Colors.black54;
 
     return Expanded(

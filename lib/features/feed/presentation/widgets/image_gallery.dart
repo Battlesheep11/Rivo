@@ -24,6 +24,13 @@ class _ImageGalleryState extends State<ImageGallery> {
   void initState() {
     super.initState();
     _pageController = PageController();
+    _pageController.addListener(() {
+      if (_pageController.page?.round() != _currentIndex) {
+        setState(() {
+          _currentIndex = _pageController.page!.round();
+        });
+      }
+    });
   }
 
   @override

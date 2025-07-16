@@ -46,19 +46,28 @@ class CaptionGlassBox extends StatelessWidget {
         ),
         const SizedBox(height: 5),
         if (caption != null && caption!.isNotEmpty)
+          // Constrain caption width to leave room for action buttons (CSS: max-width: calc(100% - 70px))
           Align(
             alignment: Alignment.centerLeft,
-            child: Text(
-              caption!,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 50),
+              child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width - 70,
               ),
-              textAlign: TextAlign.left,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
+              child: Text(
+                caption!,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.start,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
+        ),
       ],
     );
 
@@ -80,16 +89,24 @@ class CaptionGlassBox extends StatelessWidget {
           ),
         ),
         if (caption != null && caption!.isNotEmpty)
-          Text(
-            caption!,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
+          Padding(
+            padding: const EdgeInsets.only(right: 50),
+            child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width - 70,
             ),
-            textAlign: TextAlign.right,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
+            child: Text(
+              caption!,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.right,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
+        ),
       ],
     );
 
@@ -98,32 +115,38 @@ class CaptionGlassBox extends StatelessWidget {
       width: double.infinity,
       child: Stack(
         children: [
+          // Background glass effect mimicking CSS `backdrop-filter: blur(6px)`
           GlassContainer.frostedGlass(
             height: height,
-            blur: 5,
-            frostedOpacity: 0.05,
-            borderRadius: BorderRadius.circular(20),
-            padding: const EdgeInsets.all(0),
+            blur: 6, // matches CSS blur(6px)
+            frostedOpacity: 0.07,
+            // Only round the bottom corners to mirror card style in mockup
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(12),
+              bottomRight: Radius.circular(12),
+            ),
+            padding: EdgeInsets.zero,
             child: const SizedBox.shrink(),
           ),
           Container(
             height: double.infinity,
             width: double.infinity,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
+              // Gradient copied from CSS `linear-gradient(transparent, rgba(0,0,0,0.1) 10%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,0.95))`
               gradient: LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
                 colors: [
-                  Color.fromARGB(120, 0, 0, 0),
-                  Color.fromARGB(40, 0, 0, 0),
-                  Colors.transparent,
+                  Colors.black.withAlpha(153), // 0.6 * 255 ≈ 153 alpha value
+                  Colors.black.withAlpha(102), // 0.4 * 255 ≈ 102 alpha value
                 ],
-                stops: [0.0, 0.65, 1.0],
+                stops: [0.0, 1.0],
               ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(15),
+            // CSS padding: 24px 20px 20px (top, horizontal, bottom)
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
             child: SizedBox(
               width: double.infinity,
               child: isRtl ? rtlLayout : ltrLayout,
