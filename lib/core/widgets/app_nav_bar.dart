@@ -48,30 +48,30 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
     ];
 
     final isVisible = ref.watch(navBarVisibilityProvider);
-    final theme = Theme.of(context);
 
     // Use SafeArea to avoid system UI overlap
-    return SafeArea(
-      bottom: true,
-      child: AnimatedSwitcher(
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: SafeArea(
+        bottom: true,
+        child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         switchInCurve: Curves.easeOutCubic,
         switchOutCurve: Curves.easeInCubic,
-        child: isVisible
-            ? _buildNavBar(context, theme, navItems)
-            : _buildMinimizedIcon(context),
+          child: isVisible
+              ? _buildNavBar(context, Theme.of(context), navItems)
+              : _buildMinimizedIcon(context),
+        ),
       ),
     );
   }
 
   /// Builds the minimized floating home icon
   Widget _buildMinimizedIcon(BuildContext context) {
-    final theme = Theme.of(context);
-    // Move minimized icon to bottom left
     return Align(
       alignment: Alignment.bottomLeft,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(0, 0, 80, 10),
+        padding: const EdgeInsets.only(left: 25, bottom: 20),
         child: GestureDetector(
           onTap: () => ref.read(navBarVisibilityProvider.notifier).state = true,
           child: Material(
@@ -81,10 +81,10 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
             child: GlassContainer(
               height: 56,
               width: 56,
-                borderRadius: BorderRadius.circular(28),
-                blur: 25,
-                borderWidth: 0,
-                color: Colors.white.withAlpha(120),
+              borderRadius: BorderRadius.circular(28),
+              blur: 25,
+              borderWidth: 0,
+              color: Colors.white.withAlpha(120),
               borderGradient: LinearGradient(
                 colors: [Colors.white.withAlpha(60), Colors.white.withAlpha(20)],
                 begin: Alignment.topLeft,
@@ -104,30 +104,33 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
 
   /// Builds the main nav bar UI with glass effect and animated indicator
   Widget _buildNavBar(BuildContext context, ThemeData theme, List<_NavItem> navItems) {
-    return GlassContainer(
-      height: 70,
-      width: double.infinity,
-      borderRadius: BorderRadius.circular(50),
-      blur: 25,
-      borderWidth: 0,
-      color: Colors.white.withAlpha(75), // 30% opacity
-      borderGradient: LinearGradient(
-        colors: [Colors.white.withAlpha(25), Colors.white.withAlpha(12)], // 10% and 5% opacity
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      child: Directionality(
-        // Force LTR for the navigation items to maintain order
-        textDirection: TextDirection.ltr,
-        child: Row(
-          children: List.generate(
-            navItems.length,
-            (index) => _buildNavButton(
-              index,
-              navItems[index].label,
-              navItems[index].icon,
-              navItems[index].activeIcon,
-              theme,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(50.0, 0, 50.0, 17.0),
+      child: GlassContainer(
+        height: 70,
+        width: double.infinity,
+        borderRadius: BorderRadius.circular(50),
+        blur: 25,
+        borderWidth: 0,
+        color: Colors.white.withAlpha(75), // 30% opacity
+        borderGradient: LinearGradient(
+          colors: [Colors.white.withAlpha(25), Colors.white.withAlpha(12)], // 10% and 5% opacity
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        child: Directionality(
+          // Force LTR for the navigation items to maintain order
+          textDirection: TextDirection.ltr,
+          child: Row(
+            children: List.generate(
+              navItems.length,
+              (index) => _buildNavButton(
+                index,
+                navItems[index].label,
+                navItems[index].icon,
+                navItems[index].activeIcon,
+                theme,
+              ),
             ),
           ),
         ),

@@ -64,20 +64,12 @@ class AppRouter {
               body: Stack(
                 children: [
                   child,
-                  Positioned(
-                    bottom: 20,
-                    left: 20,
-                    right: 20,
-                    child: FractionallySizedBox(
-                      widthFactor: 0.75,
-                      child: AppNavBar(
-                      currentIndex: index,
-                      onTap: (selectedIndex) {
-                        final target = _getPath(selectedIndex);
-                        if (target != location) context.go(target);
-                      },
-                    ),
-                    ),
+                  AppNavBar(
+                    currentIndex: index,
+                    onTap: (selectedIndex) {
+                      final target = _getPath(selectedIndex);
+                      if (target != location) context.go(target);
+                    },
                   ),
                 ],
               ),

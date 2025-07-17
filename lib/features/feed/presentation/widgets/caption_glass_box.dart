@@ -29,7 +29,7 @@ class CaptionGlassBox extends StatelessWidget {
     final isRtl = caption != null && _isRtl(caption!); 
 
     final ltrLayout = Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Align(
@@ -41,33 +41,34 @@ class CaptionGlassBox extends StatelessWidget {
               fontWeight: FontWeight.bold,
               fontSize: 18,
             ),
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.left,
+            textDirection: TextDirection.ltr,
           ),
         ),
         const SizedBox(height: 5),
         if (caption != null && caption!.isNotEmpty)
-          // Constrain caption width to leave room for action buttons (CSS: max-width: calc(100% - 70px))
           Align(
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: const EdgeInsets.only(right: 50),
               child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width - 70,
-              ),
-              child: Text(
-                caption!,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width - 70,
                 ),
-                textAlign: TextAlign.start,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
+                child: Text(
+                  caption!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.left,
+                  textDirection: TextDirection.ltr,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
           ),
-        ),
       ],
     );
 
@@ -75,7 +76,6 @@ class CaptionGlassBox extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,
       children: [
-                const SizedBox(height: 5),
         Align(
           alignment: Alignment.centerLeft,
           child: Text(
@@ -85,28 +85,33 @@ class CaptionGlassBox extends StatelessWidget {
               fontWeight: FontWeight.bold,
               fontSize: 18,
             ),
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
           ),
         ),
+        const SizedBox(height: 5),
         if (caption != null && caption!.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(right: 50),
-            child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width - 70,
-            ),
-            child: Text(
-              caption!,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
+          Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 50),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width - 70,
+                ),
+                child: Text(
+                  caption!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.right,
+                  textDirection: TextDirection.rtl,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              textAlign: TextAlign.right,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
-        ),
       ],
     );
 

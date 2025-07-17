@@ -10,11 +10,15 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<String, UserEntity>> signUp({
+    required String fullName,
+    required String username,
     required String email,
     required String password,
   }) async {
     try {
       final response = await remoteDataSource.signUp(
+        fullName: fullName,
+        username: username,
         email: email,
         password: password,
       );

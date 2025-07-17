@@ -20,7 +20,7 @@ class ProfileScreen extends ConsumerWidget {
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(
               onPressed: () {
@@ -28,7 +28,6 @@ class ProfileScreen extends ConsumerWidget {
               },
               child: const Text('Logout'),
             ),
-            const SizedBox(height: 40), // To keep it above the nav bar
           ],
         ),
       ),

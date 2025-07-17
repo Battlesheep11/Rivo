@@ -14,13 +14,19 @@ class AuthRemoteDataSource {
       });
     }
 
-  Future<AuthResponse> signUp({
+    Future<AuthResponse> signUp({
+    required String fullName,
+    required String username,
     required String email,
     required String password,
   }) async {
     final response = await client.auth.signUp(
       email: email,
       password: password,
+      data: {
+        'full_name': fullName,
+        'username': username,
+      },
     );
     return response;
   }

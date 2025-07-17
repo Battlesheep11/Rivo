@@ -4,12 +4,19 @@ import 'package:formz/formz.dart';
 import 'package:rivo_app_beta/core/loading/loading_overlay_provider.dart';
 import 'package:rivo_app_beta/core/toast/toast_service.dart';
 import 'package:rivo_app_beta/features/auth/domain/repositories/auth_repository.dart';
+import 'package:rivo_app_beta/features/auth/presentation/forms/confirmed_password.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/email.dart';
+import 'package:rivo_app_beta/features/auth/presentation/forms/full_name.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/password.dart';
+import 'package:rivo_app_beta/features/auth/presentation/forms/username.dart';
 
 class SignupFormState {
+  final FullName fullName;
+  final Username username;
   final Email email;
   final Password password;
+  final ConfirmedPassword confirmedPassword;
+    final bool isStep1Valid;
   final bool isValid;
   final bool isSubmitting;
   final bool isSuccess;
@@ -17,8 +24,12 @@ class SignupFormState {
   final String? errorMessage;
 
   SignupFormState({
+    this.fullName = const FullName.pure(),
+    this.username = const Username.pure(),
     this.email = const Email.pure(),
     this.password = const Password.pure(),
+    this.confirmedPassword = const ConfirmedPassword.pure(),
+        this.isStep1Valid = false,
     this.isValid = false,
     this.isSubmitting = false,
     this.isSuccess = false,
@@ -27,8 +38,12 @@ class SignupFormState {
   });
 
   SignupFormState copyWith({
+    FullName? fullName,
+    Username? username,
     Email? email,
     Password? password,
+        ConfirmedPassword? confirmedPassword,
+    bool? isStep1Valid,
     bool? isValid,
     bool? isSubmitting,
     bool? isSuccess,
@@ -36,8 +51,12 @@ class SignupFormState {
     String? errorMessage,
   }) {
     return SignupFormState(
+      fullName: fullName ?? this.fullName,
+      username: username ?? this.username,
       email: email ?? this.email,
       password: password ?? this.password,
+            confirmedPassword: confirmedPassword ?? this.confirmedPassword,
+      isStep1Valid: isStep1Valid ?? this.isStep1Valid,
       isValid: isValid ?? this.isValid,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       isSuccess: isSuccess ?? this.isSuccess,
@@ -58,21 +77,45 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
     required this.context,
   }) : super(SignupFormState());
 
+  void onFullNameChanged(String value) {
+    final fullName = FullName.dirty(value);
+        state = state.copyWith(
+      fullName: fullName,
+      isStep1Valid: Formz.validate([fullName, state.username, state.email]),
+    );
+  }
+
+  void onUsernameChanged(String value) {
+    final username = Username.dirty(value);
+        state = state.copyWith(
+      username: username,
+      isStep1Valid: Formz.validate([state.fullName, username, state.email]),
+    );
+  }
+
   void onEmailChanged(String value) {
     final email = Email.dirty(value);
-    final isValid = Formz.validate([email, state.password]);
-    state = state.copyWith(
+        state = state.copyWith(
       email: email,
-      isValid: isValid,
+      isStep1Valid: Formz.validate([state.fullName, state.username, email]),
     );
   }
 
   void onPasswordChanged(String value) {
     final password = Password.dirty(value);
-    final isValid = Formz.validate([state.email, password]);
-    state = state.copyWith(
+    final confirmedPassword = ConfirmedPassword.dirty(password: password.value, value: state.confirmedPassword.value);
+        state = state.copyWith(
       password: password,
-      isValid: isValid,
+      confirmedPassword: confirmedPassword,
+      isValid: Formz.validate([state.fullName, state.username, state.email, password, confirmedPassword]),
+    );
+  }
+
+  void onConfirmPasswordChanged(String value) {
+    final confirmedPassword = ConfirmedPassword.dirty(password: state.password.value, value: value);
+    state = state.copyWith(
+      confirmedPassword: confirmedPassword,
+      isValid: Formz.validate([state.fullName, state.username, state.email, state.password, confirmedPassword]),
     );
   }
 
@@ -85,6 +128,8 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
     overlay.show(context);
 
     final result = await repository.signUp(
+      fullName: state.fullName.value,
+      username: state.username.value,
       email: state.email.value,
       password: state.password.value,
     );

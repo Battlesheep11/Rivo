@@ -8,6 +8,7 @@ import '../widgets/image_gallery.dart';
 import '../widgets/caption_glass_box.dart';
 import '../widgets/post_action_column.dart';
 import 'package:rivo_app_beta/core/presentation/providers/nav_bar_provider.dart';
+import 'custom_page_scroll_physics.dart';
 
 
 
@@ -154,6 +155,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           scrollDirection: Axis.vertical,
           itemCount: state.posts?.length ?? 0,
           controller: _pageController,
+          // Use custom physics to reduce the required scroll distance for page change
+          physics: const CustomPageScrollPhysics(),
           itemBuilder: (context, index) {
             return _buildPostItem(state.posts![index], context);
           },
