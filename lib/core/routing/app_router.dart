@@ -12,6 +12,8 @@ import 'package:rivo_app_beta/features/auth/presentation/providers/auth_session_
 import 'package:rivo_app_beta/features/feed/presentation/screens/feed_screen.dart';
 import 'package:rivo_app_beta/features/profile/presentation/screens/profile_screen.dart';
 import 'package:rivo_app_beta/core/widgets/app_nav_bar.dart';
+import 'package:rivo_app_beta/features/discovery/presentation/screens/discovery_screen.dart';
+
 
 
 
@@ -122,7 +124,7 @@ class AppRouter {
             ),
             GoRoute(
               path: '/search',
-              builder: (context, state) => PlaceholderScreen(title: AppLocalizations.of(context)!.navBarSearch),
+              builder: (context, state) => const DiscoveryScreen(),
             ),
 
 
