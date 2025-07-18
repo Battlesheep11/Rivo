@@ -18,6 +18,30 @@ class FeedRemoteDataSource {
   FeedRemoteDataSource({required SupabaseClient client}) : _client = client;
 
 
+
+  Future<List<FeedPostEntity>> getPostsByCreator(String userId) async {
+  final res = await _client
+      .from('feed_post')
+      .select('*, product(*, media(*))') 
+      .eq('creator_id', userId)
+      .order('created_at', ascending: false);
+
+  return (res as List).map((item) => FeedPostEntity.fromMap(item)).toList();
+}
+
+Future<List<FeedPostEntity>> getPostsByIds(List<String> postIds) async {
+  if (postIds.isEmpty) return [];
+
+  final res = await _client
+      .from('feed_post')
+      .select('*, product(*, media(*))') 
+      .inFilter('id', postIds)
+      .order('created_at', ascending: false);
+
+  return (res as List).map((item) => FeedPostEntity.fromMap(item)).toList();
+}
+
+
   
   /// Likes a post on behalf of the current user.
   /// 

@@ -119,4 +119,33 @@ class FeedPostEntity extends Equatable {
         mediaUrls,
         tags,
       ];
+
+      factory FeedPostEntity.fromMap(Map<String, dynamic> json) {
+  final product = json['product'] as Map<String, dynamic>? ?? {};
+  final productMediaList = (product['media'] as List<dynamic>? ?? [])
+      .cast<Map<String, dynamic>>();
+
+  final productMediaUrls = productMediaList
+      .map((m) => m['media_url'] as String?)
+      .whereType<String>()
+      .toList();
+
+  return FeedPostEntity(
+    id: json['id'] as String,
+    createdAt: DateTime.parse(json['created_at']),
+    likeCount: (json['like_count'] ?? 0) as int,
+    creatorId: json['creator_id'] as String,
+    caption: json['caption'] as String?,
+    productId: json['product_id'] as String,
+    username: json['creator']?['username'] ?? 'Unknown',
+    avatarUrl: json['creator']?['avatar_url'],
+    productTitle: product['title'] ?? '',
+    productDescription: product['description'],
+    productPrice: (product['price'] ?? 0).toDouble(),
+    mediaUrls: productMediaUrls,
+    tags: [],
+    isLikedByMe: false,
+  );
+}
+
 }

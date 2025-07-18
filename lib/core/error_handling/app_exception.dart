@@ -43,6 +43,30 @@ class AppException with EquatableMixin implements Exception {
     );
   }
 
+  factory AppException.notFound(String message, {String? code, StackTrace? stackTrace}) {
+    return NotFoundException(
+      message: message,
+      code: code ?? 'not_found',
+      stackTrace: stackTrace,
+    );
+  }
+
+  factory AppException.forbidden(String message, {String? code, StackTrace? stackTrace}) {
+    return ForbiddenException(
+      message: message,
+      code: code ?? 'forbidden',
+      stackTrace: stackTrace,
+    );
+  }
+
+  factory AppException.conflict(String message, {String? code, StackTrace? stackTrace}) {
+    return ConflictException(
+      message: message,
+      code: code ?? 'conflict',
+      stackTrace: stackTrace,
+    );
+  }
+
   @override
   String toString() => 'AppException: $message${code != null ? ' (code: $code)' : ''}';
 
@@ -50,7 +74,10 @@ class AppException with EquatableMixin implements Exception {
   List<Object?> get props => [message, code];
 }
 
-// Updated subclasses using super parameters
+// -----------------------------
+// Updated subclasses
+// -----------------------------
+
 class NetworkException extends AppException {
   const NetworkException({
     required super.message,
@@ -79,6 +106,30 @@ class UnauthorizedException extends AppException {
   const UnauthorizedException({
     required super.message,
     super.code = 'unauthorized',
+    super.stackTrace,
+  });
+}
+
+class NotFoundException extends AppException {
+  const NotFoundException({
+    required super.message,
+    super.code = 'not_found',
+    super.stackTrace,
+  });
+}
+
+class ForbiddenException extends AppException {
+  const ForbiddenException({
+    required super.message,
+    super.code = 'forbidden',
+    super.stackTrace,
+  });
+}
+
+class ConflictException extends AppException {
+  const ConflictException({
+    required super.message,
+    super.code = 'conflict',
     super.stackTrace,
   });
 }
