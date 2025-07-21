@@ -4,7 +4,9 @@ import '../locale_provider.dart';
 import '../supported_locales.dart';
 
 class LanguageSelector extends ConsumerWidget {
-  const LanguageSelector({super.key});
+  final ValueChanged<Locale>? onChanged;
+
+  const LanguageSelector({super.key, this.onChanged});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,6 +46,7 @@ class LanguageSelector extends ConsumerWidget {
           onChanged: (Locale? newLocale) {
             if (newLocale != null) {
               ref.read(localeProvider.notifier).setLocale(newLocale);
+              onChanged?.call(newLocale);
             }
           },
           items: SupportedLocales.locales.map((localeItem) {

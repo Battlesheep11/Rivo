@@ -51,13 +51,20 @@ class AuthRemoteDataSource {
   }
 
 
-Future<void> signInWithGoogle() async {
-  await client.auth.signInWithOAuth(
-    OAuthProvider.google,
-    redirectTo: 'com.example.rivo_app_beta://login-callback',
-  );
-}
+  Future<void> signInWithGoogle() async {
+    await client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: 'com.example.rivo_app_beta://login-callback',
+    );
+  }
 
+  Future<bool> checkUsername(String username) async {
+    final response = await client.from('profiles').select('id').eq('username', username);
+    return response.isNotEmpty;
+  }
 
-
+  Future<bool> checkEmail(String email) async {
+    final response = await client.from('profiles').select('id').eq('email', email);
+    return response.isNotEmpty;
+  }
 }

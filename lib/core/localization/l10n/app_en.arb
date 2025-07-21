@@ -30,6 +30,7 @@
   "authSignInLink": "Sign In",
   "continueWithGoogleText": "Continue with Google",
   "logoText": "RIVO",
+  "authInvalidCredentials": "Email\\Password are incorrect or nonexistant. please try again.",
   "uploadRequiredFieldsMissing": "Please complete all required fields.",
   "uploadUnexpectedError": "Something went wrong. Please try again.",
   "uploadPost": "Upload Post",

@@ -16,12 +16,14 @@ class SignupFormState {
   final Email email;
   final Password password;
   final ConfirmedPassword confirmedPassword;
-    final bool isStep1Valid;
+  final bool isStep1Valid;
   final bool isValid;
   final bool isSubmitting;
   final bool isSuccess;
   final bool isFailure;
   final String? errorMessage;
+  final bool isUsernameTaken;
+  final bool isEmailTaken;
 
   SignupFormState({
     this.fullName = const FullName.pure(),
@@ -29,39 +31,45 @@ class SignupFormState {
     this.email = const Email.pure(),
     this.password = const Password.pure(),
     this.confirmedPassword = const ConfirmedPassword.pure(),
-        this.isStep1Valid = false,
+    this.isStep1Valid = false,
     this.isValid = false,
     this.isSubmitting = false,
     this.isSuccess = false,
     this.isFailure = false,
     this.errorMessage,
+    this.isUsernameTaken = false,
+    this.isEmailTaken = false,
   });
 
-  SignupFormState copyWith({
+    SignupFormState copyWith({
     FullName? fullName,
     Username? username,
     Email? email,
     Password? password,
-        ConfirmedPassword? confirmedPassword,
+    ConfirmedPassword? confirmedPassword,
     bool? isStep1Valid,
     bool? isValid,
     bool? isSubmitting,
     bool? isSuccess,
     bool? isFailure,
     String? errorMessage,
+    bool? isUsernameTaken,
+    bool? isEmailTaken,
   }) {
     return SignupFormState(
       fullName: fullName ?? this.fullName,
       username: username ?? this.username,
       email: email ?? this.email,
       password: password ?? this.password,
-            confirmedPassword: confirmedPassword ?? this.confirmedPassword,
+      confirmedPassword: confirmedPassword ?? this.confirmedPassword,
       isStep1Valid: isStep1Valid ?? this.isStep1Valid,
       isValid: isValid ?? this.isValid,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       isSuccess: isSuccess ?? this.isSuccess,
       isFailure: isFailure ?? this.isFailure,
       errorMessage: errorMessage ?? this.errorMessage,
+      isUsernameTaken: isUsernameTaken ?? this.isUsernameTaken,
+      isEmailTaken: isEmailTaken ?? this.isEmailTaken,
     );
   }
 }
@@ -69,12 +77,10 @@ class SignupFormState {
 class SignupFormViewModel extends StateNotifier<SignupFormState> {
   final AuthRepository repository;
   final Ref ref;
-  final BuildContext context;
 
   SignupFormViewModel({
     required this.repository,
     required this.ref,
-    required this.context,
   }) : super(SignupFormState());
 
   void onFullNameChanged(String value) {
@@ -85,19 +91,21 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
     );
   }
 
-  void onUsernameChanged(String value) {
+    void onUsernameChanged(String value) {
     final username = Username.dirty(value);
-        state = state.copyWith(
+    state = state.copyWith(
       username: username,
       isStep1Valid: Formz.validate([state.fullName, username, state.email]),
+      isUsernameTaken: false,
     );
   }
 
-  void onEmailChanged(String value) {
+    void onEmailChanged(String value) {
     final email = Email.dirty(value);
-        state = state.copyWith(
+    state = state.copyWith(
       email: email,
       isStep1Valid: Formz.validate([state.fullName, state.username, email]),
+      isEmailTaken: false,
     );
   }
 
@@ -119,12 +127,39 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
     );
   }
 
-  Future<bool> submit() async {
-    if (!state.isValid) return false;
+    Future<void> checkUsername() async {
+    final result = await repository.checkUsername(state.username.value);
+    result.fold(
+      (failure) => null,
+      (isTaken) => state = state.copyWith(isUsernameTaken: isTaken),
+    );
+  }
+
+  Future<void> checkEmail() async {
+    final result = await repository.checkEmail(state.email.value);
+    result.fold(
+      (failure) => null,
+      (isTaken) => state = state.copyWith(isEmailTaken: isTaken),
+    );
+  }
+
+    Future<bool> submit(BuildContext context) async {
+    await checkUsername();
+    await checkEmail();
+
+    if (!state.isValid || state.isUsernameTaken || state.isEmailTaken) {
+      if (state.isUsernameTaken) {
+        state = state.copyWith(errorMessage: 'Username is already taken.');
+      } else if (state.isEmailTaken) {
+        state = state.copyWith(errorMessage: 'Email is already in use.');
+      }
+      return false;
+    }
 
     final overlay = ref.read(loadingOverlayProvider);
     state = state.copyWith(isSubmitting: true, isFailure: false, isSuccess: false);
 
+    if (!context.mounted) return false;
     overlay.show(context);
 
     final result = await repository.signUp(
@@ -134,7 +169,9 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
       password: state.password.value,
     );
 
-    overlay.hide();
+    if (context.mounted) {
+      overlay.hide();
+    }
 
     bool success = false;
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
-import 'package:rivo_app_beta/core/loading/loading_overlay_provider.dart';
+import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/core/toast/toast_service.dart';
 import 'package:rivo_app_beta/features/auth/domain/repositories/auth_repository.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/email.dart';
@@ -50,12 +50,11 @@ class SigninFormState {
 class SigninFormViewModel extends StateNotifier<SigninFormState> {
   final AuthRepository repository;
   final Ref ref;
-  final BuildContext context;
 
+  /// ViewModel no longer stores BuildContext; context is only passed to submit().
   SigninFormViewModel({
     required this.repository,
     required this.ref,
-    required this.context,
   }) : super(SigninFormState());
 
   void onEmailChanged(String value) {
@@ -76,36 +75,33 @@ class SigninFormViewModel extends StateNotifier<SigninFormState> {
     );
   }
 
-  Future<bool> submit() async {
-    if (!state.isValid) return false;
+  Future<void> submit(BuildContext context) async {
+    if (!state.isValid || state.isSubmitting) return;
 
-    final overlay = ref.read(loadingOverlayProvider);
     state = state.copyWith(isSubmitting: true, isFailure: false, isSuccess: false);
-
-    overlay.show(context);
 
     final result = await repository.signIn(
       email: state.email.value,
       password: state.password.value,
     );
 
-    overlay.hide();
-
-    bool success = false;
-
     result.fold(
       (failure) {
-        state = state.copyWith(isSubmitting: false, isFailure: true, errorMessage: failure);
-        ToastService().showError(failure);
-        success = false;
+        final userError = AppLocalizations.of(context)!.authInvalidCredentials;
+        state = state.copyWith(isSubmitting: false, isFailure: true, errorMessage: userError);
+        ToastService().showError(userError); // A toast is fine for transient errors
       },
       (user) {
         state = state.copyWith(isSubmitting: false, isSuccess: true);
-        ToastService().showSuccess("Success");
-        success = true;
+        // Navigation will be handled by ref.listen in the UI
       },
     );
+  }
 
-    return success;
+  /// Clears the current error message from the state.
+  void clearError() {
+    if (state.isFailure) {
+      state = state.copyWith(isFailure: false, errorMessage: null);
+    }
   }
 }

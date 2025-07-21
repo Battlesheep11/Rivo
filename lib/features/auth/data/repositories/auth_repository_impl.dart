@@ -89,8 +89,27 @@ class AuthRepositoryImpl implements AuthRepository {
 
 
 @override
-  Future<void> signInWithGoogle() async {
+    Future<void> signInWithGoogle() async {
     await remoteDataSource.signInWithGoogle();
   }
 
+  @override
+  Future<Either<String, bool>> checkUsername(String username) async {
+    try {
+      final isTaken = await remoteDataSource.checkUsername(username);
+      return right(isTaken);
+    } catch (e) {
+      return left(e.toString());
+    }
+  }
+
+  @override
+  Future<Either<String, bool>> checkEmail(String email) async {
+    try {
+      final isTaken = await remoteDataSource.checkEmail(email);
+      return right(isTaken);
+    } catch (e) {
+      return left(e.toString());
+    }
+  }
 }

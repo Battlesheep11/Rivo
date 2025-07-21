@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Added for orientation lock
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,6 +12,11 @@ final GlobalKey<ScaffoldMessengerState> messengerKey = GlobalKey<ScaffoldMesseng
 Future<void> main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
+
+    // Force portrait mode only
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
 
     await dotenv.load(fileName: ".env");
 

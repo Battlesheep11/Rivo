@@ -31,6 +31,7 @@
   "authSignInLink": "התחבר",
   "continueWithGoogleText": "המשך עם Google",
   "logoText": "ריבו",
+  "authInvalidCredentials": "האימייל או הסיסמה שגויים או לא קיימים. נסה שוב.",
   "uploadRequiredFieldsMissing": "אנא מלאו את כל השדות החיוניים.",
   "uploadUnexpectedError": "אירעה שגיאה. נסו שוב.",
   "uploadPost": "העלה פוסט",

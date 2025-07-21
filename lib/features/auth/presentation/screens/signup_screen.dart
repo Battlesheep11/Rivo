@@ -11,26 +11,40 @@ class SignupScreen extends ConsumerStatefulWidget {
 }
 
 class _SignupScreenState extends ConsumerState<SignupScreen> {
+    final fullNameController = TextEditingController();
+  final usernameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+        fullNameController.addListener(_onFullNameChanged);
+    usernameController.addListener(_onUsernameChanged);
     emailController.addListener(_onEmailChanged);
     passwordController.addListener(_onPasswordChanged);
   }
 
+      void _onFullNameChanged() {
+    ref.read(signupFormViewModelProvider.notifier).onFullNameChanged(fullNameController.text);
+  }
+
+  void _onUsernameChanged() {
+    ref.read(signupFormViewModelProvider.notifier).onUsernameChanged(usernameController.text);
+  }
+
   void _onEmailChanged() {
-    ref.read(signupFormViewModelProvider(context).notifier).onEmailChanged(emailController.text);
+    ref.read(signupFormViewModelProvider.notifier).onEmailChanged(emailController.text);
   }
 
   void _onPasswordChanged() {
-    ref.read(signupFormViewModelProvider(context).notifier).onPasswordChanged(passwordController.text);
+    ref.read(signupFormViewModelProvider.notifier).onPasswordChanged(passwordController.text);
   }
 
   @override
   void dispose() {
+        fullNameController.dispose();
+    usernameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -38,11 +52,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(signupFormViewModelProvider(context));
+        final state = ref.watch(signupFormViewModelProvider);
 
     final VoidCallback? onSubmit = (state.isValid && !state.isSubmitting)
         ? () {
-            ref.read(signupFormViewModelProvider(context).notifier).submit();
+            ref.read(signupFormViewModelProvider.notifier).submit(context);
           }
         : null;
 
@@ -52,7 +66,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+                        AppTextField(controller: fullNameController, hintText: 'Full Name'),
+            const SizedBox(height: 16),
+            AppTextField(controller: usernameController, hintText: 'Username'),
+            if (state.isUsernameTaken)
+              const AppErrorText(message: 'Username is already taken'),
+            const SizedBox(height: 16),
             AppTextField(controller: emailController, hintText: 'Email'),
+            if (state.isEmailTaken)
+              const AppErrorText(message: 'Email is already in use'),
             const SizedBox(height: 16),
             AppTextField(controller: passwordController, hintText: 'Password', obscureText: true),
             const SizedBox(height: 16),
