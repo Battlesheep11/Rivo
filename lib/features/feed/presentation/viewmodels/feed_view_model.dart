@@ -102,6 +102,12 @@ class FeedViewModel extends StateNotifier<FeedState> {
     }
   }
 
+
+  Future<bool> isCurrentUserSeller() async {
+    final repository = ref.read(feedRepositoryProvider);
+    return await repository.isCurrentUserSeller();
+  }
+
   /// Refreshes the feed by reloading the posts.
   /// 
   /// This is typically called when the user pulls down to refresh the feed.

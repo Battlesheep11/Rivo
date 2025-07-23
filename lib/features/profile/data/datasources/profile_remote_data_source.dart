@@ -58,16 +58,18 @@ Future<List<FeedPostEntity>> getMyDesignPosts(String userId) async {
       }
 
       return UserProfileEntity(
-        id: res['id'],
-        username: res['username'],
-        displayName: res['display_name'],
-        avatarUrl: res['avatar_url'],
-        bio: res['bio'],
-        isSeller: res['is_seller'] ?? false,
-        language: res['language'] ?? 'he',
-        lastSeenAt: res['last_seen_at'] != null ? DateTime.parse(res['last_seen_at']) : null,
-        createdAt: res['created_at'] != null ? DateTime.parse(res['created_at']) : null,
-      );
+  id: res['id'],
+  username: res['username'],
+  firstName: res['first_name'],
+  lastName: res['last_name'],
+  avatarUrl: res['avatar_url'],
+  bio: res['bio'],
+  isSeller: res['is_seller'] ?? false,
+  language: res['language'] ?? 'he',
+  lastSeenAt: res['last_seen_at'] != null ? DateTime.parse(res['last_seen_at']) : null,
+  createdAt: res['created_at'] != null ? DateTime.parse(res['created_at']) : null,
+);
+
     } on PostgrestException catch (e) {
       throw AppException.network(e.message);
     } catch (e) {
@@ -78,11 +80,12 @@ Future<List<FeedPostEntity>> getMyDesignPosts(String userId) async {
   Future<void> updateUserProfile(UserProfileEntity updated) async {
     try {
       await _client.from('profiles').update({
-        'display_name': updated.displayName,
-        'bio': updated.bio,
-        'language': updated.language,
-        'last_seen_at': DateTime.now().toIso8601String(),
-      }).eq('id', updated.id);
+  'first_name': updated.firstName,
+  'last_name': updated.lastName,
+  'bio': updated.bio,
+  'language': updated.language,
+  'last_seen_at': DateTime.now().toIso8601String(),
+}).eq('id', updated.id);
     } catch (e) {
       throw AppException.unexpected('Failed to update profile: $e');
     }

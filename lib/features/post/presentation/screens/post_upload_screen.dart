@@ -115,7 +115,7 @@ class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
         child: Column(
           children: [
             RepaintBoundary(
-              child: MediaPickerWidget(onSelected: viewModel.setMedia),
+              child: MediaPickerWidget(),
             ),
             const SizedBox(height: 12),
             const SelectedMediaPreview(),

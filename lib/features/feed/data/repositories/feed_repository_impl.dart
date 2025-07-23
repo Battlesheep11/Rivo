@@ -64,4 +64,7 @@ class FeedRepositoryImpl implements FeedRepository {
       );
     }
   }
+
+  @override
+  Future<bool> isCurrentUserSeller() => remoteDataSource.isCurrentUserSeller();
 }

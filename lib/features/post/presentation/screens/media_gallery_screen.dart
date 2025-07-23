@@ -2,7 +2,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
-import 'package:rivo_app_beta/features/post/domain/entities/media_file.dart';
+import 'package:rivo_app_beta/core/media/domain/entities/uploadable_media.dart';
+import 'package:rivo_app_beta/core/utils/permission_utils.dart';
 
 class MediaGalleryScreen extends StatefulWidget {
   const MediaGalleryScreen({super.key});
@@ -15,25 +16,54 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
   List<AssetEntity> _mediaAssets = [];
   final Set<AssetEntity> _selectedAssets = {};
 
-  @override
-  void initState() {
-    super.initState();
-    _loadMedia();
+  bool _initialized = false;
+
+@override
+void didChangeDependencies() {
+  super.didChangeDependencies();
+
+  if (!_initialized) {
+    _loadMedia(); // קורא ל־AppLocalizations ועוד
+    _initialized = true;
   }
+}
+
+
+  
 
   Future<void> _loadMedia() async {
-    final permission = await PhotoManager.requestPermissionExtend();
-    if (!permission.isAuth) return;
+    final tr = AppLocalizations.of(context)!;
+    final granted = await PermissionUtils.requestPhotoLibraryPermission();
+
+    if (!granted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr.galleryPermissionMessage)),
+        );
+      }
+      return;
+    }
 
     final albums = await PhotoManager.getAssetPathList(
       type: RequestType.common,
       hasAll: true,
     );
 
+    debugPrint('📁 Found ${albums.length} albums');
+    for (final album in albums) {
+  final count = await album.assetCountAsync;
+  debugPrint('🖼️ Album: ${album.name} | $count assets');
+}
+
+
     final recentAlbum = albums.firstOrNull;
-    if (recentAlbum == null) return;
+    if (recentAlbum == null) {
+      debugPrint('⚠️ No albums found');
+      return;
+    }
 
     final assets = await recentAlbum.getAssetListPaged(page: 0, size: 100);
+    debugPrint('📷 Loaded ${assets.length} assets from ${recentAlbum.name}');
 
     setState(() {
       _mediaAssets = assets;
@@ -52,13 +82,16 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
 
   Future<void> _handleConfirm() async {
     final navigator = Navigator.of(context); 
-    final result = <MediaFile>[];
+    final result = <UploadableMedia>[];
 
     for (final asset in _selectedAssets) {
-      final bytes = await asset.originBytes;
-      if (bytes != null) {
-        result.add(MediaFile.fromAsset(asset, bytes));
-      }
+      final type = asset.type == AssetType.video ? MediaType.video : MediaType.image;
+
+      result.add(UploadableMedia(
+        id: asset.id,
+        asset: asset,
+        type: type,
+      ));
     }
 
     navigator.pop(result); 

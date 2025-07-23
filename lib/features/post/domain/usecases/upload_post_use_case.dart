@@ -2,7 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
 import 'package:rivo_app_beta/features/post/domain/entities/upload_post_payload.dart';
 import 'package:rivo_app_beta/features/post/domain/repositories/post_repository.dart';
-import 'package:rivo_app_beta/features/post/domain/entities/uploadable_media.dart';
+import 'package:rivo_app_beta/core/media/domain/entities/uploadable_media.dart';
 
 class UploadPostUseCase {
   final PostRepository repository;

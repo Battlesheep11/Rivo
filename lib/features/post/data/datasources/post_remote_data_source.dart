@@ -1,10 +1,10 @@
-import 'dart:typed_data';
+import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
 import 'package:rivo_app_beta/features/post/domain/entities/upload_post_payload.dart';
-import 'package:rivo_app_beta/features/post/domain/entities/uploadable_media.dart';
-import 'package:rivo_app_beta/core/utils/image_utils.dart';
-import 'package:rivo_app_beta/core/utils/video_utils.dart';
+import 'package:rivo_app_beta/core/media/domain/entities/uploadable_media.dart';
+import 'package:rivo_app_beta/core/media/data/media_compressor.dart';
+import 'package:flutter/foundation.dart';
 
 class PostRemoteDataSource {
   final SupabaseClient client;
@@ -72,46 +72,55 @@ class PostRemoteDataSource {
 
     for (int i = 0; i < payload.media.length; i++) {
       final media = payload.media[i];
-      String? mediaUrl = media.url;
+      File? fileToUpload = media.file;
 
       try {
         onMediaStatusChanged?.call(media.path, UploadMediaStatus.uploading);
 
-        if (mediaUrl.isEmpty) {
-          final ext = media.type == 'video' ? 'webm' : 'jpg';
-          final uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
-          final filename = '${userId}_$uniqueId.$ext';
-          final path = 'media/$filename';
+        final ext = media.type == MediaType.video ? 'webm' : 'jpg';
+        final uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
+        final filename = '${userId}_$uniqueId.$ext';
+        final path = 'media/$filename';
 
-          Uint8List bytesToUpload = media.bytes;
-
-          if (media.type == 'image') {
-            bytesToUpload = await ImageUtils.compressImage(media.bytes);
-          } else if (media.type == 'video') {
-            try {
-              bytesToUpload = await VideoUtils.compressVideo(media.bytes);
-            } catch (_) {
-              bytesToUpload = media.bytes;
-            }
+        if (fileToUpload == null) {
+          final originFile = await media.asset.file;
+          if (originFile == null) {
+            throw AppException.unexpected("Cannot access original file from asset");
           }
 
-          await client.storage.from('media').uploadBinary(
-            path,
-            bytesToUpload,
-            fileOptions: FileOptions(
-              contentType: media.type == 'video' ? 'video/webm' : 'image/jpeg',
-              upsert: true,
-            ),
-          );
+          final result = media.type == MediaType.image
+              ? await MediaCompressor.compressImageFile(originFile)
+              : await MediaCompressor.compressVideoFile(originFile);
 
-          mediaUrl = client.storage.from('media').getPublicUrl(path);
+          result.fold(
+            (file) => fileToUpload = file,
+            (error) => throw error,
+          );
         }
+
+        final confirmedFile = fileToUpload;
+        if (confirmedFile == null || !confirmedFile.existsSync()) {
+          throw AppException.unexpected("File does not exist before uploadBinary");
+        }
+
+        final fileBytes = await confirmedFile.readAsBytes();
+
+        await client.storage.from('media').uploadBinary(
+          path,
+          fileBytes,
+          fileOptions: FileOptions(
+            contentType: media.type == MediaType.video ? 'video/webm' : 'image/jpeg',
+            upsert: true,
+          ),
+        );
+
+        final mediaUrl = client.storage.from('media').getPublicUrl(path);
 
         final mediaInsert = await client
             .from('media')
             .insert({
               'media_url': mediaUrl,
-              'media_type': media.type,
+              'media_type': media.type.name,
             })
             .select('id')
             .single();
@@ -134,7 +143,6 @@ class PostRemoteDataSource {
 
     for (final tag in payload.tags) {
       final tagId = await _getOrCreateTagByName(tag.name);
-
       await client.from('product_tags').insert({
         'product_id': productId,
         'tag_id': tagId,
@@ -163,7 +171,6 @@ class PostRemoteDataSource {
 
     for (final tag in payload.tags) {
       final tagId = await _getOrCreateTagByName(tag.name);
-
       await client.from('post_tags').insert({
         'post_id': postId,
         'tag_id': tagId,

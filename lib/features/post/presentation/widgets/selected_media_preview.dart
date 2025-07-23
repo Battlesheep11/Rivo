@@ -1,18 +1,19 @@
-import 'package:flutter/foundation.dart';
-import 'package:rivo_app_beta/core/utils/temp_file_utils.dart';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rivo_app_beta/features/post/domain/entities/media_file.dart';
+import 'package:rivo_app_beta/core/media/domain/entities/uploadable_media.dart';
+import 'package:rivo_app_beta/core/utils/temp_file_utils.dart';
 import 'package:rivo_app_beta/features/post/presentation/viewmodels/upload_post_viewmodel.dart';
 import 'package:video_player/video_player.dart';
-import 'package:rivo_app_beta/features/post/domain/entities/uploadable_media.dart';
+import 'package:photo_manager/photo_manager.dart';
+
 
 class SelectedMediaPreview extends ConsumerWidget {
   const SelectedMediaPreview({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mediaFiles = ref.watch(uploadPostViewModelProvider).media;
+final mediaFiles = ref.watch(uploadPostViewModelProvider.select((s) => s.media));
     final viewModel = ref.read(uploadPostViewModelProvider.notifier);
 
     if (mediaFiles.isEmpty) return const SizedBox.shrink();
@@ -25,7 +26,6 @@ class SelectedMediaPreview extends ConsumerWidget {
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final item = mediaFiles[index];
-          final media = item.media;
           final isInvalid = item.status == UploadMediaStatus.invalid;
 
           return Stack(
@@ -36,22 +36,21 @@ class SelectedMediaPreview extends ConsumerWidget {
                   colorFilter: isInvalid
                       ? const ColorFilter.mode(Colors.grey, BlendMode.saturation)
                       : const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
-                  child: _buildMediaThumbnail(media),
+                  child: _buildMediaThumbnail(item),
                 ),
               ),
               Positioned(
                 top: 4,
                 left: 4,
-                child: media.type.toLowerCase().contains('video')
+                child: item.type == MediaType.video
                     ? const Icon(Icons.videocam, color: Colors.white, size: 16)
                     : const SizedBox.shrink(),
               ),
-
               Positioned(
                 top: 4,
                 right: 4,
                 child: GestureDetector(
-                  onTap: () => viewModel.removeMedia(media),
+                  onTap: () => viewModel.removeMedia(item),
                   child: Container(
                     decoration: const BoxDecoration(
                       color: Colors.black54,
@@ -62,7 +61,6 @@ class SelectedMediaPreview extends ConsumerWidget {
                   ),
                 ),
               ),
-
               Positioned(
                 bottom: 4,
                 left: 4,
@@ -82,20 +80,27 @@ class SelectedMediaPreview extends ConsumerWidget {
     );
   }
 
-  Widget _buildMediaThumbnail(MediaFile media) {
-        debugPrint('[Preview] bytes length: ${media.bytes.length}');
-    if (media.type.toLowerCase().contains('video')) {
-      return _VideoThumbnail(bytes: media.bytes);
-    } else {
-      return Image.memory(
-        media.bytes,
-        width: 100,
-        height: 100,
-        fit: BoxFit.cover,
-      );
-    }
-  }
+  Widget _buildMediaThumbnail(UploadableMedia media) {
+    return FutureBuilder<Uint8List?>(
+      future: media.asset.thumbnailDataWithSize(const ThumbnailSize(200, 200)),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
+        if (media.type == MediaType.video) {
+          return _VideoThumbnail(bytes: snapshot.data!);
+        } else {
+          return Image.memory(
+            snapshot.data!,
+            width: 100,
+            height: 100,
+            fit: BoxFit.cover,
+          );
+        }
+      },
+    );
+  }
 
   Widget _buildStatusIcon(UploadableMedia item) {
     switch (item.status) {
@@ -107,19 +112,9 @@ class SelectedMediaPreview extends ConsumerWidget {
           child: CircularProgressIndicator(strokeWidth: 2),
         );
       case UploadMediaStatus.uploaded:
-        return const Icon(
-          Icons.check_circle,
-          color: Colors.green,
-          size: 20,
-          key: ValueKey('uploaded'),
-        );
+        return const Icon(Icons.check_circle, color: Colors.green, size: 20, key: ValueKey('uploaded'));
       case UploadMediaStatus.failed:
-        return const Icon(
-          Icons.error,
-          color: Colors.red,
-          size: 20,
-          key: ValueKey('failed'),
-        );
+        return const Icon(Icons.error, color: Colors.red, size: 20, key: ValueKey('failed'));
       case UploadMediaStatus.invalid:
         return Tooltip(
           key: const ValueKey('invalid'),

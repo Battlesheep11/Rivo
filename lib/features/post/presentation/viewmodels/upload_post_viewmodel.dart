@@ -1,14 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
-import 'package:rivo_app_beta/features/post/domain/entities/media_file.dart';
+import 'package:rivo_app_beta/core/media/domain/entities/uploadable_media.dart';
 import 'package:rivo_app_beta/features/post/domain/entities/upload_post_payload.dart';
 import 'package:rivo_app_beta/features/post/domain/usecases/upload_post_use_case.dart';
 import 'package:rivo_app_beta/features/post/domain/entities/tag_entity.dart';
 import 'package:rivo_app_beta/features/post/data/datasources/upload_post_state.dart';
 import 'package:rivo_app_beta/features/post/domain/providers/post_providers.dart';
-import 'package:rivo_app_beta/features/post/domain/entities/uploadable_media.dart';
+import 'package:flutter/foundation.dart';
 
-import 'dart:io';
 import 'package:rivo_app_beta/core/utils/media_validator.dart'; 
 
 class UploadPostViewModel extends StateNotifier<UploadPostState> {
@@ -27,38 +26,51 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
   void setCaption(String? value) => state = state.copyWith(caption: value);
 
 
-  void setMedia(List<MediaFile> selectedMedia) {
-    final processed = selectedMedia.map((media) {
-      final file = File(media.path);
-      final validation = MediaValidator.validate(file);
+  Future<void> setMedia(List<UploadableMedia> selectedMedia) async {
+  final processed = <UploadableMedia>[];
 
-      return validation.fold(
-        (_) => UploadableMedia(
-          media: media,
-          file: file,
-          status: UploadMediaStatus.valid,
-        ),
-        (error) => UploadableMedia(
-          media: media,
-          file: file,
-          status: UploadMediaStatus.invalid,
-          errorMessage: error.toString(),
-        ),
-      );
-    }).toList();
+  for (final media in selectedMedia) {
+    final file = await media.asset.file;
 
-    state = state.copyWith(media: processed);
+    if (file == null) {
+      processed.add(media.copyWith(
+        status: UploadMediaStatus.invalid,
+        errorMessage: 'Media file not found',
+      ));
+      continue;
+    }
+
+    final validation = MediaValidator.validate(file);
+
+    final validatedMedia = validation.fold(
+      (_) => media.copyWith(
+        file: file,
+        status: UploadMediaStatus.valid,
+      ),
+      (error) => media.copyWith(
+        file: file,
+        status: UploadMediaStatus.invalid,
+        errorMessage: error.toString(),
+      ),
+    );
+
+    processed.add(validatedMedia);
   }
 
-  void removeMedia(MediaFile file) {
+  state = state.copyWith(media: processed);
+}
+
+
+
+  void removeMedia(UploadableMedia file) {
     state = state.copyWith(
-      media: List.from(state.media)..removeWhere((m) => m.media.path == file.path),
+      media: List.from(state.media)..removeWhere((m) => m.path == file.path),
     );
   }
 
   void updateMediaStatus(String mediaPath, UploadMediaStatus status) {
   final updated = state.media.map((item) {
-    if (item.media.path == mediaPath) {
+    if (item.path == mediaPath) {
       return item.copyWith(status: status);
     }
     return item;
@@ -80,7 +92,7 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
       final validMedia = state.media
           .where((m) => m.status == UploadMediaStatus.valid)
           .toList();
-
+      debugPrint("🧪 Media in state: ${state.media.length} total, ${validMedia.length} valid");
       final payload = UploadPostPayload(
         hasProduct: true,
         productTitle: state.title!,
@@ -91,7 +103,7 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
         waist: state.waist,
         length: state.length,
         caption: state.caption,
-        media: validMedia.map((m) => m.media).toList(),
+        media: validMedia.map((m) => m).toList(),
         tags: state.tagNames.map((name) => TagEntity(name: name)).toList(),
       );
 
@@ -107,7 +119,10 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
 );
 
 
-      result.fold((failure) => throw failure, (_) {});
+      result.fold(
+  (failure) => throw failure,
+  (_) => debugPrint("✅ Upload success"),
+);
     } on AppException {
       rethrow;
     } catch (_) {

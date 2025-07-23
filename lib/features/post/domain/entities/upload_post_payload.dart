@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'media_file.dart';
-import 'tag_entity.dart';
+import 'package:rivo_app_beta/core/media/domain/entities/uploadable_media.dart';
+import 'package:rivo_app_beta/features/post/domain/entities/tag_entity.dart';
 
 part 'upload_post_payload.freezed.dart';
 
@@ -16,7 +16,7 @@ class UploadPostPayload with _$UploadPostPayload {
     double? waist,
     double? length,
     String? caption,
-    required List<MediaFile> media,
+    required List<UploadableMedia> media,
     required List<TagEntity> tags,
   }) = _UploadPostPayload;
 }

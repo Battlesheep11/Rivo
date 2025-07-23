@@ -26,7 +26,7 @@ mixin _$UploadPostPayload {
   double? get waist => throw _privateConstructorUsedError;
   double? get length => throw _privateConstructorUsedError;
   String? get caption => throw _privateConstructorUsedError;
-  List<MediaFile> get media => throw _privateConstructorUsedError;
+  List<UploadableMedia> get media => throw _privateConstructorUsedError;
   List<TagEntity> get tags => throw _privateConstructorUsedError;
 
   /// Create a copy of UploadPostPayload
@@ -53,7 +53,7 @@ abstract class $UploadPostPayloadCopyWith<$Res> {
     double? waist,
     double? length,
     String? caption,
-    List<MediaFile> media,
+    List<UploadableMedia> media,
     List<TagEntity> tags,
   });
 }
@@ -126,7 +126,7 @@ class _$UploadPostPayloadCopyWithImpl<$Res, $Val extends UploadPostPayload>
             media: null == media
                 ? _value.media
                 : media // ignore: cast_nullable_to_non_nullable
-                      as List<MediaFile>,
+                      as List<UploadableMedia>,
             tags: null == tags
                 ? _value.tags
                 : tags // ignore: cast_nullable_to_non_nullable
@@ -156,7 +156,7 @@ abstract class _$$UploadPostPayloadImplCopyWith<$Res>
     double? waist,
     double? length,
     String? caption,
-    List<MediaFile> media,
+    List<UploadableMedia> media,
     List<TagEntity> tags,
   });
 }
@@ -228,7 +228,7 @@ class __$$UploadPostPayloadImplCopyWithImpl<$Res>
         media: null == media
             ? _value._media
             : media // ignore: cast_nullable_to_non_nullable
-                  as List<MediaFile>,
+                  as List<UploadableMedia>,
         tags: null == tags
             ? _value._tags
             : tags // ignore: cast_nullable_to_non_nullable
@@ -251,7 +251,7 @@ class _$UploadPostPayloadImpl implements _UploadPostPayload {
     this.waist,
     this.length,
     this.caption,
-    required final List<MediaFile> media,
+    required final List<UploadableMedia> media,
     required final List<TagEntity> tags,
   }) : _media = media,
        _tags = tags;
@@ -274,9 +274,9 @@ class _$UploadPostPayloadImpl implements _UploadPostPayload {
   final double? length;
   @override
   final String? caption;
-  final List<MediaFile> _media;
+  final List<UploadableMedia> _media;
   @override
-  List<MediaFile> get media {
+  List<UploadableMedia> get media {
     if (_media is EqualUnmodifiableListView) return _media;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_media);
@@ -357,7 +357,7 @@ abstract class _UploadPostPayload implements UploadPostPayload {
     final double? waist,
     final double? length,
     final String? caption,
-    required final List<MediaFile> media,
+    required final List<UploadableMedia> media,
     required final List<TagEntity> tags,
   }) = _$UploadPostPayloadImpl;
 
@@ -380,7 +380,7 @@ abstract class _UploadPostPayload implements UploadPostPayload {
   @override
   String? get caption;
   @override
-  List<MediaFile> get media;
+  List<UploadableMedia> get media;
   @override
   List<TagEntity> get tags;
 

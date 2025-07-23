@@ -44,4 +44,6 @@ abstract class FeedRepository {
   /// - The post doesn't exist
   /// - The operation fails
   Future<void> unlikePost(String postId);
+
+  Future<bool> isCurrentUserSeller();
 }

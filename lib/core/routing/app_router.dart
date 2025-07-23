@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:rivo_app_beta/features/auth/presentation/screens/auth_screen.dart';
 import 'package:rivo_app_beta/features/auth/presentation/screens/auth_redirector_screen.dart';
@@ -75,46 +74,7 @@ class AppRouter {
                   ),
                 ],
               ),
-              // Use centerFloat to place FAB above the floating nav bar
-              floatingActionButtonLocation: FloatingActionButtonLocation.centerTop,
-              floatingActionButton: FutureBuilder<bool>(
-                future: _isSeller(),
-                builder: (context, snapshot) {
-                  final isSeller = snapshot.data ?? false;
-                  if (!isSeller) return const SizedBox.shrink();
-                  // FAB floats above nav bar with extra bottom padding for visual harmony
-                  return Padding(
-                    padding: const EdgeInsets.only(left: 300.0, bottom: 16.0),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => context.go('/upload'),
-                        borderRadius: BorderRadius.circular(24),
-                        child: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withAlpha(26),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.add,
-                            color: Colors.black87,
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+              
             );
           },
           routes: [
@@ -166,18 +126,7 @@ class AppRouter {
     }
   }
 
-  static Future<bool> _isSeller() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return false;
-
-    final profile = await Supabase.instance.client
-        .from('profiles')
-        .select('is_seller')
-        .eq('id', user.id)
-        .maybeSingle();
-
-    return profile != null && profile['is_seller'] == true;
-  }
+  
 }
 
 class PlaceholderScreen extends StatelessWidget {

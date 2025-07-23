@@ -37,7 +37,6 @@ Future<List<FeedPostEntity>> getPostsByIds(List<String> postIds) async {
       .select('*, product(*, media(*))') 
       .inFilter('id', postIds)
       .order('created_at', ascending: false);
-
   return (res as List).map((item) => FeedPostEntity.fromMap(item)).toList();
 }
 
@@ -190,5 +189,18 @@ Future<List<FeedPostEntity>> getPostsByIds(List<String> postIds) async {
     throw AppException.unexpected('An unexpected error occurred: $e');
   }
 }
+
+Future<bool> isCurrentUserSeller() async {
+    final user = _client.auth.currentUser;
+    if (user == null) return false;
+
+    final profile = await _client
+        .from('profiles')
+        .select('is_seller')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    return profile != null && profile['is_seller'] == true;
+  }
 
 }

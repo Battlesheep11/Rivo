@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:rivo_app_beta/features/post/presentation/viewmodels/form_status.dart';
-import 'package:rivo_app_beta/features/post/domain/entities/uploadable_media.dart';
+import 'package:rivo_app_beta/core/media/domain/entities/uploadable_media.dart';
 part 'upload_post_state.freezed.dart';
 
 @freezed

@@ -1,18 +1,20 @@
 class UserProfileEntity {
   final String id;
   final String username;
-  final String? displayName;
+  final String? firstName;
+  final String? lastName;
   final String? avatarUrl;
   final String? bio;
   final bool isSeller;
-  final String language; // 'he' or 'en'
+  final String language;
   final DateTime? lastSeenAt;
   final DateTime? createdAt;
 
   const UserProfileEntity({
     required this.id,
     required this.username,
-    this.displayName,
+    this.firstName,
+    this.lastName,
     this.avatarUrl,
     this.bio,
     required this.isSeller,
@@ -21,5 +23,5 @@ class UserProfileEntity {
     this.createdAt,
   });
 
-  String get displayLabel => displayName?.isNotEmpty == true ? displayName! : username;
+  String get fullName => [firstName, lastName].where((s) => s?.isNotEmpty == true).join(' ');
 }

@@ -1,24 +1,32 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:rivo_app_beta/features/post/presentation/viewmodels/upload_post_viewmodel.dart';
+
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/core/utils/permission_utils.dart';
-import 'package:rivo_app_beta/features/post/domain/entities/media_file.dart';
-import 'package:rivo_app_beta/features/post/presentation/screens/media_gallery_screen.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:rivo_app_beta/core/media/domain/entities/uploadable_media.dart';
 import 'package:rivo_app_beta/core/widgets/permission_dialog.dart';
-import 'dart:io';
+import 'package:rivo_app_beta/features/post/presentation/screens/media_gallery_screen.dart';
 
+class MediaPickerWidget extends ConsumerWidget {
+  const MediaPickerWidget({super.key});
 
-class MediaPickerWidget extends StatelessWidget {
-  final void Function(List<MediaFile>) onSelected;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tr = AppLocalizations.of(context)!;
 
-  const MediaPickerWidget({
-    super.key,
-    required this.onSelected,
-  });
+    return ElevatedButton.icon(
+      icon: const Icon(Icons.add_photo_alternate),
+      label: Text(tr.selectMedia),
+      onPressed: () => _showMediaSourcePicker(context, ref),
+    );
+  }
 
-  void _showMediaSourcePicker(BuildContext context) {
+  void _showMediaSourcePicker(BuildContext context, WidgetRef ref) {
     final tr = AppLocalizations.of(context)!;
 
     showModalBottomSheet(
@@ -31,7 +39,7 @@ class MediaPickerWidget extends StatelessWidget {
               title: Text(tr.mediaPickerGallery),
               onTap: () {
                 Navigator.of(context).pop();
-                _pickFromGallery(context);
+                _pickFromGallery(context, ref);
               },
             ),
             ListTile(
@@ -39,7 +47,7 @@ class MediaPickerWidget extends StatelessWidget {
               title: Text(tr.mediaPickerCamera),
               onTap: () {
                 Navigator.of(context).pop();
-                _showCameraOptions(context);
+                _showCameraOptions(context, ref);
               },
             ),
           ],
@@ -48,7 +56,7 @@ class MediaPickerWidget extends StatelessWidget {
     );
   }
 
-  void _showCameraOptions(BuildContext context) {
+  void _showCameraOptions(BuildContext context, WidgetRef ref) {
     final tr = AppLocalizations.of(context)!;
 
     showModalBottomSheet(
@@ -61,7 +69,7 @@ class MediaPickerWidget extends StatelessWidget {
               title: Text(tr.takePhoto),
               onTap: () {
                 Navigator.of(context).pop();
-                _pickFromCamera(context, isVideo: false);
+                _pickFromCamera(context, ref, isVideo: false);
               },
             ),
             ListTile(
@@ -69,7 +77,7 @@ class MediaPickerWidget extends StatelessWidget {
               title: Text(tr.recordVideo),
               onTap: () {
                 Navigator.of(context).pop();
-                _pickFromCamera(context, isVideo: true);
+                _pickFromCamera(context, ref, isVideo: true);
               },
             ),
           ],
@@ -78,88 +86,82 @@ class MediaPickerWidget extends StatelessWidget {
     );
   }
 
-  Future<void> _pickFromGallery(BuildContext context) async {
+  Future<void> _pickFromGallery(BuildContext context, WidgetRef ref) async {
+  final tr = AppLocalizations.of(context)!;
+
+  debugPrint("📂 Requesting media access permission...");
+  final hasPermission = await PermissionUtils.requestMediaAccessPermission();
+  if (!context.mounted) return;
+
+  if (!hasPermission) {
+    debugPrint("❌ Permission denied");
+    await PermissionDialog.show(
+      context,
+      title: tr.galleryPermissionTitle,
+      message: tr.galleryPermissionMessage,
+    );
+    return;
+  }
+
+  debugPrint("✅ Permission granted – opening gallery screen");
+  final result = await Navigator.of(context).push<List<UploadableMedia>>(
+    MaterialPageRoute(builder: (_) => const MediaGalleryScreen()),
+  );
+
+  if (result == null) {
+    debugPrint("📭 No media selected");
+  } else if (result.isEmpty) {
+    debugPrint("📭 Media selection returned empty list");
+  } else {
+    debugPrint("📸 ${result.length} media files selected");
+    ref.read(uploadPostViewModelProvider.notifier).setMedia(result);
+  }
+}
+
+
+  Future<void> _pickFromCamera(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool isVideo,
+  }) async {
     final tr = AppLocalizations.of(context)!;
-    final navigator = Navigator.of(context); 
-    final dialogContext = context; 
 
-    final permission = await Permission.photos.request();
+    final hasPermission = await PermissionUtils.requestCameraPermission();
+    final isPermanentlyDenied = await Permission.camera.isPermanentlyDenied;
+    if (!context.mounted) return;
 
-    if (!permission.isGranted) {
-      final isPermanentlyDenied = await Permission.photos.isPermanentlyDenied;
-      if (isPermanentlyDenied && dialogContext.mounted) {
+    if (!hasPermission) {
+      if (isPermanentlyDenied) {
         await PermissionDialog.show(
-          dialogContext,
-          title: tr.galleryPermissionTitle,
-          message: tr.galleryPermissionMessage,
+          context,
+          title: tr.cameraPermissionTitle,
+          message: tr.cameraPermissionMessage,
         );
       }
       return;
     }
 
-    final result = await navigator.push<List<MediaFile>>(
-      MaterialPageRoute(
-        builder: (_) => const MediaGalleryScreen(),
-      ),
-    );
+    final picker = ImagePicker();
+    final XFile? file = isVideo
+        ? await picker.pickVideo(source: ImageSource.camera)
+        : await picker.pickImage(source: ImageSource.camera);
 
-    if (result != null && result.isNotEmpty) {
-      onSelected(result);
+    if (file != null) {
+      try {
+        final asset = isVideo
+            ? await PhotoManager.editor.saveVideo(File(file.path))
+            : await PhotoManager.editor.saveImageWithPath(file.path);
+
+        final media = UploadableMedia(
+          id: asset.id,
+          asset: asset,
+          type: isVideo ? MediaType.video : MediaType.image,
+        );
+
+        ref.read(uploadPostViewModelProvider.notifier).setMedia([media]);
+      } catch (e) {
+        debugPrint('❌ Failed to save captured media: $e');
+      }
     }
-  }
-
-  Future<void> _pickFromCamera(BuildContext context, {required bool isVideo}) async {
-  final tr = AppLocalizations.of(context)!;
-  final dialogContext = context;
-
-  final hasPermission = await PermissionUtils.requestCameraPermission();
-
-  if (!hasPermission) {
-    final isPermanentlyDenied = await Permission.camera.isPermanentlyDenied;
-    if (isPermanentlyDenied && dialogContext.mounted) {
-      await PermissionDialog.show(
-        dialogContext,
-        title: tr.cameraPermissionTitle,
-        message: tr.cameraPermissionMessage,
-      );
-    }
-    return;
-  }
-
-  final picker = ImagePicker();
-  final XFile? file = isVideo
-      ? await picker.pickVideo(source: ImageSource.camera)
-      : await picker.pickImage(source: ImageSource.camera);
-
-  if (file != null) {
-  try {
-    final asset = isVideo
-        ? await PhotoManager.editor.saveVideo(File(file.path))
-        : await PhotoManager.editor.saveImageWithPath(file.path);
-
-    final bytes = await asset.originBytes;
-    if (bytes == null) {
-      debugPrint('⚠️ Failed to load bytes from saved asset');
-      return;
-    }
-
-    final mediaFile = MediaFile.fromAsset(asset, bytes);
-    onSelected([mediaFile]);
-  } catch (e) {
-    debugPrint('❌ Failed to save captured media: $e');
-  }
-}
-}
-
-
-  @override
-  Widget build(BuildContext context) {
-    final tr = AppLocalizations.of(context)!;
-
-    return ElevatedButton.icon(
-      icon: const Icon(Icons.add_photo_alternate),
-      label: Text(tr.selectMedia),
-      onPressed: () => _showMediaSourcePicker(context),
-    );
   }
 }
