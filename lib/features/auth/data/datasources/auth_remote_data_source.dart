@@ -15,7 +15,8 @@ class AuthRemoteDataSource {
     }
 
     Future<AuthResponse> signUp({
-    required String fullName,
+    required String firstName,
+    required String lastName,
     required String username,
     required String email,
     required String password,
@@ -24,11 +25,27 @@ class AuthRemoteDataSource {
       email: email,
       password: password,
       data: {
-        'full_name': fullName,
+        'first_name': firstName,
+        'last_name': lastName,
         'username': username,
       },
     );
     return response;
+  }
+
+  Future<bool> checkUsername(String username) async {
+    final response = await client
+      .from('profiles')
+      .select('username')
+      .ilike('username', username)
+      .maybeSingle();
+    final exists = response != null;
+    return exists;
+  }
+
+  Future<bool> checkEmail(String email) async {
+    final result = await client.rpc('email_exists', params: {'email_address': email});
+    return result as bool;
   }
 
   Future<AuthResponse> signIn({

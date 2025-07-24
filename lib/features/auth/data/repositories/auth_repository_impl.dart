@@ -10,14 +10,16 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<String, UserEntity>> signUp({
-    required String fullName,
+    required String firstName,
+    required String lastName,
     required String username,
     required String email,
     required String password,
   }) async {
     try {
       final response = await remoteDataSource.signUp(
-        fullName: fullName,
+        firstName: firstName,
+        lastName: lastName,
         username: username,
         email: email,
         password: password,
@@ -34,6 +36,26 @@ class AuthRepositoryImpl implements AuthRepository {
       ));
     } catch (e) {
       return left('Signup failed: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<Either<String, bool>> checkUsername(String username) async {
+    try {
+      final exists = await remoteDataSource.checkUsername(username);
+      return right(exists);
+    } catch (e) {
+      return left(e.toString());
+    }
+  }
+
+  @override
+  Future<Either<String, bool>> checkEmail(String email) async {
+    try {
+      final exists = await remoteDataSource.checkEmail(email);
+      return right(exists);
+    } catch (e) {
+      return left(e.toString());
     }
   }
 

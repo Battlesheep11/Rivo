@@ -39,7 +39,7 @@ class PostActionColumn extends StatelessWidget {
           const SizedBox(height: 12),
           
           // Comment button: uses ActionGlassButton defaults
-          // TODO(comments): Implement comment count functionality - currently using placeholder value of 0
+          // TODO: Implement comment count functionality - currently using placeholder value of 0
           ActionGlassButton(
             icon: Icons.comment_bank_outlined,
             onPressed: onComment,

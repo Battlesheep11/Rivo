@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:formz/formz.dart';
 import 'package:rivo_app_beta/core/loading/loading_overlay_provider.dart';
 import 'package:rivo_app_beta/core/toast/toast_service.dart';
 import 'package:rivo_app_beta/features/auth/domain/repositories/auth_repository.dart';
@@ -60,7 +59,8 @@ class SigninFormViewModel extends StateNotifier<SigninFormState> {
 
   void onEmailChanged(String value) {
     final email = Email.dirty(value);
-    final isValid = Formz.validate([email, state.password]);
+    final password = state.password;
+    final isValid = email.isValid && password.isValid;
     state = state.copyWith(
       email: email,
       isValid: isValid,
@@ -69,7 +69,8 @@ class SigninFormViewModel extends StateNotifier<SigninFormState> {
 
   void onPasswordChanged(String value) {
     final password = Password.dirty(value);
-    final isValid = Formz.validate([state.email, password]);
+    final email = state.email;
+    final isValid = email.isValid && password.isValid;
     state = state.copyWith(
       password: password,
       isValid: isValid,
