@@ -31,11 +31,12 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
 
   for (final media in selectedMedia) {
     final file = await media.asset.file;
+    final bytes = await media.asset.originBytes;
 
-    if (file == null) {
+    if (file == null || bytes == null) {
       processed.add(media.copyWith(
         status: UploadMediaStatus.invalid,
-        errorMessage: 'Media file not found',
+        errorMessage: 'Media file not found or is empty',
       ));
       continue;
     }
@@ -45,6 +46,7 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
     final validatedMedia = validation.fold(
       (_) => media.copyWith(
         file: file,
+        bytes: bytes,
         status: UploadMediaStatus.valid,
       ),
       (error) => media.copyWith(

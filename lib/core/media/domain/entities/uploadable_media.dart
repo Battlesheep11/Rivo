@@ -22,6 +22,7 @@ class UploadableMedia extends Equatable {
   final String id;
   final AssetEntity asset;
   final File? file;
+  final Uint8List? bytes;
   final MediaType type;
   final UploadMediaStatus status;
   final String? uploadedUrl;
@@ -33,6 +34,7 @@ class UploadableMedia extends Equatable {
     required this.asset,
     required this.type,
     this.file,
+    this.bytes,
     this.status = UploadMediaStatus.initial,
     this.uploadedUrl,
     this.sortOrder,
@@ -41,6 +43,7 @@ class UploadableMedia extends Equatable {
 
   UploadableMedia copyWith({
     File? file,
+    Uint8List? bytes,
     UploadMediaStatus? status,
     String? uploadedUrl,
     int? sortOrder,
@@ -51,6 +54,7 @@ class UploadableMedia extends Equatable {
       asset: asset,
       type: type,
       file: file ?? this.file,
+      bytes: bytes ?? this.bytes,
       status: status ?? this.status,
       uploadedUrl: uploadedUrl ?? this.uploadedUrl,
       sortOrder: sortOrder ?? this.sortOrder,
@@ -61,9 +65,6 @@ class UploadableMedia extends Equatable {
   /// Used as unique identifier for UI (e.g. for progress tracking)
   String get path => asset.id;
 
-  Uint8List? get bytes => file?.readAsBytesSync();
-
-
   @override
-  List<Object?> get props => [id, type, status, uploadedUrl, sortOrder, errorMessage];
+  List<Object?> get props => [id, type, status, uploadedUrl, sortOrder, errorMessage, file, bytes];
 }

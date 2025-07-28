@@ -110,94 +110,96 @@ class _PostUploadScreenState extends ConsumerState<PostUploadScreen> {
           },
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            RepaintBoundary(
-              child: MediaPickerWidget(),
-            ),
-            const SizedBox(height: 12),
-            const SelectedMediaPreview(),
-            const SizedBox(height: 16),
-            const CategoryDropdown(),
-            const SizedBox(height: 12),
-            const TagsInputField(),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _titleController,
-              hintText: localizations.title,
-              onChanged: viewModel.setTitle,
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _descriptionController,
-              hintText: localizations.description,
-              maxLines: 3,
-              onChanged: viewModel.setDescription,
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _priceController,
-              hintText: localizations.price,
-              keyboardType: TextInputType.number,
-              onChanged: (value) =>
-                  viewModel.setPrice(double.tryParse(value)),
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _chestController,
-              hintText: localizations.chestMeasurementLabel,
-              keyboardType: TextInputType.number,
-              onChanged: (value) =>
-                  viewModel.setChest(double.tryParse(value)),
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _waistController,
-              hintText: localizations.waistMeasurementLabel,
-              keyboardType: TextInputType.number,
-              onChanged: (value) =>
-                  viewModel.setWaist(double.tryParse(value)),
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _lengthController,
-              hintText: localizations.lengthMeasurementLabel,
-              keyboardType: TextInputType.number,
-              onChanged: (value) =>
-                  viewModel.setLength(double.tryParse(value)),
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _captionController,
-              hintText: localizations.captionLabel,
-              maxLines: 3,
-              maxLength: 2200,
-              onChanged: viewModel.setCaption,
-            ),
-            const SizedBox(height: 24),
-            if (state.isSubmitting)
-              const CircularProgressIndicator()
-            else
-              AppButton(
-                onPressed: state.isValid ? _submitForm : null,
-                text: localizations.upload,
-              ),
-            if (state.isSubmitting &&
-                state.uploadedMediaCount < state.totalMediaCount &&
-                state.totalMediaCount > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  '${localizations.uploadingMedia} ${state.uploadedMediaCount}/${state.totalMediaCount}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                  textAlign: TextAlign.center,
+      body: SafeArea(
+        child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                RepaintBoundary(
+                  child: MediaPickerWidget(),
                 ),
-              ),
-          ],
+                const SizedBox(height: 12),
+                const SelectedMediaPreview(),
+                const SizedBox(height: 16),
+                const CategoryDropdown(),
+                const SizedBox(height: 12),
+                const TagsInputField(),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: _titleController,
+                  hintText: localizations.title,
+                  onChanged: viewModel.setTitle,
+                ),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: _descriptionController,
+                  hintText: localizations.description,
+                  maxLines: 3,
+                  onChanged: viewModel.setDescription,
+                ),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: _priceController,
+                  hintText: localizations.price,
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) =>
+                      viewModel.setPrice(double.tryParse(value)),
+                ),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: _chestController,
+                  hintText: localizations.chestMeasurementLabel,
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) =>
+                      viewModel.setChest(double.tryParse(value)),
+                ),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: _waistController,
+                  hintText: localizations.waistMeasurementLabel,
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) =>
+                      viewModel.setWaist(double.tryParse(value)),
+                ),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: _lengthController,
+                  hintText: localizations.lengthMeasurementLabel,
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) =>
+                      viewModel.setLength(double.tryParse(value)),
+                ),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: _captionController,
+                  hintText: localizations.captionLabel,
+                  maxLines: 3,
+                  maxLength: 2200,
+                  onChanged: viewModel.setCaption,
+                ),
+                const SizedBox(height: 24),
+                if (state.isSubmitting)
+                  const CircularProgressIndicator()
+                else
+                  AppButton(
+                    onPressed: state.isValid ? _submitForm : null,
+                    text: localizations.upload,
+                  ),
+                if (state.isSubmitting &&
+                    state.uploadedMediaCount < state.totalMediaCount &&
+                    state.totalMediaCount > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      '${localizations.uploadingMedia} ${state.uploadedMediaCount}/${state.totalMediaCount}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
-      ),
     );
   }
 }

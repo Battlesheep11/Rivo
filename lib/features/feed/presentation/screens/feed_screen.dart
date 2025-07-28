@@ -24,7 +24,7 @@ class FeedScreen extends ConsumerStatefulWidget {
 }
 
 class _FeedScreenState extends ConsumerState<FeedScreen> {
-  bool _isTextBoxVisible = true;
+  final Map<String, bool> _postTextBoxVisibility = {};
   final PageController _pageController = PageController();
   double _lastScrollPosition = 0;
   bool _isUserDragging = false;
@@ -140,27 +140,36 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           }
           return false;
         },
-        child: PageView.builder(
-          scrollDirection: Axis.vertical,
-          itemCount: state.posts?.length ?? 0,
-          controller: _pageController,
-          physics: const CustomPageScrollPhysics(),
-          itemBuilder: (context, index) {
-            return _buildPostItem(state.posts![index], context);
-          },
-          key: const PageStorageKey('feed_page_view'),
+        child: RefreshIndicator(
+          onRefresh: viewModel.loadFeed,
+          child: PageView.builder(
+            scrollDirection: Axis.vertical,
+            itemCount: state.posts?.length ?? 0,
+            controller: _pageController,
+            physics: const CustomPageScrollPhysics(),
+            itemBuilder: (context, index) {
+              return _buildPostItem(state.posts![index], context);
+            },
+            key: const PageStorageKey('feed_page_view'),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildPostItem(FeedPostEntity post, BuildContext context) {
+    final isVisible = _postTextBoxVisibility.putIfAbsent(post.id, () => true);
+
     return GestureDetector(
       onTap: () {
         setState(() {
-          _isTextBoxVisible = !_isTextBoxVisible;
+          _postTextBoxVisibility[post.id] = !isVisible;
         });
-        widget.onGlassBoxToggled?.call();
+      },
+      onDoubleTap: () {
+        if (post.productId != null) {
+          context.push('/product/${post.id}');
+        }
       },
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
@@ -208,7 +217,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 left: 0,
                 right: 0,
                 child: AnimatedOpacity(
-                  opacity: _isTextBoxVisible ? 1 : 0.0,
+                  opacity: isVisible ? 1 : 0.0,
                   duration: const Duration(milliseconds: 300),
                   child: CaptionGlassBox(
                     username: post.username,

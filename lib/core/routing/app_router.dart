@@ -13,6 +13,7 @@ import 'package:rivo_app_beta/features/profile/presentation/views/profile_page.d
 import 'package:rivo_app_beta/features/profile/presentation/widgets/settings_screen.dart';
 import 'package:rivo_app_beta/core/widgets/app_nav_bar.dart';
 import 'package:rivo_app_beta/features/discovery/presentation/screens/discovery_screen.dart';
+import 'package:rivo_app_beta/features/product/presentation/screens/product_screen.dart';
 
 
 
@@ -61,6 +62,13 @@ class AppRouter {
         GoRoute(
           path: '/settings',
           builder: (context, state) => const SettingsScreen(),
+        ),
+        GoRoute(
+          path: '/product/:productId',
+          builder: (context, state) {
+            final productId = state.pathParameters['productId']!;
+            return ProductScreen(productId: productId);
+          },
         ),
         ShellRoute(
           builder: (context, state, child) {

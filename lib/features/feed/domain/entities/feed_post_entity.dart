@@ -26,8 +26,8 @@ class FeedPostEntity extends Equatable {
   /// Optional caption/text content of the post
   final String? caption;
   
-  /// ID of the product associated with this post
-  final String productId;
+  /// ID of the product associated with this post, if any
+  final String? productId;
   
   /// Username of the post creator
   final String username;
@@ -61,7 +61,7 @@ class FeedPostEntity extends Equatable {
     required this.isLikedByMe,
     required this.creatorId,
     this.caption,
-    required this.productId,
+    this.productId,
     required this.username,
     this.avatarUrl,
     required this.productTitle,
@@ -136,7 +136,7 @@ class FeedPostEntity extends Equatable {
     likeCount: (json['like_count'] ?? 0) as int,
     creatorId: json['creator_id'] as String,
     caption: json['caption'] as String?,
-    productId: json['product_id'] as String,
+    productId: json['product_id'] as String?,
     username: json['creator']?['username'] ?? 'Unknown',
     avatarUrl: json['creator']?['avatar_url'],
     productTitle: product['title'] ?? '',

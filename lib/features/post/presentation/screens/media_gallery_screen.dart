@@ -112,9 +112,12 @@ void didChangeDependencies() {
             ),
         ],
       ),
-      body: _mediaAssets.isEmpty
-          ? Center(child: Text(tr.noMediaFoundInGallery))
-          : GridView.builder(
+      body: Column(
+        children: [
+          Expanded(
+            child: _mediaAssets.isEmpty
+                ? Center(child: Text(tr.noMediaFoundInGallery))
+                : GridView.builder(
               itemCount: _mediaAssets.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
@@ -161,6 +164,9 @@ void didChangeDependencies() {
                 );
               },
             ),
+          ),
+        ],
+      ),
     );
   }
 }
