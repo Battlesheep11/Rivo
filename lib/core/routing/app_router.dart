@@ -9,7 +9,8 @@ import 'package:rivo_app_beta/features/onboarding/presentation/screens/onboardin
 import 'package:rivo_app_beta/features/post/presentation/screens/post_upload_screen.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/auth_session_provider.dart';
 import 'package:rivo_app_beta/features/feed/presentation/screens/feed_screen.dart';
-import 'package:rivo_app_beta/features/profile/presentation/screens/profile_screen.dart';
+import 'package:rivo_app_beta/features/profile/presentation/views/profile_page.dart';
+import 'package:rivo_app_beta/features/profile/presentation/widgets/settings_screen.dart';
 import 'package:rivo_app_beta/core/widgets/app_nav_bar.dart';
 import 'package:rivo_app_beta/features/discovery/presentation/screens/discovery_screen.dart';
 
@@ -56,6 +57,11 @@ class AppRouter {
           path: '/upload',
           builder: (context, state) => const PostUploadScreen(),
         ),
+        // Settings route
+        GoRoute(
+          path: '/settings',
+          builder: (context, state) => const SettingsScreen(),
+        ),
         ShellRoute(
           builder: (context, state, child) {
             final location = state.uri.path;
@@ -88,9 +94,9 @@ class AppRouter {
             ),
 
 
-                        GoRoute(
+                                    GoRoute(
               path: '/profile',
-              builder: (context, state) => const ProfileScreen(),
+              builder: (context, state) => const ProfilePage(),
             ),
           ],
         ),

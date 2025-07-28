@@ -8,6 +8,9 @@ import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart
 import 'package:rivo_app_beta/core/localization/widgets/language_selector.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/google_signin_provider.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/signin_form_provider.dart';
+import 'package:rivo_app_beta/core/design_system/app_error_text.dart';
+import 'package:rivo_app_beta/core/localization/widgets/language_selector.dart';
+import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/signup_form_provider.dart';
 import 'package:rivo_app_beta/features/auth/presentation/state/auth_mode.dart';
 import 'package:rivo_app_beta/features/auth/presentation/viewmodels/signup_form_view_model.dart';
@@ -42,6 +45,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   @override
   void initState() {
     super.initState();
+
+    // _fullNameController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onFullNameChanged(_fullNameController.text));
+    // _emailController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onEmailChanged(_emailController.text));
+    // _usernameController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onUsernameChanged(_usernameController.text));
+    // _passwordController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onPasswordChanged(_passwordController.text));
+    // _confirmPasswordController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onConfirmPasswordChanged(_confirmPasswordController.text));
+
     // Sign-up form listeners
     _firstNameController.addListener(() => ref
         .read(signupFormViewModelProvider(context).notifier)
@@ -74,8 +84,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         .read(signupFormViewModelProvider(context).notifier)
         .onConfirmPasswordChanged(_confirmPasswordController.text));
   }
-
-
 
   @override
   void dispose() {
@@ -141,7 +149,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 padding: const EdgeInsets.only(top: 6.0),
                 child: Transform.scale(
                   scale: 0.8,
-                  child: const LanguageSelector(),
+                  child: LanguageSelector(
+                    onChanged: (_) {
+                      ref.read(signinFormViewModelProvider.notifier).clearError();
+                    },
+                  ),
                 ),
               ),
             ),
@@ -153,18 +165,23 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Widget _buildSignInForm(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
-    final signinState = ref.watch(signinFormViewModelProvider(context));
+    final signinState = ref.watch(signinFormViewModelProvider);
     final googleLoading = ref.watch(googleSignInViewModelProvider(context));
 
     final isSubmitting = signinState.isSubmitting;
     final isValid = signinState.isValid;
 
+    // Use ref.listen to handle navigation side-effects, which is the idiomatic Riverpod way.
+    ref.listen(signinFormViewModelProvider, (previous, next) {
+      if (next.isSuccess && context.mounted) {
+        context.go('/redirect');
+      }
+    });
+
     final VoidCallback? onSubmit = (isValid && !isSubmitting)
-        ? () async {
-            bool success = await ref.read(signinFormViewModelProvider(context).notifier).submit();
-            if (success && context.mounted) {
-              context.go('/redirect');
-            }
+        ? () {
+            // No need to await, the listener will handle the result.
+            ref.read(signinFormViewModelProvider.notifier).submit(context);
           }
         : null;
 
@@ -203,8 +220,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             icon: Icon(_passwordVisible ? Icons.visibility_off : Icons.visibility, color: const Color(0xFF999999)),
             onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
           ),
+          onChanged: (value) {
+            ref.read(signupFormViewModelProvider.notifier).onPasswordChanged(value);
+            ref.read(signinFormViewModelProvider.notifier).onPasswordChanged(value);
+          },
         ),
-        const SizedBox(height: 24),
+        if (signinState.isFailure && signinState.errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: AppErrorText(message: signinState.errorMessage!),
+          ) else const SizedBox(height: 24),
         ElevatedButton(
           onPressed: onSubmit,
           style: ElevatedButton.styleFrom(
@@ -304,7 +329,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         const SizedBox(height: 16),
         _buildTextField(
           controller: _usernameController,
-          label: localizations.authUsername,
           hintText: localizations.authUsernameHint,
           icon: Icons.account_circle_outlined,
           onChanged: (value) => ref.read(signupFormViewModelProvider(context).notifier).onUsernameChanged(value),
@@ -404,7 +428,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
     final VoidCallback? onSubmit = (isValid && !isSubmitting && _termsAccepted)
         ? () async {
-            bool success = await ref.read(signupFormViewModelProvider(context).notifier).submit();
+            bool success = await ref.read(signupFormViewModelProvider.notifier).submit(context);
             if (success && context.mounted) {
               context.go('/redirect');
             }
@@ -454,6 +478,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             icon: Icon(_confirmPasswordVisible ? Icons.visibility_off : Icons.visibility, color: const Color(0xFF999999)),
             onPressed: () => setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
           ),
+          onChanged: (value) => ref.read(signupFormViewModelProvider.notifier).onConfirmPasswordChanged(value),
         ),
         const SizedBox(height: 24),
         _buildTermsAndConditions(context),
@@ -512,6 +537,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE0E0E0))),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF1A73E8))),
           ),
+          onChanged: onChanged,
         ),
       ],
     );

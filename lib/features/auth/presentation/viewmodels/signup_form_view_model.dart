@@ -120,6 +120,7 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
   void onUsernameChanged(String value) {
     final username = Username.dirty(value);
     state = state.copyWith(
+    state = state.copyWith(
       username: username,
       isStep1Valid: Formz.validate([state.firstName, state.lastName, username, state.email]),
       usernameExists: false,
@@ -129,6 +130,7 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
   /// Called when the email text field changes. Resets emailExists flag.
   void onEmailChanged(String value) {
     final email = Email.dirty(value);
+    state = state.copyWith(
     state = state.copyWith(
       email: email,
       isStep1Valid: Formz.validate([state.firstName, state.lastName, state.username, email]),
@@ -212,7 +214,9 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
       password: state.password.value,
     );
 
-    overlay.hide();
+    if (context.mounted) {
+      overlay.hide();
+    }
 
     bool success = false;
 

@@ -22,5 +22,9 @@ abstract class AuthRepository {
 
   Future<Either<String, UserEntity?>> getCurrentUser();
 
-  Future<void> signInWithGoogle();
+    Future<void> signInWithGoogle();
+
+  Future<Either<String, bool>> checkUsername(String username);
+
+  Future<Either<String, bool>> checkEmail(String email);
 }

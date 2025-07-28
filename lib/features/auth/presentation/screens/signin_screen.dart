@@ -22,11 +22,11 @@ class _SigninScreenState extends ConsumerState<SigninScreen> {
   }
 
   void _onEmailChanged() {
-    ref.read(signinFormViewModelProvider(context).notifier).onEmailChanged(emailController.text);
+    ref.read(signinFormViewModelProvider.notifier).onEmailChanged(emailController.text);
   }
 
   void _onPasswordChanged() {
-    ref.read(signinFormViewModelProvider(context).notifier).onPasswordChanged(passwordController.text);
+    ref.read(signinFormViewModelProvider.notifier).onPasswordChanged(passwordController.text);
   }
 
   @override
@@ -38,11 +38,11 @@ class _SigninScreenState extends ConsumerState<SigninScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(signinFormViewModelProvider(context));
+    final state = ref.watch(signinFormViewModelProvider);
 
     final VoidCallback? onSubmit = (state.isValid && !state.isSubmitting)
         ? () {
-            ref.read(signinFormViewModelProvider(context).notifier).submit();
+            ref.read(signinFormViewModelProvider.notifier).submit(context);
           }
         : null;
 
