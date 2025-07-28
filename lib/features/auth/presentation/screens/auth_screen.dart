@@ -39,14 +39,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     @override
   void initState() {
     super.initState();
-<<<<<<< Updated upstream
-    _fullNameController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onFullNameChanged(_fullNameController.text));
-    _emailController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onEmailChanged(_emailController.text));
-    _usernameController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onUsernameChanged(_usernameController.text));
-    _passwordController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onPasswordChanged(_passwordController.text));
-    _confirmPasswordController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onConfirmPasswordChanged(_confirmPasswordController.text));
-=======
->>>>>>> Stashed changes
+
+    // _fullNameController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onFullNameChanged(_fullNameController.text));
+    // _emailController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onEmailChanged(_emailController.text));
+    // _usernameController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onUsernameChanged(_usernameController.text));
+    // _passwordController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onPasswordChanged(_passwordController.text));
+    // _confirmPasswordController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onConfirmPasswordChanged(_confirmPasswordController.text));
+
   }
 
   @override
