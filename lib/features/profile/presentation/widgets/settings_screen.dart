@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:rivo_app_beta/core/design_system/design_system.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
-import 'package:rivo_app_beta/features/profile/presentation/screens/profile_screen.dart';
+import 'package:rivo_app_beta/features/profile/presentation/providers/auth_view_model_provider.dart';
 
 
 /// Settings screen accessible from the profile gear icon.
 /// Currently only contains the logout button.
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-
-
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 

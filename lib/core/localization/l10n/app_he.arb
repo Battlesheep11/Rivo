@@ -60,6 +60,7 @@
   "passwordValidationTooShort": "הסיסמה חייבת לכלול לפחות 6 תווים",
   "noBioYet": "אין ביוגרפיה עדיין.",
   "editBio": "ערוך ביוגרפיה",
+  "noTagsYet": "אין עדיין תגים. הוסף כמה!",
   "editTags": "ערוך תגיות",
   "cancel": "ביטול",
   "save": "שמור",

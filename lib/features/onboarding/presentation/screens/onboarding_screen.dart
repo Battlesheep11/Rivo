@@ -97,8 +97,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          const TagSelectorWidget(),
-          const Spacer(),
+          const Expanded(
+            child: TagSelectorWidget(),
+          ),
           ElevatedButton(
             onPressed: isButtonEnabled
                 ? () async {

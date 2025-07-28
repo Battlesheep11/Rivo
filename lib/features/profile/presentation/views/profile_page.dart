@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:rivo_app_beta/core/design_system/design_system.dart';
 import 'package:rivo_app_beta/features/profile/data/models/profile_model.dart';
 import 'package:rivo_app_beta/features/profile/data/profile_service.dart';
 import 'package:rivo_app_beta/features/profile/presentation/widgets/profile_header.dart';
 import 'package:rivo_app_beta/features/profile/presentation/widgets/spotlight_section.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:go_router/go_router.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -56,7 +56,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                   pinned: true,
                   floating: true,
                   actions: [
-                    IconButton(onPressed: () => context.go('/settings'), icon: const Icon(Icons.settings_outlined, color: AppColors.onSurface)),
+                    IconButton(onPressed: () => context.push('/settings'), icon: const Icon(Icons.settings_outlined, color: AppColors.onSurface)),
                   ],
                 ),
                 SliverToBoxAdapter(child: ProfileHeader(profile: profile)),

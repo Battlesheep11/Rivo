@@ -10,6 +10,26 @@ class ProfileService {
     await _supabase.from('profiles').update({'bio': bio}).eq('id', userId);
   }
 
+  Future<List<String>> getTagsForUser(String userId) async {
+    final response = await _supabase.from('user_tags').select('tags(name)').eq('user_id', userId);
+    final tagsList = (response as List<dynamic>)
+        .map((e) => (e['tags'] as Map)['name'] as String)
+        .toList();
+    return tagsList;
+  }
+
+  Future<void> updateTagsForUser(String userId, List<String> tagNames) async {
+    // 1. Get the IDs for the given tag names from the 'tags' table.
+    final tagsResponse = await _supabase.from('tags').select('id, name').inFilter('name', tagNames);
+            final tagIds = tagsResponse.map((tag) => tag['id'] as String).toList();
+
+    // 2. Call the 'update_user_tags' RPC function to handle the update atomically.
+    await _supabase.rpc(
+      'update_user_tags',
+      params: {'p_user_id': userId, 'p_tag_ids': tagIds},
+    );
+  }
+
   Future<Map<String, dynamic>> getProfileData(String userId) async {
     try {
       // Fetch all data in parallel

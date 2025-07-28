@@ -3,8 +3,7 @@ import 'package:rivo_app_beta/core/design_system/design_system.dart';
 import 'package:rivo_app_beta/features/profile/data/models/profile_model.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/features/profile/data/profile_service.dart';
-import 'package:rivo_app_beta/features/onboarding/presentation/viewmodels/onboarding_view_model.dart';
-import 'package:rivo_app_beta/features/onboarding/presentation/widgets/tag_selector_widget.dart';
+import 'package:rivo_app_beta/features/profile/presentation/providers/edit_tags_provider.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class ProfileHeader extends StatefulWidget {
@@ -99,35 +98,54 @@ class _ProfileHeaderState extends State<ProfileHeader> {
           ),
           const SizedBox(height: 16),
           // Tags row with edit button
-          if (_profile.tags.isNotEmpty)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center, // Center the row content
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Center(
-                    child: Center(
-                      child: Wrap(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(
+                child: _profile.tags.isEmpty
+                    ? Text(
+                        AppLocalizations.of(context)!.noTagsYet,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: AppColors.gray600),
+                      )
+                    : Wrap(
                         spacing: 8.0,
                         runSpacing: 4.0,
+                        alignment: WrapAlignment.center,
                         children: _profile.tags.map((tag) => _buildTag(tag)).toList(),
                       ),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.edit, size: 18, color: AppColors.gray500),
-                  tooltip: AppLocalizations.of(context)!.editTags,
-                  onPressed: () async {
-                    // Show tag selection dialog
-                    await showDialog(
-                      context: context,
-                      builder: (context) => const _EditTagsDialog(),
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit, size: 18, color: AppColors.gray500),
+                tooltip: AppLocalizations.of(context)!.editTags,
+                onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final saved = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => const _EditTagsDialog(),
+                  );
+
+                  if (saved != true || !mounted) return;
+
+                  try {
+                    final profileData = await ProfileService().getProfileData(_profile.id);
+                    if (mounted) {
+                      setState(() {
+                        _profile = Profile.fromData(profileData);
+                      });
+                    }
+                  } catch (e) {
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to refresh profile: $e'),
+                        backgroundColor: AppColors.error,
+                      ),
                     );
-                  },
-                ),
-              ],
-            ),
+                  }
+                },
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -279,26 +297,67 @@ class _EditTagsDialogState extends ConsumerState<_EditTagsDialog> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
+    final allTagsAsync = ref.watch(allTagsProvider);
+    final selectedTagsAsync = ref.watch(editTagsProvider);
+    
     return AlertDialog(
       title: Text(localizations.editTags),
-      content: const SizedBox(
+      content: SizedBox(
         width: double.maxFinite,
-        child: TagSelectorWidget(), // Re-use the tag selector from onboarding
+        height: 400,
+        child: allTagsAsync.when(
+          data: (allTags) => selectedTagsAsync.when(
+            data: (selectedTags) => SingleChildScrollView(
+              child: Wrap(
+                spacing: 8.0,
+                runSpacing: 4.0,
+                children: allTags.map((tag) {
+                  final isSelected = selectedTags.contains(tag);
+                  return FilterChip(
+                    label: Text(tag),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      ref.read(editTagsProvider.notifier).selectTag(tag);
+                    },
+                    selectedColor: AppColors.primary.withAlpha(51), // Use withAlpha as per user rules
+                    checkmarkColor: AppColors.primary,
+                  );
+                }).toList(),
+              ),
+            ),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stack) => Center(
+              child: Text('Error loading selected tags: $error'),
+            ),
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(
+            child: Text('Error loading tags: $error'),
+          ),
+        ),
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            ref.read(editTagsProvider.notifier).reset();
+            Navigator.of(context).pop();
+          },
           child: Text(localizations.cancel),
         ),
         ElevatedButton(
-          onPressed: () async {
+          onPressed: selectedTagsAsync.isLoading ? null : () async {
             final navigator = Navigator.of(context);
-            // Use the view model to submit the selected tags
-            await ref.read(onboardingViewModelProvider.notifier).submitTags();
+            await ref.read(editTagsProvider.notifier).saveTags();
             if (!mounted) return;
-            navigator.pop();
+            navigator.pop(true); // Return true to indicate tags were saved
           },
-          child: Text(localizations.save),
+          child: selectedTagsAsync.isLoading 
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(localizations.save),
         ),
       ],
     );
