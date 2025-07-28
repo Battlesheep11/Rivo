@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:formz/formz.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
-import 'package:rivo_app_beta/core/loading/loading_overlay_provider.dart';
 import 'package:rivo_app_beta/core/toast/toast_service.dart';
 import 'package:rivo_app_beta/features/auth/domain/repositories/auth_repository.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/email.dart';

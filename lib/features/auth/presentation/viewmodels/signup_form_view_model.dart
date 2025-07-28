@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
 import 'dart:developer' as developer;
@@ -13,6 +13,7 @@ import 'package:rivo_app_beta/features/auth/presentation/forms/first_name.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/last_name.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/password.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/username.dart';
+import 'package:rivo_app_beta/core/navigation/navigator_key_provider.dart';
 
 class SignupFormState {
   final FirstName firstName;
@@ -22,7 +23,6 @@ class SignupFormState {
   final Password password;
   final ConfirmedPassword confirmedPassword;
   final PasswordStrength passwordStrength;
-  final bool isStep1Valid;
   final bool isValid;
   final bool isSubmitting;
   final bool isSuccess;
@@ -39,7 +39,7 @@ class SignupFormState {
     this.password = const Password.pure(),
     this.confirmedPassword = const ConfirmedPassword.pure(),
     this.passwordStrength = PasswordStrength.weak,
-    this.isStep1Valid = false,
+
     this.isValid = false,
     this.isSubmitting = false,
     this.isSuccess = false,
@@ -57,7 +57,7 @@ class SignupFormState {
     Password? password,
     ConfirmedPassword? confirmedPassword,
     PasswordStrength? passwordStrength,
-    bool? isStep1Valid,
+
     bool? isValid,
     bool? isSubmitting,
     bool? isSuccess,
@@ -74,7 +74,7 @@ class SignupFormState {
       password: password ?? this.password,
       confirmedPassword: confirmedPassword ?? this.confirmedPassword,
       passwordStrength: passwordStrength ?? this.passwordStrength,
-      isStep1Valid: isStep1Valid ?? this.isStep1Valid,
+
       isValid: isValid ?? this.isValid,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       isSuccess: isSuccess ?? this.isSuccess,
@@ -89,22 +89,19 @@ class SignupFormState {
 class SignupFormViewModel extends StateNotifier<SignupFormState> {
   final AuthRepository _repository;
   final Ref _ref;
-  final BuildContext _context;
 
   SignupFormViewModel({
     required AuthRepository repository,
     required Ref ref,
-    required BuildContext context,
   })  : _repository = repository,
         _ref = ref,
-        _context = context,
         super(SignupFormState());
 
   void onFirstNameChanged(String value) {
     final firstName = FirstName.dirty(value);
     state = state.copyWith(
       firstName: firstName,
-      isStep1Valid: Formz.validate([firstName, state.lastName, state.username, state.email]),
+      isValid: Formz.validate([firstName, state.lastName, state.username, state.email, state.password, state.confirmedPassword]),
     );
   }
 
@@ -112,7 +109,7 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
     final lastName = LastName.dirty(value);
     state = state.copyWith(
       lastName: lastName,
-      isStep1Valid: Formz.validate([state.firstName, lastName, state.username, state.email]),
+      isValid: Formz.validate([state.firstName, lastName, state.username, state.email, state.password, state.confirmedPassword]),
     );
   }
 
@@ -120,9 +117,8 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
   void onUsernameChanged(String value) {
     final username = Username.dirty(value);
     state = state.copyWith(
-    state = state.copyWith(
       username: username,
-      isStep1Valid: Formz.validate([state.firstName, state.lastName, username, state.email]),
+      isValid: Formz.validate([state.firstName, state.lastName, username, state.email, state.password, state.confirmedPassword]),
       usernameExists: false,
     );
   }
@@ -131,9 +127,8 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
   void onEmailChanged(String value) {
     final email = Email.dirty(value);
     state = state.copyWith(
-    state = state.copyWith(
       email: email,
-      isStep1Valid: Formz.validate([state.firstName, state.lastName, state.username, email]),
+      isValid: Formz.validate([state.firstName, state.lastName, state.username, email, state.password, state.confirmedPassword]),
       emailExists: false,
     );
   }
@@ -182,6 +177,8 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
     );
   }
 
+
+
   Future<bool> validateStep1() async {
     // If username or email is already flagged as existing, skip backend check and loading overlay
     if (state.usernameExists || state.emailExists) {
@@ -198,13 +195,14 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
     return !currentState.usernameExists && !currentState.emailExists;
   }
 
-  Future<bool> submit() async {
+  Future<bool> submit(BuildContext context) async {
     if (!state.isValid) return false;
-
+    
     final overlay = _ref.read(loadingOverlayProvider);
     state = state.copyWith(isSubmitting: true, isFailure: false, isSuccess: false);
+developer.log('[DEBUG] isSubmitting set to true in submit(), state: ${state.isSubmitting}');
 
-    overlay.show(_context);
+    overlay.show(context);
 
     final result = await _repository.signUp(
       firstName: state.firstName.value,
@@ -214,7 +212,8 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
       password: state.password.value,
     );
 
-    if (context.mounted) {
+    final currentContext = _ref.read(navigatorKeyProvider).currentContext;
+    if (currentContext != null && currentContext.mounted) {
       overlay.hide();
     }
 
@@ -222,12 +221,16 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
 
     result.fold(
       (failure) {
+        // Transition to failure state
         state = state.copyWith(isSubmitting: false, isFailure: true, errorMessage: failure);
+        developer.log('[DEBUG] isSubmitting set to false in submit() (failure), state: ${state.isSubmitting}');
         ToastService().showError(failure);
         success = false;
       },
       (user) {
+        // Transition to success state
         state = state.copyWith(isSubmitting: false, isSuccess: true);
+        developer.log('[DEBUG] isSubmitting set to false in submit() (success), state: ${state.isSubmitting}');
         ToastService().showSuccess("Success");
         success = true;
       },

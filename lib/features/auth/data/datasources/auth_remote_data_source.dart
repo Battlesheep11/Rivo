@@ -25,11 +25,20 @@ class AuthRemoteDataSource {
       email: email,
       password: password,
       data: {
+        'username': username, // Pass username to the trigger
+      },
+    );
+
+    if (response.user != null) {
+      // After successful signup, create a profile entry
+      await client.from('profiles').insert({
+        'id': response.user!.id,
         'first_name': firstName,
         'last_name': lastName,
         'username': username,
-      },
-    );
+      });
+    }
+
     return response;
   }
 
@@ -74,14 +83,5 @@ class AuthRemoteDataSource {
       redirectTo: 'com.example.rivo_app_beta://login-callback',
     );
   }
-
-  Future<bool> checkUsername(String username) async {
-    final response = await client.from('profiles').select('id').eq('username', username);
-    return response.isNotEmpty;
-  }
-
-  Future<bool> checkEmail(String email) async {
-    final response = await client.from('profiles').select('id').eq('email', email);
-    return response.isNotEmpty;
-  }
 }
+

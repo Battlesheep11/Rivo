@@ -1,23 +1,20 @@
 import 'package:flutter/gestures.dart';
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:formz/formz.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rivo_app_beta/core/design_system/app_error_text.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/core/localization/widgets/language_selector.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/google_signin_provider.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/signin_form_provider.dart';
-import 'package:rivo_app_beta/core/design_system/app_error_text.dart';
-import 'package:rivo_app_beta/core/localization/widgets/language_selector.dart';
-import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/signup_form_provider.dart';
 import 'package:rivo_app_beta/features/auth/presentation/state/auth_mode.dart';
 import 'package:rivo_app_beta/features/auth/presentation/viewmodels/signup_form_view_model.dart';
 import 'package:rivo_app_beta/features/auth/presentation/widgets/password_strength_indicator.dart';
-
-
-
+import 'package:rivo_app_beta/features/auth/presentation/forms/password.dart';
+import 'package:rivo_app_beta/features/auth/presentation/forms/confirmed_password.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -46,43 +43,39 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   void initState() {
     super.initState();
 
-    _fullNameController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onFullNameChanged(_fullNameController.text));
-    _emailController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onEmailChanged(_emailController.text));
-    _usernameController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onUsernameChanged(_usernameController.text));
-    _passwordController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onPasswordChanged(_passwordController.text));
-    _confirmPasswordController.addListener(() => (ref.read(signupFormViewModelProvider(context).notifier) as dynamic).onConfirmPasswordChanged(_confirmPasswordController.text));
-
-    // Sign-up form listeners
-    _firstNameController.addListener(() => ref
-        .read(signupFormViewModelProvider(context).notifier)
-        .onFirstNameChanged(_firstNameController.text));
-    _lastNameController.addListener(() => ref
-        .read(signupFormViewModelProvider(context).notifier)
-        .onLastNameChanged(_lastNameController.text));
     _emailController.addListener(() {
       if (_authMode == AuthMode.signIn) {
-        ref.read(signinFormViewModelProvider(context).notifier)
-            .onEmailChanged(_emailController.text);
+        ref.read(signinFormViewModelProvider.notifier).onEmailChanged(_emailController.text);
       } else {
-        ref.read(signupFormViewModelProvider(context).notifier)
-            .onEmailChanged(_emailController.text);
+        ref.read(signupFormViewModelProvider.notifier).onEmailChanged(_emailController.text);
       }
     });
-    _usernameController.addListener(() => ref
-        .read(signupFormViewModelProvider(context).notifier)
-        .onUsernameChanged(_usernameController.text));
+
     _passwordController.addListener(() {
+      debugPrint('[DEBUG] PasswordController changed: ${_passwordController.text}');
       if (_authMode == AuthMode.signIn) {
-        ref.read(signinFormViewModelProvider(context).notifier)
-            .onPasswordChanged(_passwordController.text);
+        ref.read(signinFormViewModelProvider.notifier).onPasswordChanged(_passwordController.text);
       } else {
-        ref.read(signupFormViewModelProvider(context).notifier)
-            .onPasswordChanged(_passwordController.text);
+        ref.read(signupFormViewModelProvider.notifier).onPasswordChanged(_passwordController.text);
       }
     });
-    _confirmPasswordController.addListener(() => ref
-        .read(signupFormViewModelProvider(context).notifier)
-        .onConfirmPasswordChanged(_confirmPasswordController.text));
+
+    _firstNameController.addListener(() {
+      debugPrint('[DEBUG] FirstNameController changed: ${_firstNameController.text}');
+      ref.read(signupFormViewModelProvider.notifier).onFirstNameChanged(_firstNameController.text);
+    });
+    _lastNameController.addListener(() {
+      debugPrint('[DEBUG] LastNameController changed: ${_lastNameController.text}');
+      ref.read(signupFormViewModelProvider.notifier).onLastNameChanged(_lastNameController.text);
+    });
+    _usernameController.addListener(() {
+      debugPrint('[DEBUG] UsernameController changed: ${_usernameController.text}');
+      ref.read(signupFormViewModelProvider.notifier).onUsernameChanged(_usernameController.text);
+    });
+    _confirmPasswordController.addListener(() {
+      debugPrint('[DEBUG] ConfirmPasswordController changed: ${_confirmPasswordController.text}');
+      ref.read(signupFormViewModelProvider.notifier).onConfirmPasswordChanged(_confirmPasswordController.text);
+    });
   }
 
   @override
@@ -98,15 +91,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<SignupFormState>(signupFormViewModelProvider(context),
-        (previous, next) {
+    ref.listen<SignupFormState>(signupFormViewModelProvider, (previous, next) {
       if (next.isSubmitting) {
-        // Optionally show a loading dialog
+        // Handle loading state
       }
       if (!next.isSubmitting && (previous?.isSubmitting ?? false)) {
-        // Optionally hide loading dialog
+        // Handle end of loading state
       }
-
     });
 
     return Scaffold(
@@ -125,7 +116,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withAlpha(12),
+                        color: Colors.black.withValues(alpha: 0.06),
                         blurRadius: 20,
                         offset: const Offset(0, 4),
                       ),
@@ -171,7 +162,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final isSubmitting = signinState.isSubmitting;
     final isValid = signinState.isValid;
 
-    // Use ref.listen to handle navigation side-effects, which is the idiomatic Riverpod way.
     ref.listen(signinFormViewModelProvider, (previous, next) {
       if (next.isSuccess && context.mounted) {
         context.go('/redirect');
@@ -179,35 +169,22 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     });
 
     final VoidCallback? onSubmit = (isValid && !isSubmitting)
-        ? () {
-            // No need to await, the listener will handle the result.
-            ref.read(signinFormViewModelProvider.notifier).submit(context);
-          }
+        ? () => ref.read(signinFormViewModelProvider.notifier).submit(context)
         : null;
 
     return Column(
       key: const ValueKey('signInForm'),
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          localizations.signIn,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
-        ),
+        Text(localizations.signIn, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A))),
         const SizedBox(height: 8),
-        Text(
-          localizations.authWelcomeSubtitle,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF666666)),
-        ),
+        Text(localizations.authWelcomeSubtitle, style: const TextStyle(fontSize: 14, color: Color(0xFF666666))),
         const SizedBox(height: 32),
         _buildTextField(
           controller: _emailController,
           label: localizations.email,
           hintText: localizations.email,
           icon: Icons.email_outlined,
-          onChanged: (value) {
-            ref.read(signinFormViewModelProvider(context).notifier)
-                .onEmailChanged(value);
-          },
         ),
         const SizedBox(height: 20),
         _buildTextField(
@@ -220,14 +197,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             icon: Icon(_passwordVisible ? Icons.visibility_off : Icons.visibility, color: const Color(0xFF999999)),
             onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
           ),
-          onChanged: (value) {
-            ref.read(signupFormViewModelProvider.notifier).onPasswordChanged(value);
-            ref.read(signinFormViewModelProvider.notifier).onPasswordChanged(value);
-          },
         ),
         if (signinState.isFailure && signinState.errorMessage != null)
           Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
+            padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
             child: AppErrorText(message: signinState.errorMessage!),
           ) else const SizedBox(height: 24),
         ElevatedButton(
@@ -243,17 +216,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
               : Text(localizations.signIn),
         ),
-        // Show error message if sign-in failed
-        if (signinState.isFailure && signinState.errorMessage != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
-            child: Text(
-              // Use localization for invalid credentials
-              localizations.authInvalidCredentials,
-              style: const TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-          ),
         const SizedBox(height: 24),
         _buildDivider(context),
         const SizedBox(height: 24),
@@ -286,23 +248,19 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Widget _buildUserDetailsStep(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
-    final formState = ref.watch(signupFormViewModelProvider(context));
+    final signupState = ref.watch(signupFormViewModelProvider);
+    final signupNotifier = ref.read(signupFormViewModelProvider.notifier);
     final googleLoading = ref.watch(googleSignInViewModelProvider(context));
-    final isStep1Valid = formState.isStep1Valid;
+
+    final isStep1Valid = Formz.validate([signupState.firstName, signupState.lastName, signupState.username, signupState.email]);
 
     return Column(
       key: const ValueKey('userDetailsStep'),
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          localizations.signUp,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
-        ),
+        Text(localizations.signUp, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A))),
         const SizedBox(height: 8),
-        Text(
-          localizations.authSubheading,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF666666)),
-        ),
+        Text(localizations.authSubheading, style: const TextStyle(fontSize: 14, color: Color(0xFF666666))),
         const SizedBox(height: 32),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,15 +289,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           controller: _usernameController,
           hintText: localizations.authUsernameHint,
           icon: Icons.account_circle_outlined,
-          onChanged: (value) => ref.read(signupFormViewModelProvider(context).notifier).onUsernameChanged(value),
         ),
-        if (formState.usernameExists)
+        if (signupState.usernameExists)
           Padding(
             padding: const EdgeInsets.only(top: 4, left: 4),
-            child: Text(
-              localizations.authUsernameTaken,
-              style: const TextStyle(color: Colors.red, fontSize: 13),
-            ),
+            child: Text(localizations.authUsernameTaken, style: const TextStyle(color: Colors.red, fontSize: 13)),
           ),
         const SizedBox(height: 16),
         _buildTextField(
@@ -347,47 +301,31 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           label: localizations.email,
           hintText: localizations.authEmailHint,
           icon: Icons.alternate_email,
-          onChanged: (value) => ref.read(signupFormViewModelProvider(context).notifier).onEmailChanged(value),
         ),
-        if (formState.emailExists)
+        if (signupState.emailExists)
           Padding(
             padding: const EdgeInsets.only(top: 4, left: 4),
-            child: Text(
-              localizations.authEmailTaken,
-              style: const TextStyle(color: Colors.red, fontSize: 13),
-            ),
+            child: Text(localizations.authEmailTaken, style: const TextStyle(color: Colors.red, fontSize: 13)),
           ),
         const SizedBox(height: 24),
         ElevatedButton(
-          onPressed: isStep1Valid && !formState.isSubmitting
+          onPressed: isStep1Valid && !signupState.isSubmitting
               ? () async {
-                  developer.log('[DEBUG] Continue button pressed');
-                  final signupProvider = signupFormViewModelProvider(context);
-                  final notifier = ref.read(signupProvider.notifier);
-                  final localFormState = ref.read(signupProvider);
-                  final scaffoldMessenger = ScaffoldMessenger.of(context);
-                  final localizationsCopy = localizations;
-                  final authUsernameTaken = localizationsCopy.authUsernameTaken;
-                  final authEmailTaken = localizationsCopy.authEmailTaken;
-                  final success = await notifier.validateStep1();
-                  developer.log('[DEBUG] validateStep1 returned: $success');
-                  if (!mounted) return;
+                  final success = await signupNotifier.validateStep1();
+                  if (!context.mounted) return;
                   if (success) {
-                    setState(() {
-                      _signupStep = _SignupStep.createPassword;
-                    });
+                    setState(() => _signupStep = _SignupStep.createPassword);
                   } else {
-                    if (!mounted) return;
-                    developer.log('[DEBUG] usernameExists: ${localFormState.usernameExists}, emailExists: ${localFormState.emailExists}');
-                    if (localFormState.usernameExists) {
-                      scaffoldMessenger.showSnackBar(
-                        SnackBar(content: Text(authUsernameTaken)),
-                      );
+                    if (!context.mounted) return;
+                    final currentState = ref.read(signupFormViewModelProvider);
+                    final messenger = ScaffoldMessenger.of(context);
+                    if (currentState.usernameExists) {
+                      if (!context.mounted) return;
+                      messenger.showSnackBar(SnackBar(content: Text(localizations.authUsernameTaken)));
                     }
-                    if (localFormState.emailExists) {
-                      scaffoldMessenger.showSnackBar(
-                        SnackBar(content: Text(authEmailTaken)),
-                      );
+                    if (currentState.emailExists) {
+                      if (!context.mounted) return;
+                      messenger.showSnackBar(SnackBar(content: Text(localizations.authEmailTaken)));
                     }
                   }
                 }
@@ -421,33 +359,56 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Widget _buildCreatePasswordStep(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
-    final passwordStrength = ref.watch(signupFormViewModelProvider(context).select((state) => state.passwordStrength));
-    final signupState = ref.watch(signupFormViewModelProvider(context));
+    final signupState = ref.watch(signupFormViewModelProvider);
+    final passwordStrength = signupState.passwordStrength;
     final isSubmitting = signupState.isSubmitting;
+    
+    // The overall form validity is determined by the view model's state.
     final isValid = signupState.isValid;
+    debugPrint('[DEBUG] Form isValid from state: $isValid');
+
+    // Get password validation error messages (localized)
+    String? passwordError;
+    String? confirmPasswordError;
+
+    // Password validation - show localized error for each possible failure
+    if (signupState.password.displayError != null) {
+      switch (signupState.password.displayError!) {
+        case PasswordValidationError.tooShort:
+          passwordError = localizations.passwordValidationTooShort;
+          break;
+      }
+    }
+
+    // Confirm password validation - show localized error for each possible failure
+    if (signupState.confirmedPassword.displayError != null) {
+      switch (signupState.confirmedPassword.displayError!) {
+        case ConfirmedPasswordValidationError.mismatch:
+          confirmPasswordError = localizations.passwordValidationMismatch;
+          break;
+      }
+    }
 
     final VoidCallback? onSubmit = (isValid && !isSubmitting && _termsAccepted)
         ? () async {
+            debugPrint('[DEBUG] Create Account button pressed!');
             bool success = await ref.read(signupFormViewModelProvider.notifier).submit(context);
+            debugPrint('[DEBUG] Submit result: $success');
             if (success && context.mounted) {
+              debugPrint('[DEBUG] Navigation to /redirect');
               context.go('/redirect');
             }
           }
         : null;
+    debugPrint('[DEBUG] Button enabled: ${isValid && !isSubmitting && _termsAccepted} (isValid: $isValid, isSubmitting: $isSubmitting, terms: $_termsAccepted)');
 
     return Column(
       key: const ValueKey('createPasswordStep'),
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          localizations.authCreatePassword,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
-        ),
+        Text(localizations.authCreatePassword, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A))),
         const SizedBox(height: 8),
-        Text(
-          localizations.authSecureAccount,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF666666)),
-        ),
+        Text(localizations.authSecureAccount, style: const TextStyle(fontSize: 14, color: Color(0xFF666666))),
         const SizedBox(height: 32),
         _buildTextField(
           controller: _passwordController,
@@ -455,6 +416,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           hintText: localizations.authPasswordHint,
           icon: Icons.lock_outline,
           obscureText: !_passwordVisible,
+          errorText: passwordError, // Display password validation error
           suffixIcon: IconButton(
             icon: Icon(_passwordVisible ? Icons.visibility_off : Icons.visibility, color: const Color(0xFF999999)),
             onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
@@ -463,9 +425,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         if (_passwordController.text.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
-            child: PasswordStrengthIndicator(
-              strength: passwordStrength,
-            ),
+            child: PasswordStrengthIndicator(strength: passwordStrength),
           ),
         const SizedBox(height: 20),
         _buildTextField(
@@ -474,15 +434,27 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           hintText: localizations.authConfirmPasswordHint,
           icon: Icons.lock_outline,
           obscureText: !_confirmPasswordVisible,
+          errorText: confirmPasswordError, // Display confirm password validation error
           suffixIcon: IconButton(
             icon: Icon(_confirmPasswordVisible ? Icons.visibility_off : Icons.visibility, color: const Color(0xFF999999)),
             onPressed: () => setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
           ),
-          onChanged: (value) => ref.read(signupFormViewModelProvider.notifier).onConfirmPasswordChanged(value),
         ),
         const SizedBox(height: 24),
         _buildTermsAndConditions(context),
         const SizedBox(height: 24),
+        // Add helpful text when button is disabled to guide user
+        if (!isValid || !_termsAccepted)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Text(
+              !_termsAccepted 
+                  ? 'Please accept the terms and conditions to continue'
+                  : 'Please enter a valid password and confirm it correctly',
+              style: const TextStyle(color: Colors.orange, fontSize: 13, fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
         ElevatedButton(
           onPressed: onSubmit,
           style: ElevatedButton.styleFrom(
@@ -509,22 +481,22 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     String? label,
     bool obscureText = false,
     Widget? suffixIcon,
-    ValueChanged<String>? onChanged,
+    String? errorText, // Add error text parameter for validation feedback
   }) {
+    // Determine border color based on error state
+    final borderColor = errorText != null ? Colors.red : const Color(0xFFE0E0E0);
+    final focusedBorderColor = errorText != null ? Colors.red : const Color(0xFF1A73E8);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (label != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF333333)),
-            ),
+            child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF333333))),
           ),
         TextFormField(
           controller: controller,
-          onChanged: onChanged,
           obscureText: obscureText,
           decoration: InputDecoration(
             hintText: hintText,
@@ -533,12 +505,23 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE0E0E0))),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE0E0E0))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF1A73E8))),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: borderColor)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: borderColor)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: focusedBorderColor)),
+            // Add error styling when there's an error
+            errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.red)),
+            focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.red)),
           ),
-          onChanged: onChanged,
         ),
+        // Display error text below the field if present
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 4),
+            child: Text(
+              errorText,
+              style: const TextStyle(color: Colors.red, fontSize: 13),
+            ),
+          ),
       ],
     );
   }
@@ -585,6 +568,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           onChanged: (bool? value) {
             setState(() {
               _termsAccepted = value ?? false;
+              debugPrint('[DEBUG] TermsAccepted changed: $_termsAccepted');
             });
           },
           activeColor: const Color(0xFF1A73E8),
@@ -598,7 +582,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               children: [
                 TextSpan(text: localizations.authTermsAccept),
                 TextSpan(
-                                    text: localizations.authTermsOfService,
+                  text: localizations.authTermsOfService,
                   style: const TextStyle(color: Color(0xFF1A73E8), fontWeight: FontWeight.w500),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
