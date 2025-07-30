@@ -25,6 +25,12 @@ mixin _$UploadPostState {
   double? get length => throw _privateConstructorUsedError;
   String? get caption => throw _privateConstructorUsedError;
   String? get categoryId => throw _privateConstructorUsedError;
+  String? get brand => throw _privateConstructorUsedError; // brand of the item
+  String? get material =>
+      throw _privateConstructorUsedError; // material description
+  String? get condition =>
+      throw _privateConstructorUsedError; // item condition (e.g. New, Used)
+  String? get size => throw _privateConstructorUsedError; // item size
   List<UploadableMedia> get media => throw _privateConstructorUsedError;
   List<String> get tagNames => throw _privateConstructorUsedError;
   bool get isSubmitting => throw _privateConstructorUsedError;
@@ -55,6 +61,10 @@ abstract class $UploadPostStateCopyWith<$Res> {
     double? length,
     String? caption,
     String? categoryId,
+    String? brand,
+    String? material,
+    String? condition,
+    String? size,
     List<UploadableMedia> media,
     List<String> tagNames,
     bool isSubmitting,
@@ -87,6 +97,10 @@ class _$UploadPostStateCopyWithImpl<$Res, $Val extends UploadPostState>
     Object? length = freezed,
     Object? caption = freezed,
     Object? categoryId = freezed,
+    Object? brand = freezed,
+    Object? material = freezed,
+    Object? condition = freezed,
+    Object? size = freezed,
     Object? media = null,
     Object? tagNames = null,
     Object? isSubmitting = null,
@@ -127,6 +141,22 @@ class _$UploadPostStateCopyWithImpl<$Res, $Val extends UploadPostState>
             categoryId: freezed == categoryId
                 ? _value.categoryId
                 : categoryId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            brand: freezed == brand
+                ? _value.brand
+                : brand // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            material: freezed == material
+                ? _value.material
+                : material // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            condition: freezed == condition
+                ? _value.condition
+                : condition // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            size: freezed == size
+                ? _value.size
+                : size // ignore: cast_nullable_to_non_nullable
                       as String?,
             media: null == media
                 ? _value.media
@@ -176,6 +206,10 @@ abstract class _$$UploadPostStateImplCopyWith<$Res>
     double? length,
     String? caption,
     String? categoryId,
+    String? brand,
+    String? material,
+    String? condition,
+    String? size,
     List<UploadableMedia> media,
     List<String> tagNames,
     bool isSubmitting,
@@ -207,6 +241,10 @@ class __$$UploadPostStateImplCopyWithImpl<$Res>
     Object? length = freezed,
     Object? caption = freezed,
     Object? categoryId = freezed,
+    Object? brand = freezed,
+    Object? material = freezed,
+    Object? condition = freezed,
+    Object? size = freezed,
     Object? media = null,
     Object? tagNames = null,
     Object? isSubmitting = null,
@@ -247,6 +285,22 @@ class __$$UploadPostStateImplCopyWithImpl<$Res>
         categoryId: freezed == categoryId
             ? _value.categoryId
             : categoryId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        brand: freezed == brand
+            ? _value.brand
+            : brand // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        material: freezed == material
+            ? _value.material
+            : material // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        condition: freezed == condition
+            ? _value.condition
+            : condition // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        size: freezed == size
+            ? _value.size
+            : size // ignore: cast_nullable_to_non_nullable
                   as String?,
         media: null == media
             ? _value._media
@@ -289,6 +343,10 @@ class _$UploadPostStateImpl extends _UploadPostState {
     this.length,
     this.caption,
     this.categoryId,
+    this.brand = '',
+    this.material = '',
+    this.condition = '',
+    this.size = '',
     final List<UploadableMedia> media = const [],
     final List<String> tagNames = const [],
     this.isSubmitting = false,
@@ -316,7 +374,24 @@ class _$UploadPostStateImpl extends _UploadPostState {
   final String? caption;
   @override
   final String? categoryId;
+  @override
+  @JsonKey()
+  final String? brand;
+  // brand of the item
+  @override
+  @JsonKey()
+  final String? material;
+  // material description
+  @override
+  @JsonKey()
+  final String? condition;
+  // item condition (e.g. New, Used)
+  @override
+  @JsonKey()
+  final String? size;
+  // item size
   final List<UploadableMedia> _media;
+  // item size
   @override
   @JsonKey()
   List<UploadableMedia> get media {
@@ -349,7 +424,7 @@ class _$UploadPostStateImpl extends _UploadPostState {
 
   @override
   String toString() {
-    return 'UploadPostState(title: $title, description: $description, price: $price, chest: $chest, waist: $waist, length: $length, caption: $caption, categoryId: $categoryId, media: $media, tagNames: $tagNames, isSubmitting: $isSubmitting, status: $status, uploadedMediaCount: $uploadedMediaCount, totalMediaCount: $totalMediaCount)';
+    return 'UploadPostState(title: $title, description: $description, price: $price, chest: $chest, waist: $waist, length: $length, caption: $caption, categoryId: $categoryId, brand: $brand, material: $material, condition: $condition, size: $size, media: $media, tagNames: $tagNames, isSubmitting: $isSubmitting, status: $status, uploadedMediaCount: $uploadedMediaCount, totalMediaCount: $totalMediaCount)';
   }
 
   @override
@@ -367,6 +442,12 @@ class _$UploadPostStateImpl extends _UploadPostState {
             (identical(other.caption, caption) || other.caption == caption) &&
             (identical(other.categoryId, categoryId) ||
                 other.categoryId == categoryId) &&
+            (identical(other.brand, brand) || other.brand == brand) &&
+            (identical(other.material, material) ||
+                other.material == material) &&
+            (identical(other.condition, condition) ||
+                other.condition == condition) &&
+            (identical(other.size, size) || other.size == size) &&
             const DeepCollectionEquality().equals(other._media, _media) &&
             const DeepCollectionEquality().equals(other._tagNames, _tagNames) &&
             (identical(other.isSubmitting, isSubmitting) ||
@@ -389,6 +470,10 @@ class _$UploadPostStateImpl extends _UploadPostState {
     length,
     caption,
     categoryId,
+    brand,
+    material,
+    condition,
+    size,
     const DeepCollectionEquality().hash(_media),
     const DeepCollectionEquality().hash(_tagNames),
     isSubmitting,
@@ -419,6 +504,10 @@ abstract class _UploadPostState extends UploadPostState {
     final double? length,
     final String? caption,
     final String? categoryId,
+    final String? brand,
+    final String? material,
+    final String? condition,
+    final String? size,
     final List<UploadableMedia> media,
     final List<String> tagNames,
     final bool isSubmitting,
@@ -444,6 +533,14 @@ abstract class _UploadPostState extends UploadPostState {
   String? get caption;
   @override
   String? get categoryId;
+  @override
+  String? get brand; // brand of the item
+  @override
+  String? get material; // material description
+  @override
+  String? get condition; // item condition (e.g. New, Used)
+  @override
+  String? get size; // item size
   @override
   List<UploadableMedia> get media;
   @override

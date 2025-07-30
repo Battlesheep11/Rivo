@@ -8,22 +8,46 @@ import 'package:rivo_app_beta/features/post/data/datasources/upload_post_state.d
 import 'package:rivo_app_beta/features/post/domain/providers/post_providers.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:rivo_app_beta/core/utils/media_validator.dart'; 
+import 'package:rivo_app_beta/core/utils/media_validator.dart';
+import 'package:rivo_app_beta/core/utils/input_sanitizer.dart'; // For input sanitization
 
 class UploadPostViewModel extends StateNotifier<UploadPostState> {
   final UploadPostUseCase useCase;
 
   UploadPostViewModel({required this.useCase}) : super(const UploadPostState());
 
-  void setTitle(String? value) => state = state.copyWith(title: value);
-  void setDescription(String? value) => state = state.copyWith(description: value);
-  void setPrice(double? value) => state = state.copyWith(price: value);
-  void setCategory(String? id) => state = state.copyWith(categoryId: id);
-  void setTags(List<String> tagNames) => state = state.copyWith(tagNames: tagNames);
+  // Sanitize and set title
+  void setTitle(String? value) => state = state.copyWith(title: value != null ? InputSanitizer.sanitizeTitle(value) : null);
+  // Sanitize and set description
+  void setDescription(String? value) => state = state.copyWith(description: value != null ? InputSanitizer.sanitizeDescription(value) : null);
+  // Sanitize and set price (convert to string, sanitize, then parse back)
+  void setPrice(double? value) {
+    if (value == null) {
+      state = state.copyWith(price: null);
+    } else {
+      final sanitized = InputSanitizer.sanitizePrice(value.toString());
+      final parsed = double.tryParse(sanitized);
+      state = state.copyWith(price: parsed);
+    }
+  }
+  // Sanitize and set category (should be a valid UUID, but still sanitize)
+  void setCategory(String? id) => state = state.copyWith(categoryId: id != null ? InputSanitizer.sanitizeSimpleField(id) : null);
+  // Sanitize and set tags
+  void setTags(List<String> tagNames) => state = state.copyWith(tagNames: InputSanitizer.sanitizeTags(tagNames));
+  // Chest, waist, length: only numbers, no need for string sanitization
   void setChest(double? value) => state = state.copyWith(chest: value);
   void setWaist(double? value) => state = state.copyWith(waist: value);
   void setLength(double? value) => state = state.copyWith(length: value);
-  void setCaption(String? value) => state = state.copyWith(caption: value);
+  // Sanitize and set caption
+  void setCaption(String? value) => state = state.copyWith(caption: value != null ? InputSanitizer.sanitizeDescription(value) : null);
+  // Sanitize and set condition
+  void setCondition(String? value) => state = state.copyWith(condition: value != null ? InputSanitizer.sanitizeSimpleField(value) : null);
+  // Sanitize and set size
+  void setSize(String? value) => state = state.copyWith(size: value != null ? InputSanitizer.sanitizeSimpleField(value) : null);
+  // Sanitize and set brand
+  void setBrand(String? value) => state = state.copyWith(brand: value != null ? InputSanitizer.sanitizeSimpleField(value) : null);
+  // Sanitize and set material
+  void setMaterial(String? value) => state = state.copyWith(material: value != null ? InputSanitizer.sanitizeSimpleField(value) : null);
 
 
   Future<void> setMedia(List<UploadableMedia> selectedMedia) async {
@@ -64,6 +88,13 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
 
 
 
+  void reorderMedia(int oldIndex, int newIndex) {
+    final items = List<UploadableMedia>.from(state.media);
+    final item = items.removeAt(oldIndex);
+    items.insert(newIndex, item);
+    state = state.copyWith(media: items);
+  }
+
   void removeMedia(UploadableMedia file) {
     state = state.copyWith(
       media: List.from(state.media)..removeWhere((m) => m.path == file.path),
@@ -84,6 +115,13 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
 
 
   Future<void> submit() async {
+    // Throw specific validation errors for missing caption or price
+    if (state.caption == null || state.caption!.trim().isEmpty) {
+      throw AppException.validation('uploadCaptionRequiredBackend');
+    }
+    if (state.price == null) {
+      throw AppException.validation('uploadPriceRequiredBackend');
+    }
     if (!state.isValid) {
       throw AppException.validation('upload.required_fields_missing');
     }
@@ -104,6 +142,10 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
         chest: state.chest,
         waist: state.waist,
         length: state.length,
+        brand: state.brand?.isEmpty == true ? null : state.brand,
+        material: state.material?.isEmpty == true ? null : state.material,
+        condition: state.condition?.isEmpty == true ? null : state.condition,
+        size: state.size?.isEmpty == true ? null : state.size,
         caption: state.caption,
         media: validMedia.map((m) => m).toList(),
         tags: state.tagNames.map((name) => TagEntity(name: name)).toList(),

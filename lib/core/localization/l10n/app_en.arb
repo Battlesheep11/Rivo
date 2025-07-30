@@ -78,6 +78,30 @@
   "selectCategory": "Select a category",
   "tags": "Tags",
   "fieldRequired": "This field is required",
+  "uploadCaptionRequired": "Caption is required",
+  "uploadCaptionRequiredBackend": "Caption is required",
+  "@uploadCaptionRequiredBackend": {
+    "description": "Error message when caption is missing during upload validation (backend)"
+  },
+  "@uploadCaptionRequired": {
+    "description": "Error message shown when caption is missing on upload"
+  },
+  "uploadPriceRequired": "Price is required",
+  "uploadPriceRequiredBackend": "Price is required",
+  "@uploadPriceRequiredBackend": {
+    "description": "Error message when price is missing during upload validation (backend)"
+  },
+  "@uploadPriceRequired": {
+    "description": "Error message shown when price is missing on upload"
+  },
+  "uploadPhotoRequired": "Please add at least one photo",
+  "@uploadPhotoRequired": {
+    "description": "Error message shown when no photos are added for upload"
+  },
+  "uploadCategoryRequired": "Please select a category",
+  "@uploadCategoryRequired": {
+    "description": "Error message shown when no category is selected"
+  },
   "chestMeasurementLabel": "Chest measurements",
   "waistMeasurementLabel": "Waist measurements",
   "lengthMeasurementLabel": "Length measurements",
@@ -168,5 +192,80 @@
   "navBarSearch": "Search",
   "navBarFavorites": "Favorites",
   "navBarProfile": "Profile",
-  "moreFromThisSeller": "More from this seller"
+  "moreFromThisSeller": "More from this seller",
+  "uploadCaptionLabel": "Caption",
+  "uploadCaptionHint": "Enter a caption for your post",
+  "uploadPriceLabel": "Price",
+  "uploadPriceHint": "Enter a price",
+  "uploadBackButton": "Back",
+  "uploadNextButton": "Next",
+  "itemDetailsLabel": "Item Details",
+  "newItem": "New Item",
+  "addPhotos": "Add photos",
+  "photoTip": "First photo is your cover image. Tap to rearrange.",
+  "firstPhotoAsCover": "Your first photo will be the cover of your item.",
+  "whatAreYouSelling": "What are you selling?",
+  "details": "Details",
+  "publishItem": "Publish Item",
+  "cover": "Cover",
+  "error_loading_tags": "Error loading tags",
+  "failed_to_publish_item": "Failed to publish item: {error}",
+  "@failed_to_publish_item": {
+    "description": "Error message shown when publishing an item fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "item_published": "Item Published!",
+  "item_published_description": "Your item is now live. What would you like to do next?",
+  "go_home": "Go Home",
+  "view_item": "View Item",
+  "captionAndPriceTitle": "Caption & Price",
+  "addCaptionHint": "Add a caption",
+  "itemDetailsTitle": "Item Details",
+  "conditionLabel": "Condition",
+  "selectConditionHint": "Select condition",
+  "sizeLabel": "Size",
+  "selectSizeHint": "Select size",
+  "brandLabel": "Brand",
+  "enterBrandHint": "Enter brand",
+  "materialLabel": "Material",
+  "enterMaterialHint": "Enter material",
+  "tagsAndStyleTitle": "Tags & Style",
+  "tagsDescription": "Add style tags to help buyers find your item",
+  "customTagsHint": "e.g. summer, party, comfortable",
+  "publishButton": "Publish",
+  "maxPhotosError": "Maximum 10 photos allowed",
+  "savePhotoError": "Failed to save photo",
+  "selectConditionTitle": "Select Condition",
+  "conditionNewWithTags": "New with tags",
+  "conditionNewWithoutTags": "New without tags",
+  "conditionLikeNew": "Like new",
+  "conditionVeryGood": "Very good",
+  "conditionGood": "Good",
+  "conditionFair": "Fair",
+  "optional": "Optional",
+  "itemDetailsDescription": "Add details about your item to help buyers find it.",
+  "measurementsLabel": "Measurements",
+  "tagsAndStyleTitle": "Tags & Style",
+  "tagsAndStyleDescription": "Add tags to help people find your item",
+  "styleTagsLabel": "Style Tags",
+  "customTagsLabel": "Custom Tags",
+  "customTagsHint": "Add your own tags (comma separated)",
+  "selectedTagsLabel": "Selected Tags",
+  "publishItemButton": "Publish Item",
+  "publishingButton": "Publishing...",
+  "centimetersAbbreviation": "cm",
+  "itemPublished": "Item Published!",
+  "itemPublishedDescription": "Your item has been successfully published and is now visible to other users.",
+  "goHome": "Go Home",
+  "viewItem": "View Item",
+  "failedToPublish": "Failed to publish item: {error}",
+  "custom_tags_hint": "e.g. summer, party, comfortable",
+  "currencyShekel": "₪",
+  "@currencyShekel": {
+    "description": "Currency symbol for Israeli Shekel (used as prefix in price fields)"
+  }
 }

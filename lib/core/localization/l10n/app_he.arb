@@ -54,6 +54,19 @@
   "authUsernameTaken": "שם משתמש תפוס",
   "authEmailTaken": "כתובת אימייל תפוסה",
   "moreFromThisSeller": "עוד מוכרים",
+  "uploadCaptionLabel": "כיתוב",
+  "uploadCaptionHint": "הזן כיתוב לפוסט שלך",
+  "uploadPriceLabel": "מחיר",
+  "uploadPriceHint": "הזן מחיר",
+  "uploadBackButton": "חזור",
+  "uploadNextButton": "הבא",
+  "itemDetailsLabel": "פרטי פריט",
+  "newItem": "פריט חדש",
+  "addPhotos": "הוסף תמונות",
+  "photoTip": "התמונה הראשונה היא תמונת השער. הקש כדי לסדר מחדש.",
+  "whatAreYouSelling": "מה אתה מוכר?",
+  "details": "פרטים",
+  "publishItem": "פרסם פריט",
   "settingsTooltip": "הגדרות",
   "followers": "עוקבים",
   "following": "נעקבים",
@@ -80,6 +93,30 @@
   "selectCategory": "בחר קטגוריה",
   "tags": "תגיות",
   "fieldRequired": "שדה חובה",
+  "uploadCaptionRequired": "יש להוסיף כיתוב",
+  "uploadCaptionRequiredBackend": "יש להוסיף כיתוב",
+  "@uploadCaptionRequiredBackend": {
+    "description": "הודעת שגיאה כאשר חסר כיתוב בוולידציה אחורית"
+  },
+  "@uploadCaptionRequired": {
+    "description": "הודעת שגיאה כאשר חסר כיתוב במסך העלאה"
+  },
+  "uploadPriceRequired": "יש להוסיף מחיר",
+  "uploadPriceRequiredBackend": "יש להוסיף מחיר",
+  "@uploadPriceRequiredBackend": {
+    "description": "הודעת שגיאה כאשר חסר מחיר בוולידציה אחורית"
+  },
+  "@uploadPriceRequired": {
+    "description": "הודעת שגיאה כאשר חסר מחיר במסך העלאה"
+  },
+  "uploadPhotoRequired": "אנא הוסף לפחות תמונה אחת",
+  "@uploadPhotoRequired": {
+    "description": "הודעת שגיאה כאשר לא נוספו תמונות להעלאה"
+  },
+  "uploadCategoryRequired": "אנא בחר קטגוריה",
+  "@uploadCategoryRequired": {
+    "description": "הודעת שגיאה כאשר לא נבחרה קטגוריה"
+  },
   "chestMeasurementLabel": "מידות חזה",
   "waistMeasurementLabel": "מידות מותן",
   "lengthMeasurementLabel": "מידות אורך",
@@ -148,9 +185,11 @@
 "uploadingMedia": "מעלה מדיה",
 "uploadSuccess": "הפוסט הועלה בהצלחה!",
 "uploadFailure": "משהו השתבש. נסו שוב.",
+"firstPhotoAsCover": "התמונה הראשונה תשמש כתמונת שער",
 "permissionDialogCancel": "ביטול",
 "permissionDialogOpenSettings": "פתח הגדרות",
 "cameraPermissionTitle": "נדרשת הרשאה לצלם",
+"cover": "שער",
 "cameraPermissionMessage": "ללא הרשאה לצלם, לא תוכל להעלות תמונות או וידאו.",
 "galleryPermissionTitle": "נדרשת הרשאה לגלריה",
 "galleryPermissionMessage": "כדי לבחור תמונה מהגלריה, נדרשת הרשאה. אפשר לאפשר אותה דרך ההגדרות.",
@@ -169,6 +208,65 @@
   "navBarHome": "בית",
   "navBarSearch": "חיפוש",
   "navBarFavorites": "מועדפים",
-  "navBarProfile": "פרופיל"
+  "navBarProfile": "פרופיל",
+  "error_loading_tags": "שגיאה בטעינת תגיות",
+  "failed_to_publish_item": "פרסום הפריט נכשל: {error}",
+  "@failed_to_publish_item": {
+    "description": "הודעת שגיאה המוצגת כאשר פרסום פריט נכשל",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "item_published": "הפריט פורסם!",
+  "item_published_description": "הפריט שלך עלה לאוויר. מה תרצה/י לעשות עכשיו?",
+  "go_home": "לדף הבית",
+  "captionAndPriceTitle": "כיתוב ומחיר",
+  "addCaptionHint": "הוסף כיתוב",
+  "itemDetailsTitle": "פרטי הפריט",
+  "conditionLabel": "מצב",
+  "selectConditionHint": "בחר מצב",
+  "sizeLabel": "מידה",
+  "selectSizeHint": "בחר מידה",
+  "brandLabel": "מותג",
+  "enterBrandHint": "הזן מותג",
+  "materialLabel": "חומר",
+  "enterMaterialHint": "הזן חומר",
+  "tagsAndStyleTitle": "תגיות וסגנון",
+  "tagsDescription": "הוסף תגיות סגנון שיעזרו לקונים למצוא את הפריט שלך",
+  "customTagsHint": "למשל: קיץ, מסיבה, נוח",
+  "publishButton": "פרסם",
+  "maxPhotosError": "מותר להעלות עד 10 תמונות",
+  "savePhotoError": "שמירת התמונה נכשלה",
+  "selectConditionTitle": "בחר מצב",
+  "conditionNewWithTags": "חדש עם תוויות",
+  "conditionNewWithoutTags": "חדש ללא תוויות",
+  "conditionLikeNew": "כמו חדש",
+  "conditionVeryGood": "טוב מאוד",
+  "conditionGood": "טוב",
+  "conditionFair": "במצב סביר",
+  "optional": "אופציונלי",
+  "itemDetailsDescription": "הוסף פרטים על הפריט שלך כדי לעזור לקונים למצוא אותו.",
+  "measurementsLabel": "מידות",
+  "tagsAndStyleTitle": "תגיות וסגנון",
+  "tagsAndStyleDescription": "הוסף תגיות שיעזרו לאנשים למצוא את הפריט שלך",
+  "styleTagsLabel": "תגיות סגנון",
+  "customTagsLabel": "תגיות מותאמות אישית",
+  "customTagsHint": "הוסף תגיות משלך (מופרדות בפסיק)",
+  "selectedTagsLabel": "תגיות נבחרות",
+  "publishItemButton": "פרסם פריט",
+  "publishingButton": "מפרסם...",
+  "centimetersAbbreviation": "ס״מ",
+  "itemPublished": "הפריט פורסם!",
+  "itemPublishedDescription": "הפריט שלך פורסם בהצלחה ונראה כעת למשתמשים אחרים.",
+  "goHome": "לדף הבית",
+  "viewItem": "צפה בפריט",
+  "failedToPublish": "שגיאה בפרסום הפריט: {error}",
+  "view_item": "צפה/י בפריט",
+  "custom_tags_hint": "לדוגמה: קיץ, מסיבה, נוח",
+  "currencyShekel": "₪",
+  "@currencyShekel": {
+    "description": "סמל מטבע שקל ישראלי (משמש כקידומת בשדות מחיר)"
+  }
 }
-

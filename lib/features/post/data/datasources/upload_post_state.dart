@@ -15,6 +15,10 @@ class UploadPostState with _$UploadPostState {
     double? length,
     String? caption,
     String? categoryId,
+    @Default('') String? brand, // brand of the item
+    @Default('') String? material, // material description
+    @Default('') String? condition, // item condition (e.g. New, Used)
+    @Default('') String? size, // item size
     @Default([]) List<UploadableMedia> media,
     @Default([]) List<String> tagNames,
     @Default(false) bool isSubmitting,
@@ -22,6 +26,11 @@ class UploadPostState with _$UploadPostState {
     @Default(0) int uploadedMediaCount,
     @Default(0) int totalMediaCount,
   }) = _UploadPostState;
+  // Require price, category, at least one media, and non-empty caption for a valid upload
   bool get isValid =>
-      price != null && categoryId != null && media.isNotEmpty;
+      price != null &&
+      categoryId != null &&
+      media.isNotEmpty &&
+      caption != null &&
+      caption!.trim().isNotEmpty;
 }

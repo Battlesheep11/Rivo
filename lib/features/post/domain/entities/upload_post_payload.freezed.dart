@@ -25,6 +25,10 @@ mixin _$UploadPostPayload {
   double? get chest => throw _privateConstructorUsedError;
   double? get waist => throw _privateConstructorUsedError;
   double? get length => throw _privateConstructorUsedError;
+  String? get brand => throw _privateConstructorUsedError;
+  String? get material => throw _privateConstructorUsedError;
+  String? get condition => throw _privateConstructorUsedError;
+  String? get size => throw _privateConstructorUsedError;
   String? get caption => throw _privateConstructorUsedError;
   List<UploadableMedia> get media => throw _privateConstructorUsedError;
   List<TagEntity> get tags => throw _privateConstructorUsedError;
@@ -52,6 +56,10 @@ abstract class $UploadPostPayloadCopyWith<$Res> {
     double? chest,
     double? waist,
     double? length,
+    String? brand,
+    String? material,
+    String? condition,
+    String? size,
     String? caption,
     List<UploadableMedia> media,
     List<TagEntity> tags,
@@ -81,6 +89,10 @@ class _$UploadPostPayloadCopyWithImpl<$Res, $Val extends UploadPostPayload>
     Object? chest = freezed,
     Object? waist = freezed,
     Object? length = freezed,
+    Object? brand = freezed,
+    Object? material = freezed,
+    Object? condition = freezed,
+    Object? size = freezed,
     Object? caption = freezed,
     Object? media = null,
     Object? tags = null,
@@ -119,6 +131,22 @@ class _$UploadPostPayloadCopyWithImpl<$Res, $Val extends UploadPostPayload>
                 ? _value.length
                 : length // ignore: cast_nullable_to_non_nullable
                       as double?,
+            brand: freezed == brand
+                ? _value.brand
+                : brand // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            material: freezed == material
+                ? _value.material
+                : material // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            condition: freezed == condition
+                ? _value.condition
+                : condition // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            size: freezed == size
+                ? _value.size
+                : size // ignore: cast_nullable_to_non_nullable
+                      as String?,
             caption: freezed == caption
                 ? _value.caption
                 : caption // ignore: cast_nullable_to_non_nullable
@@ -155,6 +183,10 @@ abstract class _$$UploadPostPayloadImplCopyWith<$Res>
     double? chest,
     double? waist,
     double? length,
+    String? brand,
+    String? material,
+    String? condition,
+    String? size,
     String? caption,
     List<UploadableMedia> media,
     List<TagEntity> tags,
@@ -183,6 +215,10 @@ class __$$UploadPostPayloadImplCopyWithImpl<$Res>
     Object? chest = freezed,
     Object? waist = freezed,
     Object? length = freezed,
+    Object? brand = freezed,
+    Object? material = freezed,
+    Object? condition = freezed,
+    Object? size = freezed,
     Object? caption = freezed,
     Object? media = null,
     Object? tags = null,
@@ -221,6 +257,22 @@ class __$$UploadPostPayloadImplCopyWithImpl<$Res>
             ? _value.length
             : length // ignore: cast_nullable_to_non_nullable
                   as double?,
+        brand: freezed == brand
+            ? _value.brand
+            : brand // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        material: freezed == material
+            ? _value.material
+            : material // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        condition: freezed == condition
+            ? _value.condition
+            : condition // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        size: freezed == size
+            ? _value.size
+            : size // ignore: cast_nullable_to_non_nullable
+                  as String?,
         caption: freezed == caption
             ? _value.caption
             : caption // ignore: cast_nullable_to_non_nullable
@@ -250,6 +302,10 @@ class _$UploadPostPayloadImpl implements _UploadPostPayload {
     this.chest,
     this.waist,
     this.length,
+    this.brand,
+    this.material,
+    this.condition,
+    this.size,
     this.caption,
     required final List<UploadableMedia> media,
     required final List<TagEntity> tags,
@@ -273,6 +329,14 @@ class _$UploadPostPayloadImpl implements _UploadPostPayload {
   @override
   final double? length;
   @override
+  final String? brand;
+  @override
+  final String? material;
+  @override
+  final String? condition;
+  @override
+  final String? size;
+  @override
   final String? caption;
   final List<UploadableMedia> _media;
   @override
@@ -292,7 +356,7 @@ class _$UploadPostPayloadImpl implements _UploadPostPayload {
 
   @override
   String toString() {
-    return 'UploadPostPayload(hasProduct: $hasProduct, productTitle: $productTitle, productDescription: $productDescription, productPrice: $productPrice, categoryId: $categoryId, chest: $chest, waist: $waist, length: $length, caption: $caption, media: $media, tags: $tags)';
+    return 'UploadPostPayload(hasProduct: $hasProduct, productTitle: $productTitle, productDescription: $productDescription, productPrice: $productPrice, categoryId: $categoryId, chest: $chest, waist: $waist, length: $length, brand: $brand, material: $material, condition: $condition, size: $size, caption: $caption, media: $media, tags: $tags)';
   }
 
   @override
@@ -313,6 +377,12 @@ class _$UploadPostPayloadImpl implements _UploadPostPayload {
             (identical(other.chest, chest) || other.chest == chest) &&
             (identical(other.waist, waist) || other.waist == waist) &&
             (identical(other.length, length) || other.length == length) &&
+            (identical(other.brand, brand) || other.brand == brand) &&
+            (identical(other.material, material) ||
+                other.material == material) &&
+            (identical(other.condition, condition) ||
+                other.condition == condition) &&
+            (identical(other.size, size) || other.size == size) &&
             (identical(other.caption, caption) || other.caption == caption) &&
             const DeepCollectionEquality().equals(other._media, _media) &&
             const DeepCollectionEquality().equals(other._tags, _tags));
@@ -329,6 +399,10 @@ class _$UploadPostPayloadImpl implements _UploadPostPayload {
     chest,
     waist,
     length,
+    brand,
+    material,
+    condition,
+    size,
     caption,
     const DeepCollectionEquality().hash(_media),
     const DeepCollectionEquality().hash(_tags),
@@ -356,6 +430,10 @@ abstract class _UploadPostPayload implements UploadPostPayload {
     final double? chest,
     final double? waist,
     final double? length,
+    final String? brand,
+    final String? material,
+    final String? condition,
+    final String? size,
     final String? caption,
     required final List<UploadableMedia> media,
     required final List<TagEntity> tags,
@@ -377,6 +455,14 @@ abstract class _UploadPostPayload implements UploadPostPayload {
   double? get waist;
   @override
   double? get length;
+  @override
+  String? get brand;
+  @override
+  String? get material;
+  @override
+  String? get condition;
+  @override
+  String? get size;
   @override
   String? get caption;
   @override

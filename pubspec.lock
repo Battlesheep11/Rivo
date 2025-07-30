@@ -609,10 +609,10 @@ packages:
     dependency: "direct main"
     description:
       name: go_router
-      sha256: ac294be30ba841830cfa146e5a3b22bb09f8dc5a0fdd9ca9332b04b0bde99ebf
+      sha256: c489908a54ce2131f1d1b7cc631af9c1a06fac5ca7c449e959192089f9489431
       url: "https://pub.dev"
     source: hosted
-    version: "15.2.4"
+    version: "16.0.0"
   google_fonts:
     dependency: "direct main"
     description:
@@ -1037,6 +1037,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.7.1"
+  photo_manager_image_provider:
+    dependency: "direct main"
+    description:
+      name: photo_manager_image_provider
+      sha256: b6015b67b32f345f57cf32c126f871bced2501236c405aafaefa885f7c821e4f
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   platform:
     dependency: transitive
     description:
@@ -1109,6 +1117,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.5.1"
+  reorderable_grid_view:
+    dependency: "direct main"
+    description:
+      name: reorderable_grid_view
+      sha256: e36c6229a97105a10c79e15ab4b9b14ee9f6c488574ff2be9e858c82af47cda6
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.8"
   result_dart:
     dependency: "direct main"
     description:

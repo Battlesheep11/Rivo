@@ -39,7 +39,7 @@ class MediaPickerWidget extends ConsumerWidget {
               title: Text(tr.mediaPickerGallery),
               onTap: () {
                 Navigator.of(context).pop();
-                _pickFromGallery(context, ref);
+                pickFromGallery(context, ref);
               },
             ),
             ListTile(
@@ -86,7 +86,7 @@ class MediaPickerWidget extends ConsumerWidget {
     );
   }
 
-  Future<void> _pickFromGallery(BuildContext context, WidgetRef ref) async {
+  Future<void> pickFromGallery(BuildContext context, WidgetRef ref) async {
   final tr = AppLocalizations.of(context)!;
 
   debugPrint("📂 Requesting media access permission...");

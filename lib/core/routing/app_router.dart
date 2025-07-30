@@ -6,7 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:rivo_app_beta/features/auth/presentation/screens/auth_screen.dart';
 import 'package:rivo_app_beta/features/auth/presentation/screens/auth_redirector_screen.dart';
 import 'package:rivo_app_beta/features/onboarding/presentation/screens/onboarding_screen.dart';
-import 'package:rivo_app_beta/features/post/presentation/screens/post_upload_screen.dart';
+import 'package:rivo_app_beta/features/post/presentation/screens/post_upload_screen_refactored.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/auth_session_provider.dart';
 import 'package:rivo_app_beta/features/feed/presentation/screens/feed_screen.dart';
 import 'package:rivo_app_beta/features/profile/presentation/views/profile_page.dart';
@@ -56,7 +56,7 @@ class AppRouter {
         ),
         GoRoute(
           path: '/upload',
-          builder: (context, state) => const PostUploadScreen(),
+          builder: (context, state) => const PostUploadScreenRefactored(),
         ),
         // Settings route
         GoRoute(

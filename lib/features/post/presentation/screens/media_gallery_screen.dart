@@ -1,9 +1,10 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/core/media/domain/entities/uploadable_media.dart';
 import 'package:rivo_app_beta/core/utils/permission_utils.dart';
+import 'gallery_grid_item.dart';
+import 'thumbnail_cache.dart';
 
 class MediaGalleryScreen extends StatefulWidget {
   const MediaGalleryScreen({super.key});
@@ -15,58 +16,66 @@ class MediaGalleryScreen extends StatefulWidget {
 class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
   List<AssetEntity> _mediaAssets = [];
   final Set<AssetEntity> _selectedAssets = {};
-
   bool _initialized = false;
+  bool _isLoading = false;
+  final ThumbnailCache _thumbnailCache = ThumbnailCache();
 
-@override
-void didChangeDependencies() {
-  super.didChangeDependencies();
-
-  if (!_initialized) {
-    _loadMedia(); // קורא ל־AppLocalizations ועוד
-    _initialized = true;
+  @override
+  void dispose() {
+    // Clear the cache when the screen is disposed
+    _thumbnailCache.clear();
+    super.dispose();
   }
-}
 
-
-  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _loadMedia();
+      _initialized = true;
+    }
+  }
 
   Future<void> _loadMedia() async {
     final tr = AppLocalizations.of(context)!;
+    setState(() {
+      _isLoading = true;
+    });
     final granted = await PermissionUtils.requestPhotoLibraryPermission();
-
     if (!granted) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(tr.galleryPermissionMessage)),
         );
       }
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
-
     final albums = await PhotoManager.getAssetPathList(
       type: RequestType.common,
       hasAll: true,
     );
-
     debugPrint('📁 Found ${albums.length} albums');
     for (final album in albums) {
-  final count = await album.assetCountAsync;
-  debugPrint('🖼️ Album: ${album.name} | $count assets');
-}
-
-
+      final count = await album.assetCountAsync;
+      debugPrint('🖼️ Album: ${album.name} | $count assets');
+    }
     final recentAlbum = albums.firstOrNull;
     if (recentAlbum == null) {
       debugPrint('⚠️ No albums found');
+      setState(() {
+        _mediaAssets = [];
+        _isLoading = false;
+      });
       return;
     }
-
     final assets = await recentAlbum.getAssetListPaged(page: 0, size: 100);
     debugPrint('📷 Loaded ${assets.length} assets from ${recentAlbum.name}');
-
     setState(() {
       _mediaAssets = assets;
+      _isLoading = false;
     });
   }
 
@@ -81,26 +90,22 @@ void didChangeDependencies() {
   }
 
   Future<void> _handleConfirm() async {
-    final navigator = Navigator.of(context); 
+    final navigator = Navigator.of(context);
     final result = <UploadableMedia>[];
-
     for (final asset in _selectedAssets) {
       final type = asset.type == AssetType.video ? MediaType.video : MediaType.image;
-
       result.add(UploadableMedia(
         id: asset.id,
         asset: asset,
         type: type,
       ));
     }
-
-    navigator.pop(result); 
+    navigator.pop(result);
   }
 
   @override
   Widget build(BuildContext context) {
     final tr = AppLocalizations.of(context)!;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(tr.selectMedia),
@@ -115,55 +120,28 @@ void didChangeDependencies() {
       body: Column(
         children: [
           Expanded(
-            child: _mediaAssets.isEmpty
-                ? Center(child: Text(tr.noMediaFoundInGallery))
-                : GridView.builder(
-              itemCount: _mediaAssets.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 2,
-                crossAxisSpacing: 2,
-              ),
-              itemBuilder: (context, index) {
-                final asset = _mediaAssets[index];
-                final isSelected = _selectedAssets.contains(asset);
-
-                return GestureDetector(
-                  onTap: () => _toggleSelection(asset),
-                  child: Stack(
-                    children: [
-                      FutureBuilder<Uint8List?>(
-                        future: asset.thumbnailDataWithSize(const ThumbnailSize(200, 200)),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return const Center(child: CircularProgressIndicator());
-                          }
-                          return Image.memory(
-                            snapshot.data!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _mediaAssets.isEmpty
+                    ? Center(child: Text(tr.noMediaFoundInGallery))
+                    : GridView.builder(
+                        itemCount: _mediaAssets.length,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4, // Set to 4 items per row
+                          mainAxisSpacing: 0,
+                          crossAxisSpacing: 0,
+                          childAspectRatio: 1.0, // Force perfect squares
+                        ),
+                        itemBuilder: (context, index) {
+                          final asset = _mediaAssets[index];
+                          return GalleryGridItem(
+                            asset: asset,
+                            isSelected: _selectedAssets.contains(asset),
+                            onTap: () => _toggleSelection(asset),
+                            cache: _thumbnailCache, // Pass the cache instance
                           );
                         },
                       ),
-                      if (isSelected)
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color.fromRGBO(33, 150, 243, 0.8),
-                              shape: BoxShape.circle,
-                            ),
-                            padding: const EdgeInsets.all(4),
-                            child: const Icon(Icons.check, size: 16, color: Colors.white),
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              },
-            ),
           ),
         ],
       ),
