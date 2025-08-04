@@ -62,7 +62,27 @@ class AppException with EquatableMixin implements Exception {
   factory AppException.conflict(String message, {String? code, StackTrace? stackTrace}) {
     return ConflictException(
       message: message,
-      code: code ?? 'conflict',
+      code: code,
+      stackTrace: stackTrace,
+    );
+  }
+
+  /// Creates a rate limit exception.
+  /// 
+  /// [message]: The error message
+  /// [retryAfter]: The number of seconds to wait before retrying
+  /// [code]: Optional error code (defaults to 'rate_limit_exceeded')
+  /// [stackTrace]: Optional stack trace
+  factory AppException.rateLimit(
+    String message, {
+    int? retryAfter,
+    String? code = 'rate_limit_exceeded',
+    StackTrace? stackTrace,
+  }) {
+    return RateLimitException(
+      message: message,
+      code: code,
+      retryAfter: retryAfter,
       stackTrace: stackTrace,
     );
   }
@@ -132,4 +152,23 @@ class ConflictException extends AppException {
     super.code = 'conflict',
     super.stackTrace,
   });
+}
+
+/// Thrown when a rate limit has been exceeded.
+class RateLimitException extends AppException {
+  /// The number of seconds to wait before retrying the request.
+  final int? retryAfter;
+
+  const RateLimitException({
+    required super.message,
+    super.code = 'rate_limit_exceeded',
+    this.retryAfter,
+    super.stackTrace,
+  });
+
+  @override
+  List<Object?> get props => [...super.props, retryAfter];
+
+  @override
+  bool? get stringify => true;
 }

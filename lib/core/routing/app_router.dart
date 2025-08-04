@@ -14,8 +14,8 @@ import 'package:rivo_app_beta/features/profile/presentation/widgets/settings_scr
 import 'package:rivo_app_beta/core/widgets/app_nav_bar.dart';
 import 'package:rivo_app_beta/features/discovery/presentation/screens/discovery_screen.dart';
 import 'package:rivo_app_beta/features/product/presentation/screens/product_screen.dart';
-
-
+import 'package:rivo_app_beta/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:rivo_app_beta/features/auth/presentation/screens/reset_password_screen.dart';
 
 
 class AppRouter {
@@ -25,6 +25,11 @@ class AppRouter {
     return GoRouter(
       initialLocation: '/redirect',
       redirect: (context, state) {
+        // Skip redirect for password reset screens
+        if (state.matchedLocation.startsWith('/reset-password')) {
+          return null;
+        }
+
         // If the user is not logged in, they are redirected to the /auth screen
         final loggedIn = authState.asData?.value != null;
         final loggingIn = state.matchedLocation == '/auth';
@@ -45,6 +50,23 @@ class AppRouter {
         GoRoute(
           path: '/auth',
           builder: (context, state) => const AuthScreen(),
+          routes: [
+            GoRoute(
+              path: 'forgot-password',
+              builder: (context, state) => const ForgotPasswordScreen(),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: '/reset-password',
+          builder: (context, state) {
+            final token = state.uri.queryParameters['token'];
+            if (token == null || token.isEmpty) {
+              // If no token is provided, redirect to auth screen
+              return const AuthScreen();
+            }
+            return ResetPasswordScreen(token: token);
+          },
         ),
         GoRoute(
           path: '/redirect', 

@@ -11,17 +11,17 @@ class PostRepositoryImpl implements PostRepository {
   PostRepositoryImpl({required this.remoteDataSource});
 
   @override
-Future<void> uploadPost(
-  UploadPostPayload payload, {
-  void Function(int uploaded, int total)? onMediaUploaded,
-  void Function(String mediaPath, UploadMediaStatus status)? onMediaStatusChanged, 
-}) {
-  return remoteDataSource.uploadPost(
-    payload,
-    onMediaUploaded: onMediaUploaded,
-    onMediaStatusChanged: onMediaStatusChanged, 
-  );
-}
+  Future<String> uploadPost(
+    UploadPostPayload payload, {
+    void Function(int uploaded, int total)? onMediaUploaded,
+    void Function(String mediaPath, UploadMediaStatus status)? onMediaStatusChanged, 
+  }) async {
+    return await remoteDataSource.uploadPost(
+      payload,
+      onMediaUploaded: onMediaUploaded,
+      onMediaStatusChanged: onMediaStatusChanged, 
+    );
+  }
 
 
 }

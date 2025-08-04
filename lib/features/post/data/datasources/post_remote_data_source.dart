@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
@@ -11,7 +12,7 @@ class PostRemoteDataSource {
 
   PostRemoteDataSource({required this.client});
 
-  Future<void> uploadPost(
+  Future<String> uploadPost(
     UploadPostPayload payload, {
     void Function(int uploaded, int total)? onMediaUploaded,
     void Function(String mediaPath, UploadMediaStatus status)? onMediaStatusChanged,
@@ -23,6 +24,7 @@ class PostRemoteDataSource {
       }
 
       String? productId;
+      String postId = '';
 
       if (payload.hasProduct) {
         productId = await _uploadProduct(
@@ -33,7 +35,8 @@ class PostRemoteDataSource {
         );
       }
 
-      await _uploadFeedPost(payload, userId, productId);
+      postId = await _uploadFeedPost(payload, userId, productId);
+      return postId;
     } on PostgrestException catch (e) {
       throw AppException.unexpected(
         'Supabase error: ${e.message}',
@@ -53,6 +56,9 @@ class PostRemoteDataSource {
     void Function(int uploaded, int total)? onMediaUploaded,
     void Function(String mediaPath, UploadMediaStatus status)? onMediaStatusChanged,
   ) async {
+    log('🔄 Attempting to insert product with category ID: ${payload.categoryId}');
+    log('📝 Category ID type: ${payload.categoryId.runtimeType}');
+    
     final productResponse = await client
         .from('products')
         .insert({
@@ -63,10 +69,12 @@ class PostRemoteDataSource {
           'chest': payload.chest,
           'waist': payload.waist,
           'length': payload.length,
-          'category_id': payload.categoryId,
+          'category_id': payload.categoryId, // This should be a valid UUID string
         })
         .select('id')
         .single();
+        
+    log('✅ Product inserted with ID: ${productResponse['id']}');
 
     final productId = productResponse['id'] as String;
 
@@ -152,7 +160,7 @@ class PostRemoteDataSource {
     return productId;
   }
 
-  Future<void> _uploadFeedPost(
+  Future<String> _uploadFeedPost(
     UploadPostPayload payload,
     String userId,
     String? productId,
@@ -176,6 +184,8 @@ class PostRemoteDataSource {
         'tag_id': tagId,
       });
     }
+    
+    return postId;
   }
 
   Future<String> _getOrCreateTagByName(String tagName) async {

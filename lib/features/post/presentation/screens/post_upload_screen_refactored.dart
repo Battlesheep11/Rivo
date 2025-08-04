@@ -3,6 +3,8 @@ import 'package:flutter/services.dart'; // For FilteringTextInputFormatter and T
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rivo_app_beta/features/auth/presentation/providers/auth_session_provider.dart';
+import 'package:rivo_app_beta/features/settings/presentation/providers/settings_providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -15,6 +17,8 @@ import 'package:rivo_app_beta/core/widgets/permission_dialog.dart';
 import 'package:rivo_app_beta/features/post/presentation/screens/media_gallery_screen.dart';
 import 'package:rivo_app_beta/features/post/domain/providers/post_providers.dart';
 import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
+import 'package:rivo_app_beta/features/post/domain/providers/category_providers.dart';
+import 'package:rivo_app_beta/core/entities/category.dart';
 
 class PostUploadScreenRefactored extends ConsumerStatefulWidget {
   const PostUploadScreenRefactored({super.key});
@@ -29,7 +33,9 @@ class _PostUploadScreenRefactoredState extends ConsumerState<PostUploadScreenRef
 
   /// Validates the current step before allowing navigation to the next page
   /// Shows specific error messages for missing required fields
+  /// Navigate to the next page of the form
   void _nextPage() {
+    if (!mounted) return;
     final state = ref.read(uploadPostViewModelProvider);
     final l10n = AppLocalizations.of(context)!;
     
@@ -94,14 +100,26 @@ class _PostUploadScreenRefactoredState extends ConsumerState<PostUploadScreenRef
   }
 
   void _previousPage() {
+    if (!mounted) return;
     if (_currentPage > 0) {
-      setState(() {
-        _currentPage--;
-      });
-      _pageController.animateToPage(_currentPage, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      if (mounted) {
+        setState(() {
+          _currentPage--;
+        });
+      }
     }
   }
 
+  @override
+  void initState() {
+    super.initState();
+    // Initialization code can go here
+  }
+  
   @override
   void dispose() {
     _pageController.dispose();
@@ -150,15 +168,19 @@ class _PostUploadScreenRefactoredState extends ConsumerState<PostUploadScreenRef
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Row(
         children: [
-          // Back button
+          // Back button - on last step, triggers upload, otherwise goes back or home
           GestureDetector(
-            onTap: _currentPage > 0 ? _previousPage : () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/home');
-              }
-            },
+            onTap: _currentPage == 3 
+              ? () => _publishItem(ref.read(uploadPostViewModelProvider.notifier), AppLocalizations.of(context)!) 
+              : _currentPage > 0 
+                ? _previousPage 
+                : () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/home');
+                    }
+                  },
             child: Container(
               width: 40,
               height: 40,
@@ -827,6 +849,10 @@ class _PostUploadScreenRefactoredState extends ConsumerState<PostUploadScreenRef
                     child: TextField(
                       maxLines: 3,
                       onChanged: viewModel.setCaption,
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(500), // Limit caption length
+                        FilteringTextInputFormatter.deny(RegExp(r'[<>/\|]')), // Block dangerous characters
+                      ],
                       decoration: InputDecoration(
                         hintText: 'Describe your item...',
                         hintStyle: TextStyle(
@@ -1030,11 +1056,15 @@ class _PostUploadScreenRefactoredState extends ConsumerState<PostUploadScreenRef
 
           // Category picker
           _buildDetailField(
-            l10n.category,
-            l10n.selectCategory,
-            Icons.category_outlined,
+            l10n.categoryLabel,
+            l10n.selectCategoryHint,
+            Icons.category_outlined, // Changed icon
             onTap: () => _showCategoryPicker(context, viewModel),
-            value: state.categoryId,
+            value: ref.watch(categoryByIdProvider(state.categoryId)).when(
+                  data: (category) => category?.name,
+                  loading: () => '',
+                  error: (err, stack) => null,
+                ),
           ),
 
           // Condition picker
@@ -1318,6 +1348,10 @@ class _PostUploadScreenRefactoredState extends ConsumerState<PostUploadScreenRef
           ),
           child: TextField(
             onChanged: onChanged,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(100), // Limit input length
+              FilteringTextInputFormatter.deny(RegExp(r'[<>/\|]')), // Block dangerous characters
+            ],
             decoration: InputDecoration(
               hintText: placeholder,
               hintStyle: TextStyle(
@@ -1393,29 +1427,6 @@ class _PostUploadScreenRefactoredState extends ConsumerState<PostUploadScreenRef
       ],
     );
   }
-  
-  /// Show category picker (placeholder)
-  void _showCategoryPicker(BuildContext context, UploadPostViewModel viewModel) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _buildPickerSheet(
-        title: 'Select Category',
-        items: const [
-          'T-Shirts',
-          'Jeans',
-          'Dresses',
-          'Jackets',
-          'Shoes',
-          'Accessories',
-        ],
-        onSelected: (value) {
-          viewModel.setCategory(value);
-          Navigator.pop(context);
-        },
-      ),
-    );
-  }
 
   // Show condition picker bottom sheet
   void _showConditionPicker(BuildContext context, UploadPostViewModel viewModel) {
@@ -1437,6 +1448,45 @@ class _PostUploadScreenRefactoredState extends ConsumerState<PostUploadScreenRef
           Navigator.pop(context);
         },
       ),
+    );
+  }
+
+  // Show category picker bottom sheet
+  void _showCategoryPicker(BuildContext context, UploadPostViewModel viewModel) {
+    // Use ref.read to get the future and handle it manually.
+    final categoriesFuture = ref.read(categoriesProvider.future);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return FutureBuilder<List<Category>>(
+          future: categoriesFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(child: Text('No categories found.'));
+            }
+
+            final categoryList = snapshot.data!;
+            return _buildPickerSheet(
+              title: 'Select Category',
+              items: categoryList.map((c) => c.name).toList(),
+              onSelected: (value) {
+                final selectedCategory =
+                    categoryList.firstWhere((c) => c.name == value);
+                viewModel.setCategory(selectedCategory.id);
+                Navigator.pop(context);
+              },
+            );
+          },
+        );
+      },
     );
   }
 
@@ -1550,6 +1600,8 @@ class _PostUploadScreenRefactoredState extends ConsumerState<PostUploadScreenRef
     final viewModel = ref.read(uploadPostViewModelProvider.notifier);
     final isSubmitting = state.isSubmitting;
     final allTags = ref.watch(tagsProvider);
+    
+    if (!mounted) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -1849,32 +1901,34 @@ class _PostUploadScreenRefactoredState extends ConsumerState<PostUploadScreenRef
     }
   }
 
-  /// Handles custom tag input, sanitizing and validating tags for allowed characters and security.
+  /// Handles custom tag input, sanitizing and validating tags.
 void _handleCustomTagsInput(String input, UploadPostViewModel viewModel) {
-  // Only allow Hebrew, English, and numbers in tags; remove anything else
-  final allowedTagPattern = RegExp(r'^[\u0590-\u05FFa-zA-Z0-9 ]+ ?$');
-  final enteredTags = input
+  // Split by comma, trim whitespace, and remove any empty tags.
+  final newTags = input
       .split(',')
-      .map((e) => e.trim())
-      .where((e) => e.isNotEmpty)
       .map((tag) {
-        // Remove any disallowed characters from each tag
-        final sanitized = tag.replaceAll(RegExp(r'[^\u0590-\u05FFa-zA-Z0-9 ]'), '');
-        return sanitized;
+        // Sanitize each tag to allow only Hebrew, English, numbers, and spaces.
+        // This also helps prevent script injection.
+        final sanitizedTag = tag.replaceAll(RegExp(r'[^\u0590-\u05FFa-zA-Z0-9 ]'), '').trim();
+        return sanitizedTag;
       })
-      .where((e) => e.isNotEmpty && allowedTagPattern.hasMatch(e))
-      .toList();
+      .where((tag) => tag.isNotEmpty) // Filter out any tags that are empty after sanitization
+      .toSet(); // Use a Set to automatically handle duplicates from the input string.
 
-  if (enteredTags.isNotEmpty) {
-    final currentTags = ref.read(uploadPostViewModelProvider).tagNames;
-    final newTags = enteredTags.where((tag) => !currentTags.contains(tag)).toList();
-    if (newTags.isNotEmpty) {
-      // Additional sanitization for Supabase (e.g., escaping special characters)
-      final safeTags = newTags.map((tag) => tag.replaceAll("'", "")).toList();
-      viewModel.setTags([...currentTags, ...safeTags]);
-    }
+  if (newTags.isEmpty) {
+    return;
   }
-  // Note: All tags are now sanitized for allowed characters and SQL injection risk
+
+  final currentTags = ref.read(uploadPostViewModelProvider).tagNames.toSet();
+  
+  // Add only the tags that are not already present.
+  final uniqueNewTags = newTags.difference(currentTags);
+
+  if (uniqueNewTags.isNotEmpty) {
+    viewModel.setTags([...currentTags, ...uniqueNewTags]);
+  }
+  // Note: Backend services should use parameterized queries to prevent SQL injection.
+  // Client-side validation helps ensure data integrity.
 }
 
     Widget _buildCustomTagsInput(UploadPostViewModel viewModel) {
@@ -1929,9 +1983,9 @@ void _handleCustomTagsInput(String input, UploadPostViewModel viewModel) {
 
   Future<void> _publishItem(UploadPostViewModel viewModel, AppLocalizations l10n) async {
     try {
-      await viewModel.submit();
+      final postId = await viewModel.submit();
       if (mounted) {
-        _showSuccessMessage(l10n);
+        _showSuccessMessage(l10n, postId: postId);
       }
     } on AppException catch (e) {
       if (!mounted) return;
@@ -1966,7 +2020,130 @@ void _handleCustomTagsInput(String input, UploadPostViewModel viewModel) {
     }
   }
 
-  void _showSuccessMessage(AppLocalizations l10n) {
+  void _showSuccessMessage(AppLocalizations l10n, {required String postId}) {
+    // Get the current user's preferences
+        final user = ref.read(authSessionProvider).value;
+    if (user == null) {
+      // If user is not logged in (shouldn't happen), show default behavior
+      _showDefaultSuccessDialog(l10n, postId);
+      return;
+    }
+    
+    // Get the user's preferences
+    final settingsState = ref.read(settingsViewModelProvider(user.id));
+    
+    // Show the success dialog if the user wants to see it
+    if (settingsState.maybeWhen(
+      success: (prefs) => prefs.showPostUploadSuccessDialog,
+      orElse: () => true, // Default to showing the dialog if we can't load prefs
+    )) {
+      _showSuccessDialog(l10n, postId);
+    } else if (settingsState.maybeWhen(
+      success: (prefs) => prefs.autoNavigateToPostAfterUpload,
+      orElse: () => false, // Default to not auto-navigating if we can't load prefs
+    )) {
+      // If auto-navigate is enabled, go directly to the post
+      _navigateToPost(postId);
+    } else {
+      // If neither dialog nor auto-navigate is enabled, just go home
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
+  }
+  
+  /// Shows a success dialog after an item is successfully published
+  /// Includes options to go home, view the item, or post a new item
+  void _showSuccessDialog(AppLocalizations l10n, String postId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.green.withAlpha(26), // Using withAlpha instead of withOpacity
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: const Icon(
+                Icons.check,
+                color: Colors.green,
+                size: 30,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.itemPublishedSuccessfully,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.yourItemHasBeenPublished,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          // Go Home button
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            child: Text(l10n.goHome),
+          ),
+          
+          // Post New Item button
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // Reset the form and go back to the first step
+              ref.read(uploadPostViewModelProvider.notifier).reset();
+              setState(() {
+                _currentPage = 0;
+                _pageController.jumpToPage(0);
+              });
+            },
+            child: Text(l10n.postNewItem),
+          ),
+          
+          // View Item button (primary action)
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _navigateToPost(postId);
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).primaryColor,
+            ),
+            child: Text(l10n.viewItem),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// Navigates to the product page for the given post ID
+  /// Uses push instead of pushReplacement to maintain the navigation stack
+  /// and allow proper back navigation to the post-upload flow
+  void _navigateToPost(String postId) {
+    context.push('/product/$postId');
+  }
+
+  void _showDefaultSuccessDialog(AppLocalizations l10n, String postId) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1992,27 +2169,28 @@ void _handleCustomTagsInput(String input, UploadPostViewModel viewModel) {
             ),
             const SizedBox(height: 16),
             Text(
-              l10n.itemPublished,
+              l10n.itemPublishedSuccessfully,
               style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
                 color: Color(0xFF1A1A2E),
               ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              l10n.itemPublishedDescription,
-              textAlign: TextAlign.center,
-              style: TextStyle(
+              l10n.yourItemHasBeenPublished,
+              style: const TextStyle(
                 fontSize: 14,
-                color: Colors.grey.withAlpha((0.7 * 255).round()),
+                color: Color(0xFF666666),
               ),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
-                  child: TextButton(
+                  child: OutlinedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
                       context.go('/home');
@@ -2025,8 +2203,7 @@ void _handleCustomTagsInput(String input, UploadPostViewModel viewModel) {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      // TODO: Navigate to item view
-                      context.go('/home');
+                      context.pushReplacement('/product/$postId');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF6E8EFB),
@@ -2036,7 +2213,10 @@ void _handleCustomTagsInput(String input, UploadPostViewModel viewModel) {
                     ),
                     child: Text(
                       l10n.viewItem,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),

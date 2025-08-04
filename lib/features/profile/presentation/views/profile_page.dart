@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rivo_app_beta/core/design_system/design_system.dart';
@@ -15,96 +17,197 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStateMixin {
-  late Future<Profile> _profileFuture;
   final ProfileService _profileService = ProfileService();
-  late TabController _tabController;
+  late final TabController _tabController;
+  late final String _userId;
+  
+  // Stream subscription for profile updates
+  StreamSubscription<Map<String, dynamic>>? _profileSubscription;
+  
+  // Profile state
+  Profile? _profile;
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    final userId = Supabase.instance.client.auth.currentUser!.id;
-    _profileFuture = _profileService.getProfileData(userId).then((data) => Profile.fromData(data));
+    _userId = Supabase.instance.client.auth.currentUser!.id;
     _tabController = TabController(length: 2, vsync: this);
+    _subscribeToProfileUpdates();
+  }
+  
+  @override
+  void dispose() {
+    _profileSubscription?.cancel();
+    _tabController.dispose();
+    super.dispose();
+  }
+  
+  void _subscribeToProfileUpdates() {
+    // Initial load
+    _loadProfile();
+    
+    // Subscribe to updates
+    _profileSubscription = _profileService.watchProfileData(_userId)?.listen(
+      (profileData) {
+        if (mounted) {
+          setState(() {
+            _profile = Profile.fromData(profileData);
+            _isLoading = false;
+            _error = null;
+          });
+        }
+      },
+      onError: (error) {
+        if (mounted) {
+          setState(() {
+            _error = error.toString();
+            _isLoading = false;
+          });
+        }
+      },
+      cancelOnError: false,
+    );
+  }
+  
+  Future<void> _loadProfile() async {
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
+    
+    try {
+      final profileData = await _profileService.getProfileData(_userId);
+      if (mounted) {
+        setState(() {
+          _profile = Profile.fromData(profileData);
+          _isLoading = false;
+          _error = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: FutureBuilder<Profile>(
-        future: _profileFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: AppColors.error)));
-          }
-          if (!snapshot.hasData) {
-            return const Center(child: Text('Profile not found.', style: TextStyle(color: AppColors.onSurface, fontSize: 16)));
-          }
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-          final profile = snapshot.data!;
+    if (_error != null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Error loading profile',
+                style: TextStyle(color: AppColors.error, fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: _loadProfile,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
-          return NestedScrollView(
-            headerSliverBuilder: (context, innerBoxIsScrolled) {
-              return [
-                SliverAppBar(
-                  backgroundColor: AppColors.surface,
-                  title: Text(profile.username, style: const TextStyle(color: AppColors.onSurface, fontWeight: FontWeight.bold)),
-                  centerTitle: true,
-                  pinned: true,
-                  floating: true,
-                  actions: [
-                    IconButton(onPressed: () => context.push('/settings'), icon: const Icon(Icons.settings_outlined, color: AppColors.onSurface)),
-                  ],
+    if (_profile == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: Text(
+            'Profile not found',
+            style: TextStyle(color: AppColors.onSurface, fontSize: 16),
+          ),
+        ),
+      );
+    }
+
+    final profile = _profile!;
+
+    return NestedScrollView(
+      headerSliverBuilder: (context, innerBoxIsScrolled) {
+        return [
+          SliverAppBar(
+            backgroundColor: AppColors.surface,
+            title: Text(
+              profile.username,
+              style: const TextStyle(
+                color: AppColors.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            centerTitle: true,
+            pinned: true,
+            floating: true,
+            actions: [
+              IconButton(
+                onPressed: () => context.push('/settings'),
+                icon: const Icon(
+                  Icons.settings_outlined,
+                  color: AppColors.onSurface,
                 ),
-                SliverToBoxAdapter(child: ProfileHeader(profile: profile)),
-                SliverToBoxAdapter(child: SpotlightSection()),
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _SliverTabBarDelegate(
-                    TabBar(
-                      controller: _tabController,
-                      labelColor: AppColors.primary,
-                      unselectedLabelColor: AppColors.gray600,
-                      indicatorColor: AppColors.primary,
-                      tabs: [
-                        Tab(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Icon(Icons.grid_view_rounded),
-                              SizedBox(width: 8),
-                              Text('My Style'),
-                            ],
-                          ),
-                        ),
-                        Tab(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Icon(Icons.receipt_long),
-                              SizedBox(width: 8),
-                              Text('Purchases'),
-                            ],
-                          ),
-                        ),
+              ),
+            ],
+          ),
+          SliverToBoxAdapter(child: ProfileHeader(profile: profile)),
+          const SliverToBoxAdapter(child: SpotlightSection()),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _SliverTabBarDelegate(
+              TabBar(
+                controller: _tabController,
+                labelColor: AppColors.primary,
+                unselectedLabelColor: AppColors.gray600,
+                indicatorColor: AppColors.primary,
+                tabs: [
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.grid_view_rounded),
+                        SizedBox(width: 8),
+                        Text('My Style'),
                       ],
                     ),
                   ),
-                ),
-              ];
-            },
-            body: TabBarView(
-              controller: _tabController,
-              children: const [
-                Center(child: Text('My Style Content')),
-                Center(child: Text('Purchase History Content')),
-              ],
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.receipt_long),
+                        SizedBox(width: 8),
+                        Text('Purchases'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          );
-        },
+          ),
+        ];
+      },
+      body: TabBarView(
+        controller: _tabController,
+        children: const [
+          Center(child: Text('My Style Content')),
+          Center(child: Text('Purchase History Content')),
+        ],
       ),
     );
   }

@@ -1,6 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
+import 'package:rivo_app_beta/core/security/input_validator.dart';
+import 'package:rivo_app_beta/core/security/rate_limiter.dart';
 import 'package:rivo_app_beta/features/feed/domain/entities/feed_post_entity.dart';
+import 'package:logger/logger.dart';
 
 /// A data source that handles remote feed-related operations.
 /// 
@@ -8,7 +11,19 @@ import 'package:rivo_app_beta/features/feed/domain/entities/feed_post_entity.dar
 /// - Fetching feed posts
 /// - Managing post likes/unlikes
 /// - Interacting with the Supabase backend
-class FeedRemoteDataSource {
+class FeedRemoteDataSource with RateLimited {
+  static const _rateLimitKey = 'feed_requests';
+  static const _maxRequestsPerMinute = 60; // Adjust based on your API limits
+  
+  final Logger _logger = Logger(
+    printer: PrettyPrinter(
+      methodCount: 0,
+      errorMethodCount: 5,
+      lineLength: 50,
+      colors: true,
+      printEmojis: true,
+    ),
+  );
   /// The Supabase client used for database operations
   final SupabaseClient _client;
 
@@ -19,26 +34,108 @@ class FeedRemoteDataSource {
 
 
 
+  /// Fetches posts created by a specific user.
+  /// 
+  /// [userId]: The ID of the user whose posts to fetch
+  /// 
+  /// Returns a list of [FeedPostEntity] objects.
+  /// 
+  /// Throws [AppException] if:
+  /// - The user ID is invalid
+  /// - The request is rate limited
+  /// - There's a network error
   Future<List<FeedPostEntity>> getPostsByCreator(String userId) async {
-  final res = await _client
-      .from('feed_post')
-      .select('*, product(*, media(*))') 
-      .eq('creator_id', userId)
-      .order('created_at', ascending: false);
+    try {
+      // Validate input
+      final validatedUserId = InputValidator.validateId(userId, fieldName: 'User ID');
+      
+      // Check rate limit based on the current user making the request
+      final callerId = _client.auth.currentUser?.id;
+      if (callerId == null) {
+        throw AppException.unauthorized('User not authenticated');
+      }
+      await checkRateLimit(
+        key: '${_rateLimitKey}_getPostsByCreator_$callerId',
+        maxRequests: _maxRequestsPerMinute,
+      );
 
-  return (res as List).map((item) => FeedPostEntity.fromMap(item)).toList();
-}
+      _logger.d('Fetching posts for user: $validatedUserId');
+      
+      final res = await _client
+          .from('feed_post')
+          .select('*, product(*, media(*))')
+          .eq('creator_id', validatedUserId)
+          .order('created_at', ascending: false);
 
-Future<List<FeedPostEntity>> getPostsByIds(List<String> postIds) async {
-  if (postIds.isEmpty) return [];
+      // Supabase returns an empty list when no posts are found
+      if (res.isEmpty) {
+        _logger.w('No posts found for user: $validatedUserId');
+        return [];
+      }
 
-  final res = await _client
-      .from('feed_post')
-      .select('*, product(*, media(*))') 
-      .inFilter('id', postIds)
-      .order('created_at', ascending: false);
-  return (res as List).map((item) => FeedPostEntity.fromMap(item)).toList();
-}
+      return (res as List).map((item) => FeedPostEntity.fromMap(item)).toList();
+    } on PostgrestException catch (e) {
+      _logger.e('Database error fetching posts: ${e.message}');
+      throw AppException.network('Failed to fetch posts: ${e.message}');
+    } catch (e) {
+      _logger.e('Unexpected error in getPostsByCreator: $e');
+      throw AppException.unexpected('An error occurred while fetching posts');
+    }
+  }
+
+  /// Fetches posts by their IDs.
+  /// 
+  /// [postIds]: A list of post IDs to fetch
+  /// 
+  /// Returns a list of [FeedPostEntity] objects.
+  /// 
+  /// Throws [AppException] if:
+  /// - The post IDs list is empty
+  /// - Any post ID is invalid
+  /// - The request is rate limited
+  /// - There's a network error
+  Future<List<FeedPostEntity>> getPostsByIds(List<String> postIds) async {
+    try {
+      if (postIds.isEmpty) {
+        _logger.d('Empty post IDs list provided');
+        return [];
+      }
+
+      // Validate all post IDs
+      final validatedPostIds = InputValidator.validateIdList(
+        postIds,
+        fieldName: 'Post ID',
+      );
+
+      // Check rate limit
+      await checkRateLimit(
+        key: '${_rateLimitKey}_get_by_ids',
+        maxRequests: _maxRequestsPerMinute,
+      );
+
+      _logger.d('Fetching ${validatedPostIds.length} posts by IDs');
+      
+      final res = await _client
+          .from('feed_post')
+          .select('*, product(*, media(*))')
+          .inFilter('id', validatedPostIds)
+          .order('created_at', ascending: false);
+
+      // Supabase returns an empty list when no posts are found
+      if (res.isEmpty) {
+        _logger.w('No posts found for the provided IDs');
+        return [];
+      }
+
+      return (res as List).map((item) => FeedPostEntity.fromMap(item)).toList();
+    } on PostgrestException catch (e) {
+      _logger.e('Database error fetching posts by IDs: ${e.message}');
+      throw AppException.network('Failed to fetch posts: ${e.message}');
+    } catch (e) {
+      _logger.e('Unexpected error in getPostsByIds: $e');
+      throw AppException.unexpected('An error occurred while fetching posts');
+    }
+  }
 
 
   
@@ -52,15 +149,47 @@ Future<List<FeedPostEntity>> getPostsByIds(List<String> postIds) async {
   /// Throws an [Exception] if:
   /// - The user is not authenticated
   /// - The database operation fails
+  /// Likes a post on behalf of the current user.
+  /// 
+  /// [postId]: The ID of the post to like
+  /// 
+  /// Throws [AppException] if:
+  /// - The user is not authenticated
+  /// - The post ID is invalid
+  /// - The request is rate limited
+  /// - There's a network error
   Future<void> likePost(String postId) async {
-  final userId = _client.auth.currentUser?.id;
-  if (userId == null) throw Exception('User not authenticated');
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) {
+        throw AppException.unauthorized('User not authenticated');
+      }
 
-  await _client.from('post_likes').insert({
-    'user_id': userId,
-    'post_id': postId,
-  });
-}
+      // Validate input
+      final validatedPostId = InputValidator.validateId(postId, fieldName: 'Post ID');
+      
+      // Check rate limit
+      await checkRateLimit(
+        key: '${_rateLimitKey}_like_$userId',
+        maxRequests: 30, // Lower limit for like actions
+      );
+
+      _logger.d('User $userId liking post $validatedPostId');
+      
+      await _client.from('post_likes').insert({
+        'user_id': userId,
+        'post_id': validatedPostId,
+      });
+      
+      _logger.i('Successfully liked post $validatedPostId');
+    } on PostgrestException catch (e) {
+      _logger.e('Database error liking post: ${e.message}');
+      throw AppException.network('Failed to like post: ${e.message}');
+    } catch (e) {
+      _logger.e('Unexpected error in likePost: $e');
+      rethrow; // Let the error bubble up with the original exception
+    }
+  }
 
   /// Removes a like from a post for the current user.
   /// 
@@ -72,15 +201,47 @@ Future<List<FeedPostEntity>> getPostsByIds(List<String> postIds) async {
   /// Throws an [Exception] if:
   /// - The user is not authenticated
   /// - The database operation fails
+  /// Removes a like from a post for the current user.
+  /// 
+  /// [postId]: The ID of the post to unlike
+  /// 
+  /// Throws [AppException] if:
+  /// - The user is not authenticated
+  /// - The post ID is invalid
+  /// - The request is rate limited
+  /// - There's a network error
   Future<void> unlikePost(String postId) async {
-  final userId = _client.auth.currentUser?.id;
-  if (userId == null) throw Exception('User not authenticated');
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) {
+        throw AppException.unauthorized('User not authenticated');
+      }
 
-  await _client
-      .from('post_likes')
-      .delete()
-      .match({'user_id': userId, 'post_id': postId});
-}
+      // Validate input
+      final validatedPostId = InputValidator.validateId(postId, fieldName: 'Post ID');
+      
+      // Check rate limit
+      await checkRateLimit(
+        key: '${_rateLimitKey}_unlike_$userId',
+        maxRequests: 30, // Lower limit for unlike actions
+      );
+
+      _logger.d('User $userId unliking post $validatedPostId');
+      
+      await _client
+          .from('post_likes')
+          .delete()
+          .match({'user_id': userId, 'post_id': validatedPostId});
+      
+      _logger.i('Successfully unliked post $validatedPostId');
+    } on PostgrestException catch (e) {
+      _logger.e('Database error unliking post: ${e.message}');
+      throw AppException.network('Failed to unlike post: ${e.message}');
+    } catch (e) {
+      _logger.e('Unexpected error in unlikePost: $e');
+      rethrow; // Let the error bubble up with the original exception
+    }
+  }
 
 
   /// Fetches a list of feed posts for the current user.
@@ -98,12 +259,28 @@ Future<List<FeedPostEntity>> getPostsByIds(List<String> postIds) async {
   /// - The user is not authenticated (unauthorized)
   /// - There's a network error (network)
   /// - An unexpected error occurs (unexpected)
+  /// Fetches the feed posts for the current user.
+  /// 
+  /// Returns a list of [FeedPostEntity] objects.
+  /// 
+  /// Throws [AppException] if:
+  /// - The user is not authenticated
+  /// - The request is rate limited
+  /// - There's a network error
   Future<List<FeedPostEntity>> getFeedPosts() async {
-  try {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) {
-      throw AppException.unauthorized('User not logged in');
-    }
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) {
+        throw AppException.unauthorized('User not logged in');
+      }
+      
+      // Check rate limit
+      await checkRateLimit(
+        key: '${_rateLimitKey}_feed_$userId',
+        maxRequests: _maxRequestsPerMinute,
+      );
+      
+      _logger.d('Fetching feed for user: $userId');
 
     // 1. Get posts with related data using a single query with joins
     const postQuery = '''
@@ -191,16 +368,40 @@ Future<List<FeedPostEntity>> getPostsByIds(List<String> postIds) async {
 }
 
 Future<bool> isCurrentUserSeller() async {
-    final user = _client.auth.currentUser;
-    if (user == null) return false;
+    try {
+      final user = _client.auth.currentUser;
+      if (user == null) return false;
+      
+      // Check rate limit
+      await checkRateLimit(
+        key: '${_rateLimitKey}_seller_check_${user.id}',
+        maxRequests: 10, // Very low limit for this endpoint
+      );
 
-    final profile = await _client
-        .from('profiles')
-        .select('is_seller')
-        .eq('id', user.id)
-        .maybeSingle();
+      _logger.d('Checking if user ${user.id} is a seller');
+      
+      final profile = await _client
+          .from('profiles')
+          .select('is_seller')
+          .eq('id', user.id)
+          .maybeSingle();
 
-    return profile != null && profile['is_seller'] == true;
+      final isSeller = profile != null && profile['is_seller'] == true;
+      
+      if (isSeller) {
+        _logger.d('User ${user.id} is a seller');
+      } else {
+        _logger.d('User ${user.id} is not a seller');
+      }
+      
+      return isSeller;
+    } on PostgrestException catch (e) {
+      _logger.e('Database error checking seller status: ${e.message}');
+      throw AppException.network('Failed to verify seller status');
+    } catch (e) {
+      _logger.e('Unexpected error in isCurrentUserSeller: $e');
+      return false; // Fail safely to non-seller status
+    }
   }
 
 }

@@ -30,8 +30,8 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
       state = state.copyWith(price: parsed);
     }
   }
-  // Sanitize and set category (should be a valid UUID, but still sanitize)
-  void setCategory(String? id) => state = state.copyWith(categoryId: id != null ? InputSanitizer.sanitizeSimpleField(id) : null);
+  // Set category ID directly as it comes from a controlled dropdown
+  void setCategory(String? id) => state = state.copyWith(categoryId: id);
   // Sanitize and set tags
   void setTags(List<String> tagNames) => state = state.copyWith(tagNames: InputSanitizer.sanitizeTags(tagNames));
   // Chest, waist, length: only numbers, no need for string sanitization
@@ -48,6 +48,11 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
   void setBrand(String? value) => state = state.copyWith(brand: value != null ? InputSanitizer.sanitizeSimpleField(value) : null);
   // Sanitize and set material
   void setMaterial(String? value) => state = state.copyWith(material: value != null ? InputSanitizer.sanitizeSimpleField(value) : null);
+  
+  /// Resets the form to its initial state
+  void reset() {
+    state = const UploadPostState();
+  }
 
 
   Future<void> setMedia(List<UploadableMedia> selectedMedia) async {
@@ -114,7 +119,7 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
 
 
 
-  Future<void> submit() async {
+  Future<String> submit() async {
     // Throw specific validation errors for missing caption or price
     if (state.caption == null || state.caption!.trim().isEmpty) {
       throw AppException.validation('uploadCaptionRequiredBackend');
@@ -152,21 +157,23 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
       );
 
       final result = await useCase(
-  payload,
-  onMediaUploaded: (current, total) {
-    state = state.copyWith(
-      uploadedMediaCount: current,
-      totalMediaCount: total,
-    );
-  },
-  onMediaStatusChanged: updateMediaStatus, 
-);
+        payload,
+        onMediaUploaded: (current, total) {
+          state = state.copyWith(
+            uploadedMediaCount: current,
+            totalMediaCount: total,
+          );
+        },
+        onMediaStatusChanged: updateMediaStatus, 
+      );
 
-
-      result.fold(
-  (failure) => throw failure,
-  (_) => debugPrint("✅ Upload success"),
-);
+      return result.fold(
+        (failure) => throw failure,
+        (postId) {
+          debugPrint("✅ Upload success, post ID: $postId");
+          return postId;
+        },
+      );
     } on AppException {
       rethrow;
     } catch (_) {

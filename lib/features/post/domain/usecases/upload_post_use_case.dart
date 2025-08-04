@@ -9,18 +9,18 @@ class UploadPostUseCase {
 
   UploadPostUseCase(this.repository);
 
-  Future<Either<AppException, void>> call(
+  Future<Either<AppException, String>> call(
   UploadPostPayload payload, {
   void Function(int current, int total)? onMediaUploaded,
   void Function(String mediaPath, UploadMediaStatus status)? onMediaStatusChanged,
 }) async {
   try {
-    await repository.uploadPost(
+    final postId = await repository.uploadPost(
       payload,
       onMediaUploaded: onMediaUploaded,
       onMediaStatusChanged: onMediaStatusChanged,
     );
-    return right(null);
+    return right(postId);
   } catch (e) {
     if (e is AppException) return left(e);
     return left(AppException.unexpected('upload.unknown'));

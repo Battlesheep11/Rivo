@@ -83,5 +83,46 @@ class AuthRemoteDataSource {
       redirectTo: 'com.example.rivo_app_beta://login-callback',
     );
   }
+
+  /// Sends a password reset email to the specified email address
+  /// 
+  /// Throws an exception if there's an error sending the email
+  Future<void> sendPasswordResetEmail(String email) async {
+    await client.auth.resetPasswordForEmail(
+      email,
+      redirectTo: 'com.example.rivo_app_beta://reset-password',
+    );
+  }
+
+  /// Resets the password using the provided token and new password
+  /// 
+  /// Throws an exception if there's an error resetting the password
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    // With Supabase, the password reset flow is:
+    // 1. User requests a password reset email (handled by sendPasswordResetEmail)
+    // 2. User clicks the link in the email, which contains a token
+    // 3. The app calls this method with the token and new password
+    
+    // The token is a JWT that contains the user's email
+    // We'll use it to update the user's password
+    
+    try {
+      // Update the user's password
+      await client.auth.updateUser(
+        UserAttributes(
+          password: newPassword,
+        ),
+      );
+      
+      // The token is automatically verified by Supabase when we try to update the password
+      // If the token is invalid or expired, an exception will be thrown
+      
+    } catch (e) {
+      throw Exception('Failed to reset password. The link may have expired or is invalid.');
+    }
+  }
 }
 

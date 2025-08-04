@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:rivo_app_beta/core/design_system/design_system.dart';
 import 'package:rivo_app_beta/features/profile/data/models/profile_model.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
@@ -242,6 +243,9 @@ class _EditBioDialogState extends State<_EditBioDialog> {
         children: [
           TextField(
             controller: _controller,
+            inputFormatters: [
+              FilteringTextInputFormatter.deny(RegExp(r'[<>/\|]')), // Block dangerous characters
+            ],
             maxLines: 5,
             maxLength: _maxChars,
             decoration: InputDecoration(

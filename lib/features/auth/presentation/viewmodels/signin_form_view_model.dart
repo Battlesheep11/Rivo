@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
+import 'package:rivo_app_beta/core/security/rate_limiter_service.dart';
 import 'package:rivo_app_beta/core/toast/toast_service.dart';
 import 'package:rivo_app_beta/features/auth/domain/repositories/auth_repository.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/email.dart';
@@ -79,24 +80,63 @@ class SigninFormViewModel extends StateNotifier<SigninFormState> {
   Future<void> submit(BuildContext context) async {
     if (!state.isValid || state.isSubmitting) return;
 
+    // Check rate limiting before attempting login
+    final rateLimiter = RateLimiterService();
+    final rateLimitError = rateLimiter.checkLoginAttempt(state.email.value);
+    
+    if (rateLimitError != null) {
+      state = state.copyWith(
+        isSubmitting: false,
+        isFailure: true,
+        errorMessage: rateLimitError,
+      );
+      ToastService().showError(rateLimitError);
+      return;
+    }
+
     state = state.copyWith(isSubmitting: true, isFailure: false, isSuccess: false);
 
-    final result = await repository.signIn(
-      email: state.email.value,
-      password: state.password.value,
-    );
+    try {
+      final result = await repository.signIn(
+        email: state.email.value,
+        password: state.password.value,
+      );
 
-    result.fold(
-      (failure) {
-        final userError = AppLocalizations.of(context)!.authInvalidCredentials;
-        state = state.copyWith(isSubmitting: false, isFailure: true, errorMessage: userError);
-        ToastService().showError(userError); // A toast is fine for transient errors
-      },
-      (user) {
-        state = state.copyWith(isSubmitting: false, isSuccess: true);
-        // Navigation will be handled by ref.listen in the UI
-      },
-    );
+      result.fold(
+        (failure) {
+          // Record failed login attempt
+          rateLimiter.recordLoginAttempt(state.email.value);
+          
+          // Check rate limit again in case we just hit the threshold
+          final rateLimitError = rateLimiter.checkLoginAttempt(state.email.value);
+          final errorMessage = rateLimitError ?? 'Invalid email or password. Please try again.';
+          
+          state = state.copyWith(
+            isSubmitting: false,
+            isFailure: true,
+            errorMessage: errorMessage,
+          );
+          ToastService().showError(errorMessage);
+        },
+        (user) {
+          // Reset rate limiting on successful login
+          rateLimiter.resetLoginAttempts(state.email.value);
+          state = state.copyWith(isSubmitting: false, isSuccess: true);
+          // Navigation will be handled by ref.listen in the UI
+        },
+      );
+    } catch (e) {
+      // Record failed login attempt on exception
+      rateLimiter.recordLoginAttempt(state.email.value);
+      final errorMessage = 'An unexpected error occurred. Please try again.';
+      state = state.copyWith(
+        isSubmitting: false,
+        isFailure: true,
+        errorMessage: errorMessage,
+      );
+      ToastService().showError(errorMessage);
+      developer.log('Login error: $e', error: e, stackTrace: StackTrace.current);
+    }
   }
 
   /// Clears the current error message from the state.

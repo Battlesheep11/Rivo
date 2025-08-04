@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -202,7 +201,30 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           Padding(
             padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
             child: AppErrorText(message: signinState.errorMessage!),
-          ) else const SizedBox(height: 24),
+          ) else const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () {
+              // Navigate to forgot password screen
+              context.push('/auth/forgot-password');
+            },
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              localizations.forgotPassword,
+              style: const TextStyle(
+                color: Color(0xFF666666),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
         ElevatedButton(
           onPressed: onSubmit,
           style: ElevatedButton.styleFrom(
@@ -362,25 +384,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final signupState = ref.watch(signupFormViewModelProvider);
     final passwordStrength = signupState.passwordStrength;
     final isSubmitting = signupState.isSubmitting;
-    
-    // The overall form validity is determined by the view model's state.
+
     final isValid = signupState.isValid;
-    debugPrint('[DEBUG] Form isValid from state: $isValid');
 
-    // Get password validation error messages (localized)
     String? passwordError;
-    String? confirmPasswordError;
-
-    // Password validation - show localized error for each possible failure
     if (signupState.password.displayError != null) {
-      switch (signupState.password.displayError!) {
-        case PasswordValidationError.tooShort:
-          passwordError = localizations.passwordValidationTooShort;
-          break;
-      }
+      passwordError = signupState.password.error?.getErrorMessage(context);
     }
 
-    // Confirm password validation - show localized error for each possible failure
+    String? confirmPasswordError;
     if (signupState.confirmedPassword.displayError != null) {
       switch (signupState.confirmedPassword.displayError!) {
         case ConfirmedPasswordValidationError.mismatch:
@@ -391,16 +403,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
     final VoidCallback? onSubmit = (isValid && !isSubmitting && _termsAccepted)
         ? () async {
-            debugPrint('[DEBUG] Create Account button pressed!');
             bool success = await ref.read(signupFormViewModelProvider.notifier).submit(context);
-            debugPrint('[DEBUG] Submit result: $success');
             if (success && context.mounted) {
-              debugPrint('[DEBUG] Navigation to /redirect');
               context.go('/redirect');
             }
           }
         : null;
-    debugPrint('[DEBUG] Button enabled: ${isValid && !isSubmitting && _termsAccepted} (isValid: $isValid, isSubmitting: $isSubmitting, terms: $_termsAccepted)');
 
     return Column(
       key: const ValueKey('createPasswordStep'),
@@ -416,7 +424,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           hintText: localizations.authPasswordHint,
           icon: Icons.lock_outline,
           obscureText: !_passwordVisible,
-          errorText: passwordError, // Display password validation error
+          errorText: passwordError,
           suffixIcon: IconButton(
             icon: Icon(_passwordVisible ? Icons.visibility_off : Icons.visibility, color: const Color(0xFF999999)),
             onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
@@ -434,7 +442,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           hintText: localizations.authConfirmPasswordHint,
           icon: Icons.lock_outline,
           obscureText: !_confirmPasswordVisible,
-          errorText: confirmPasswordError, // Display confirm password validation error
+          errorText: confirmPasswordError,
           suffixIcon: IconButton(
             icon: Icon(_confirmPasswordVisible ? Icons.visibility_off : Icons.visibility, color: const Color(0xFF999999)),
             onPressed: () => setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
@@ -443,14 +451,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         const SizedBox(height: 24),
         _buildTermsAndConditions(context),
         const SizedBox(height: 24),
-        // Add helpful text when button is disabled to guide user
         if (!isValid || !_termsAccepted)
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
-              !_termsAccepted 
-                  ? 'Please accept the terms and conditions to continue'
-                  : 'Please enter a valid password and confirm it correctly',
+              !_termsAccepted
+                  ? localizations.authTermsAcceptanceRequired
+                  : localizations.authPasswordValidationRequired,
               style: const TextStyle(color: Colors.orange, fontSize: 13, fontWeight: FontWeight.w500),
               textAlign: TextAlign.center,
             ),
@@ -559,7 +566,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   Widget _buildTermsAndConditions(BuildContext context) {
-    final localizations = AppLocalizations.of(context)!;
+    // Using a simple string for now since we're having issues with the placeholder replacement
+    const termsText = 'By creating an account, you agree to our Terms of Service and Privacy Policy';
+    
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -575,23 +584,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           visualDensity: VisualDensity.compact,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-        Expanded(
-          child: RichText(
-            text: TextSpan(
-              style: const TextStyle(fontSize: 14, color: Color(0xFF666666), fontFamily: 'Inter'),
-              children: [
-                TextSpan(text: localizations.authTermsAccept),
-                TextSpan(
-                  text: localizations.authTermsOfService,
-                  style: const TextStyle(color: Color(0xFF1A73E8), fontWeight: FontWeight.w500),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () {
-                      // ignore: avoid_print
-                      print('Terms of Service tapped');
-                    },
-                ),
-              ],
-            ),
+        const SizedBox(width: 8),
+        const Expanded(
+          child: Text(
+            termsText,
+            style: TextStyle(fontSize: 14, color: Color(0xFF666666), fontFamily: 'Inter'),
           ),
         ),
       ],

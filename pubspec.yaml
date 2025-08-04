@@ -48,6 +48,11 @@ dependencies:
   shared_preferences: ^2.2.2
   url_launcher: ^6.2.5
   webview_flutter: ^4.4.2
+  flutter_secure_storage: ^9.0.0
+  logger: ^2.0.2
+  pretty_dio_logger: ^1.4.0
+  http2: ^2.3.0
+  crypto: ^3.0.3
   path_provider: ^2.1.2
   app_links: ^6.4.0
   glass_kit: ^4.0.1
@@ -59,14 +64,15 @@ dependencies:
 
 dev_dependencies:
   riverpod_annotation: ^2.1.1
-  build_runner: ^2.4.5
-  freezed: ^2.4.5
+  build_runner: ^2.4.7
+  freezed: ^2.4.6
   flutter_test:
     sdk: flutter
   mocktail: ^1.0.3
-  json_serializable: ^6.8.0
+  json_serializable: ^6.7.1
   flutter_lints: ^6.0.0
   riverpod_generator: ^2.2.3
+  intl_utils: 2.8.11
 
 flutter:
   uses-material-design: true

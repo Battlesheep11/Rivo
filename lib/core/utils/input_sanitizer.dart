@@ -48,6 +48,22 @@ class InputSanitizer {
     return tags.map(sanitizeTag).where((t) => t.isNotEmpty).toList();
   }
 
+    /// Sanitizes a UUID string, allowing only valid UUID characters
+  /// and converting to lowercase for consistency.
+  /// Returns the sanitized string or empty if input is null/empty.
+  static String sanitizeUuid(String? input) {
+    if (input == null || input.isEmpty) return '';
+    
+    // Remove any characters that aren't valid in a UUID
+    final sanitized = input.trim().replaceAll(RegExp(r'[^a-fA-F0-9-]'), '');
+    
+    // If the string is empty after sanitization, return empty
+    if (sanitized.isEmpty) return '';
+    
+    // Convert to lowercase for consistency
+    return sanitized.toLowerCase();
+  }
+
   /// Sanitizes a size or condition string.
   static String sanitizeSimpleField(String input) {
     return _sanitizeGenericString(input, maxLength: 32);

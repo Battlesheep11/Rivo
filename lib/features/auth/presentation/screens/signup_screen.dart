@@ -4,6 +4,7 @@ import 'package:rivo_app_beta/features/auth/presentation/providers/signup_form_p
 import 'package:rivo_app_beta/core/design_system/design_system.dart';
 import 'package:rivo_app_beta/features/auth/presentation/widgets/password_strength_indicator.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
+import 'package:rivo_app_beta/features/auth/presentation/forms/password.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -96,8 +97,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             const SizedBox(height: 16),
             AppTextField(controller: passwordController, hintText: localizations.authPasswordHint, obscureText: true),
             // Show password validation errors
-            if (state.password.isNotValid && state.password.value.isNotEmpty)
-              AppErrorText(message: localizations.passwordValidationTooShort),
+            if (state.password.isNotValid && state.password.error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: AppErrorText(message: state.password.error!.getErrorMessage(context)),
+              ),
             // Show password strength indicator
             if (state.password.value.isNotEmpty)
               Padding(

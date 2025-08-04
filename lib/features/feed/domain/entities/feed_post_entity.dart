@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import 'package:rivo_app_beta/core/security/field_security.dart';
+import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
 
 /// Represents a post in the feed.
 ///
@@ -120,32 +122,128 @@ class FeedPostEntity extends Equatable {
         tags,
       ];
 
+      /// Creates a [FeedPostEntity] from a JSON map.
+      /// 
+      /// [json]: A map containing the post data
+      /// 
+      /// Throws [AppException] if any required fields are missing or invalid.
       factory FeedPostEntity.fromMap(Map<String, dynamic> json) {
-  final product = json['product'] as Map<String, dynamic>? ?? {};
-  final productMediaList = (product['media'] as List<dynamic>? ?? [])
-      .cast<Map<String, dynamic>>();
+        try {
+          // Extract and validate product data
+          final product = json['product'] as Map<String, dynamic>? ?? {};
+          final creator = json['creator'] as Map<String, dynamic>? ?? {};
+          
+          // Get media list safely
+          final productMediaList = (product['media'] as List<dynamic>? ?? [])
+              .whereType<Map<String, dynamic>>()
+              .toList();
 
-  final productMediaUrls = productMediaList
-      .map((m) => m['media_url'] as String?)
-      .whereType<String>()
-      .toList();
+          // Sanitize and validate media URLs
+          final productMediaUrls = productMediaList
+              .map((m) => m['media_url'] as String?)
+              .whereType<String>()
+              .map((url) => FieldSecurity.sanitizeUrl(
+                    value: url,
+                    fieldName: 'Media URL',
+                  ))
+              .whereType<String>()
+              .toList();
 
-  return FeedPostEntity(
-    id: json['id'] as String,
-    createdAt: DateTime.parse(json['created_at']),
-    likeCount: (json['like_count'] ?? 0) as int,
-    creatorId: json['creator_id'] as String,
-    caption: json['caption'] as String?,
-    productId: json['product_id'] as String?,
-    username: json['creator']?['username'] ?? 'Unknown',
-    avatarUrl: json['creator']?['avatar_url'],
-    productTitle: product['title'] ?? '',
-    productDescription: product['description'],
-    productPrice: (product['price'] ?? 0).toDouble(),
-    mediaUrls: productMediaUrls,
-    tags: [],
-    isLikedByMe: false,
-  );
-}
+          // Validate and sanitize all fields
+          final id = FieldSecurity.validateId(json['id'], fieldName: 'Post ID');
+          final creatorId = FieldSecurity.validateId(
+            json['creator_id'],
+            fieldName: 'Creator ID',
+          );
+          
+          final username = FieldSecurity.sanitizeString(
+            value: creator['username'],
+            fieldName: 'Username',
+            isRequired: true,
+            maxLength: 50,
+          ) ?? 'Unknown';
+
+          final avatarUrl = FieldSecurity.sanitizeUrl(
+            value: creator['avatar_url'],
+            fieldName: 'Avatar URL',
+          );
+
+          final productTitle = FieldSecurity.sanitizeString(
+            value: product['title'],
+            fieldName: 'Product title',
+            isRequired: true,
+            maxLength: 100,
+          ) ?? '';
+
+          final productDescription = FieldSecurity.sanitizeString(
+            value: product['description'],
+            fieldName: 'Product description',
+            maxLength: 1000,
+          );
+
+          // Parse and validate price
+          double productPrice;
+          try {
+            final price = product['price'];
+            if (price is num) {
+              productPrice = price.toDouble();
+            } else if (price is String) {
+              productPrice = double.tryParse(price) ?? 0.0;
+            } else {
+              productPrice = 0.0;
+            }
+            
+            // Ensure price is not negative
+            if (productPrice < 0) {
+              productPrice = 0.0;
+            }
+          } catch (e) {
+            productPrice = 0.0;
+          }
+
+          // Parse and validate creation date
+          DateTime createdAt;
+          try {
+            createdAt = DateTime.parse(json['created_at'] as String);
+          } catch (e) {
+            createdAt = DateTime.now();
+          }
+
+          // Get like count safely
+          final likeCount = json['like_count'] is int 
+              ? (json['like_count'] as int) 
+              : 0;
+
+          return FeedPostEntity(
+            id: id,
+            createdAt: createdAt,
+            likeCount: likeCount,
+            creatorId: creatorId,
+            caption: FieldSecurity.sanitizeString(
+              value: json['caption'],
+              fieldName: 'Caption',
+              maxLength: 500,
+            ),
+            productId: json['product_id']?.toString(),
+            username: username,
+            avatarUrl: avatarUrl,
+            productTitle: productTitle,
+            productDescription: productDescription,
+            productPrice: productPrice,
+            mediaUrls: productMediaUrls,
+            tags: FieldSecurity.sanitizeStringList(
+              value: json['tags'],
+              fieldName: 'Tags',
+              maxItems: 10,
+              maxItemLength: 30,
+            ),
+            isLikedByMe: json['is_liked_by_me'] == true,
+          );
+        } catch (e) {
+          // Log the error and rethrow with a more user-friendly message
+          if (e is AppException) rethrow;
+          throw AppException.validation('Invalid post data: ${e.toString()}');
+        }
+      }
 
 }

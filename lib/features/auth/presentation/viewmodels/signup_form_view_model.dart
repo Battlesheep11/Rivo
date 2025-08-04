@@ -14,6 +14,8 @@ import 'package:rivo_app_beta/features/auth/presentation/forms/last_name.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/password.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/username.dart';
 import 'package:rivo_app_beta/core/navigation/navigator_key_provider.dart';
+import 'package:rivo_app_beta/core/security/field_security.dart';
+import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
 
 class SignupFormState {
   final FirstName firstName;
@@ -198,44 +200,85 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
   Future<bool> submit(BuildContext context) async {
     if (!state.isValid) return false;
     
-    final overlay = _ref.read(loadingOverlayProvider);
-    state = state.copyWith(isSubmitting: true, isFailure: false, isSuccess: false);
-developer.log('[DEBUG] isSubmitting set to true in submit(), state: ${state.isSubmitting}');
+    try {
+      // Apply FieldSecurity validation
+      final firstName = FieldSecurity.sanitizeString(
+        value: state.firstName.value,
+        fieldName: 'First name',
+        isRequired: true,
+        maxLength: 50,
+      )!;
 
-    overlay.show(context);
+      final lastName = FieldSecurity.sanitizeString(
+        value: state.lastName.value,
+        fieldName: 'Last name',
+        isRequired: true,
+        maxLength: 50,
+      )!;
 
-    final result = await _repository.signUp(
-      firstName: state.firstName.value,
-      lastName: state.lastName.value,
-      username: state.username.value,
-      email: state.email.value,
-      password: state.password.value,
-    );
+      final username = FieldSecurity.sanitizeString(
+        value: state.username.value,
+        fieldName: 'Username',
+        isRequired: true,
+        maxLength: 30,
+      )!;
 
-    final currentContext = _ref.read(navigatorKeyProvider).currentContext;
-    if (currentContext != null && currentContext.mounted) {
-      overlay.hide();
+      // Email is already validated by the Email Formz class
+      final email = state.email.value;
+      
+      final overlay = _ref.read(loadingOverlayProvider);
+      state = state.copyWith(isSubmitting: true, isFailure: false, isSuccess: false);
+      overlay.show(context);
+
+      final result = await _repository.signUp(
+        firstName: firstName,
+        lastName: lastName,
+        username: username,
+        email: email,
+        password: state.password.value,
+      );
+
+      final currentContext = _ref.read(navigatorKeyProvider).currentContext;
+      if (currentContext != null && currentContext.mounted) {
+        overlay.hide();
+      }
+
+      bool success = false;
+
+      result.fold(
+        (failure) {
+          state = state.copyWith(isSubmitting: false, isFailure: true, errorMessage: failure);
+          ToastService().showError(failure);
+          success = false;
+        },
+        (user) {
+          state = state.copyWith(isSubmitting: false, isSuccess: true);
+          ToastService().showSuccess("Success");
+          success = true;
+        },
+      );
+
+      return success;
+    } on AppException catch (e) {
+      // Handle validation errors from FieldSecurity
+      final errorMessage = e.toString();
+      state = state.copyWith(
+        isSubmitting: false,
+        isFailure: true,
+        errorMessage: errorMessage,
+      );
+      ToastService().showError(errorMessage);
+      return false;
+    } catch (e) {
+      // Handle any other unexpected errors
+      const errorMessage = 'An unexpected error occurred. Please try again.';
+      state = state.copyWith(
+        isSubmitting: false,
+        isFailure: true,
+        errorMessage: errorMessage,
+      );
+      ToastService().showError(errorMessage);
+      return false;
     }
-
-    bool success = false;
-
-    result.fold(
-      (failure) {
-        // Transition to failure state
-        state = state.copyWith(isSubmitting: false, isFailure: true, errorMessage: failure);
-        developer.log('[DEBUG] isSubmitting set to false in submit() (failure), state: ${state.isSubmitting}');
-        ToastService().showError(failure);
-        success = false;
-      },
-      (user) {
-        // Transition to success state
-        state = state.copyWith(isSubmitting: false, isSuccess: true);
-        developer.log('[DEBUG] isSubmitting set to false in submit() (success), state: ${state.isSubmitting}');
-        ToastService().showSuccess("Success");
-        success = true;
-      },
-    );
-
-    return success;
   }
 }

@@ -3,7 +3,14 @@
   "email": "Email",
   "password": "Password",
   "signIn": "Sign In",
+  "signingIn": "Signing In...",
   "signUp": "Sign Up",
+  "forgotPassword": "Forgot Password?",
+  "authTermsAcceptanceRequired": "Please accept the terms and conditions to continue",
+  "authPasswordValidationRequired": "Please enter a valid password and confirm it correctly",
+  "authTermsAndConditions": "By creating an account, you agree to our {termsOfService} and {privacyPolicy}",
+  "authTermsOfService": "Terms of Service",
+  "authPrivacyPolicy": "Privacy Policy",
   "authWelcomeTitle": "Welcome Back",
   "authWelcomeSubtitle": "Sign in to discover unique fashion",
   "authSubheading": "Join our fashion community",
@@ -19,12 +26,44 @@
   "authContinue": "Continue",
   "authCreatePassword": "Create Password",
   "authSecureAccount": "Secure your account",
+  "authForgotPasswordTitle": "Forgot Password?",
+  "authForgotPasswordSubtitle": "Enter your email and we will send you a link to reset your password",
+  "authResetPassword": "Reset Password",
+  "resetPasswordMessage": "Please enter your new password",
+  "newPassword": "New Password",
+  "confirmNewPassword": "Confirm New Password",
+  "passwordResetSuccess": "Your password has been reset successfully!",
+  "authResetEmailSent": "Password reset email sent. Please check your inbox.",
+  "authSendResetLink": "Send Reset Link",
+  "emailValidationEmpty": "Please enter your email",
+  "emailValidationInvalid": "Please enter a valid email address",
+  "passwordValidationEmpty": "Password cannot be empty",
+  "passwordValidationMinLength": "Password must be at least 8 characters long",
+  "passwordValidationUppercase": "Password must contain at least one uppercase letter",
+  "passwordValidationLowercase": "Password must contain at least one lowercase letter",
+  "passwordValidationNumber": "Password must contain at least one number",
+  "passwordValidationSpecialChar": "Password must contain at least one special character",
+  "authPasswordHint": "Enter your password",
   "authConfirmPassword": "Confirm Password",
   "authConfirmPasswordHint": "Confirm your password",
-  "authPasswordHint": "Enter your password",
-  "authForgotPassword": "Forgot?",
   "authOrContinueWith": "or continue with",
   "authGoogle": "Google",
+  "itemPublishedSuccessfully": "Item Published!",
+  "@itemPublishedSuccessfully": {
+    "description": "Title shown when an item is successfully published"
+  },
+  "yourItemHasBeenPublished": "Your item has been published successfully and is now visible to the community.",
+  "@yourItemHasBeenPublished": {
+    "description": "Message shown when an item is successfully published"
+  },
+  "goHome": "Go Home",
+  "@goHome": {
+    "description": "Button text to navigate to home screen"
+  },
+  "viewItem": "View Item",
+  "@viewItem": {
+    "description": "Button text to view the published item"
+  },
   "authApple": "Apple",
   "authCreateAccount": "Create Account",
   "authTermsAccept": "I accept the ",
@@ -57,6 +96,13 @@
   "title": "Title",
   "description": "Description",
   "settingsTooltip": "Settings",
+  "settingsPostUpload": "Post Upload",
+  "settingsPostUploadDescription": "Customize what happens after you upload a post",
+  "settingsShowPostUploadDialog": "Show success dialog",
+  "settingsShowPostUploadDialogDescription": "Show a confirmation dialog after uploading a post",
+  "settingsAutoNavigateToPost": "Auto-navigate to post",
+  "settingsAutoNavigateToPostDescription": "Automatically go to the post after uploading",
+  "postUploadPreferencesUpdated": "Post upload preferences updated",
   "followers": "Followers",
   "following": "Following",
   "noBioYet": "No bio yet.",
@@ -201,6 +247,7 @@
   "uploadNextButton": "Next",
   "itemDetailsLabel": "Item Details",
   "newItem": "New Item",
+  "postNewItem": "Post New Item",
   "addPhotos": "Add photos",
   "photoTip": "First photo is your cover image. Tap to rearrange.",
   "firstPhotoAsCover": "Your first photo will be the cover of your item.",
@@ -248,8 +295,21 @@
   "conditionFair": "Fair",
   "optional": "Optional",
   "itemDetailsDescription": "Add details about your item to help buyers find it.",
+  "@itemDetailsDescription": {
+    "description": "Description for the item details step in post upload"
+  },
+  "categoryLabel": "Category",
+  "@categoryLabel": {
+    "description": "Label for the category selection field"
+  },
+  "selectCategoryHint": "Select category",
+  "@selectCategoryHint": {
+    "description": "Placeholder hint for category selection"
+  },
   "measurementsLabel": "Measurements",
-  "tagsAndStyleTitle": "Tags & Style",
+  "@measurementsLabel": {
+    "description": "Label for the measurements field"
+  },
   "tagsAndStyleDescription": "Add tags to help people find your item",
   "styleTagsLabel": "Style Tags",
   "customTagsLabel": "Custom Tags",
@@ -267,5 +327,14 @@
   "currencyShekel": "₪",
   "@currencyShekel": {
     "description": "Currency symbol for Israeli Shekel (used as prefix in price fields)"
-  }
+  },
+  "settings": "Settings",
+  "postUpload": "Post Upload",
+  "postUploadPreferences": "Post Upload Preferences",
+  "postUploadPreferencesSubtitle": "Customize your post upload preferences",
+  "showPostUploadDialog": "Show Post Upload Dialog",
+  "showPostUploadDialogSubtitle": "Show a dialog after uploading a post",
+  "autoNavigateToPost": "Auto-navigate to post",
+  "autoNavigateToPostSubtitle": "Automatically navigate to the post after upload",
+  "postUploadPreferencesUpdated": "Post-upload preferences updated."
 }

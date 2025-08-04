@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/signin_form_provider.dart';
 import 'package:rivo_app_beta/core/design_system/design_system.dart';
+import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 
 class SigninScreen extends ConsumerStatefulWidget {
   const SigninScreen({super.key});
@@ -47,16 +48,31 @@ class _SigninScreenState extends ConsumerState<SigninScreen> {
         : null;
 
     return Scaffold(
-      appBar: AppBar(title: const AppFormTitle(text: 'Sign In'), centerTitle: true),
+      appBar: AppBar(
+        title: AppFormTitle(text: AppLocalizations.of(context)!.signIn),
+        centerTitle: true,
+      ),
       body: AppFormContainer(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppTextField(controller: emailController, hintText: 'Email'),
+            AppTextField(
+              controller: emailController,
+              hintText: AppLocalizations.of(context)!.email,
+            ),
             const SizedBox(height: 16),
-            AppTextField(controller: passwordController, hintText: 'Password', obscureText: true),
+            AppTextField(
+              controller: passwordController,
+              hintText: AppLocalizations.of(context)!.password,
+              obscureText: true,
+            ),
             const SizedBox(height: 16),
-            AppButton(text: state.isSubmitting ? 'Signing In...' : 'Sign In', onPressed: onSubmit),
+            AppButton(
+              text: state.isSubmitting 
+                  ? AppLocalizations.of(context)!.signingIn 
+                  : AppLocalizations.of(context)!.signIn, 
+              onPressed: onSubmit,
+            ),
             if (state.isFailure && state.errorMessage != null)
               AppErrorText(message: state.errorMessage!),
           ],
