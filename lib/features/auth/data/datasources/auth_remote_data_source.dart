@@ -15,28 +15,37 @@ class AuthRemoteDataSource {
     }
 
     Future<AuthResponse> signUp({
-    required String username,
-    required String email,
-    required String password,
-  }) async {
-    final response = await client.auth.signUp(
-      email: email,
-      password: password,
-      data: {
-        'username': username, // Pass username to the trigger
-      },
-    );
+  required String email,
+  required String password,
+  required String username,
+}) async {
+  final response = await client.auth.signUp(
+    email: email,
+    password: password,
+    data: {
+      'username': username,
+    },
+  );
 
-    if (response.user != null) {
-      // After successful signup, create a profile entry
-      await client.from('profiles').insert({
-        'id': response.user!.id,
-        'username': username,
-      });
-    }
+  if (response.user != null) {
+    final allowlisted = await client
+        .from('seller_allowlist')
+        .select('email')
+        .eq('email', email)
+        .maybeSingle();
 
-    return response;
+    final isSeller = allowlisted != null;
+
+    await client.from('profiles').insert({
+      'id': response.user!.id,
+      'username': username,
+      'is_seller': isSeller,
+    });
   }
+
+  return response;
+}
+
 
   Future<bool> checkUsername(String username) async {
     final response = await client

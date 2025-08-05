@@ -78,18 +78,22 @@ Future<List<FeedPostEntity>> getMyDesignPosts(String userId) async {
   }
 
   Future<void> updateUserProfile(UserProfileEntity updated) async {
-    try {
-      await _client.from('profiles').update({
-  'first_name': updated.firstName,
-  'last_name': updated.lastName,
-  'bio': updated.bio,
-  'language': updated.language,
-  'last_seen_at': DateTime.now().toIso8601String(),
-}).eq('id', updated.id);
-    } catch (e) {
-      throw AppException.unexpected('Failed to update profile: $e');
-    }
+  try {
+    final updateData = <String, dynamic>{
+      if (updated.firstName != null) 'first_name': updated.firstName,
+      if (updated.lastName != null) 'last_name': updated.lastName,
+      if (updated.bio != null) 'bio': updated.bio,
+      'language': updated.language,
+      if (updated.avatarUrl != null) 'avatar_url': updated.avatarUrl,
+      'last_seen_at': DateTime.now().toIso8601String(),
+    };
+
+    await _client.from('profiles').update(updateData).eq('id', updated.id);
+  } catch (e) {
+    throw AppException.unexpected('Failed to update profile: $e');
   }
+}
+
 
   Future<List<SocialLinkEntity>> getSocialLinks(String userId) async {
     try {
