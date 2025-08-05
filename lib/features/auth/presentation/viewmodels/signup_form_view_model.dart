@@ -231,8 +231,6 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
       overlay.show(context);
 
       final result = await _repository.signUp(
-        firstName: firstName,
-        lastName: lastName,
         username: username,
         email: email,
         password: state.password.value,

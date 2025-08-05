@@ -7,15 +7,13 @@ class AuthViewModel extends StateNotifier<AuthState> {
   AuthViewModel({required this.repository}) : super(const AuthState.initial());
 
     Future<void> signUp({
-    required String firstName,
-    required String lastName,
     required String username,
     required String email,
     required String password,
   }) async {
     state = const AuthState.loading();
     final result = await repository.signUp(
-        firstName: firstName, lastName: lastName, username: username, email: email, password: password);
+        username: username, email: email, password: password);
 
     result.fold(
       (failure) => state = AuthState.error(failure),

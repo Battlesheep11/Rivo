@@ -15,8 +15,6 @@ class AuthRemoteDataSource {
     }
 
     Future<AuthResponse> signUp({
-    required String firstName,
-    required String lastName,
     required String username,
     required String email,
     required String password,
@@ -33,8 +31,6 @@ class AuthRemoteDataSource {
       // After successful signup, create a profile entry
       await client.from('profiles').insert({
         'id': response.user!.id,
-        'first_name': firstName,
-        'last_name': lastName,
         'username': username,
       });
     }

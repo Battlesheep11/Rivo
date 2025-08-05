@@ -3,8 +3,6 @@ import 'package:dartz/dartz.dart';
 
 abstract class AuthRepository {
   Future<Either<String, UserEntity>> signUp({
-    required String firstName,
-    required String lastName,
     required String username,
     required String email,
     required String password,
