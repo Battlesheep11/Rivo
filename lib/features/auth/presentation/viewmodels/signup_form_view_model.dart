@@ -202,19 +202,6 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
     
     try {
       // Apply FieldSecurity validation
-      final firstName = FieldSecurity.sanitizeString(
-        value: state.firstName.value,
-        fieldName: 'First name',
-        isRequired: true,
-        maxLength: 50,
-      )!;
-
-      final lastName = FieldSecurity.sanitizeString(
-        value: state.lastName.value,
-        fieldName: 'Last name',
-        isRequired: true,
-        maxLength: 50,
-      )!;
 
       final username = FieldSecurity.sanitizeString(
         value: state.username.value,
