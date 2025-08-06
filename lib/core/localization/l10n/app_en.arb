@@ -337,5 +337,32 @@
   "autoNavigateToPost": "Auto-navigate to post",
   "autoNavigateToPostSubtitle": "Automatically navigate to the post after upload",
   "postUploadPreferencesUpdated": "Post-upload preferences updated.",
-  "signInToAccessSettings": "Please sign in to access settings"
+  "signInToAccessSettings": "Please sign in to access settings",
+  "forgotPasswordTitle": "Reset Password",
+  "forgotPasswordSubtitle": "Enter your email to receive a reset link",
+  "forgotPasswordEmailHint": "Enter your email address",
+  "forgotPasswordSendLink": "Send Reset Link",
+  "forgotPasswordConfirmationTitle": "Check Your Email",
+  "forgotPasswordConfirmationSubtitle": "We've sent a password reset link to {email}",
+  "@forgotPasswordConfirmationSubtitle": {
+    "description": "Confirmation message after sending a password reset link.",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "user@example.com"
+      }
+    }
+  },
+  "forgotPasswordResendPrompt": "Didn't receive the email?",
+  "forgotPasswordResendLink": "Click to resend",
+  "forgotPasswordResendTimer": "Resend available in {seconds}s",
+  "@forgotPasswordResendTimer": {
+    "description": "Timer for resending a password reset link.",
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "forgotPasswordRemembered": "Remember your password?"
 }

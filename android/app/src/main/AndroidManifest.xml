@@ -23,7 +23,7 @@
                <category android:name="android.intent.category.DEFAULT" />
               <category android:name="android.intent.category.BROWSABLE" />
                  <data
-                    android:scheme="com.example.rivo_app_beta"
+                    android:scheme="io.supabase.rivo-app-beta"
                     android:host="login-callback" />
             </intent-filter>
 

@@ -21,6 +21,7 @@ class UploadPostState with _$UploadPostState {
     @Default('') String? size, // item size
     @Default([]) List<UploadableMedia> media,
     @Default([]) List<String> tagNames,
+    @Default(0) int coverImageIndex, // Index of the selected cover image
     @Default(false) bool isSubmitting,
     @Default(FormStatus.initial) FormStatus status,
     @Default(0) int uploadedMediaCount,

@@ -90,6 +90,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // If a child widget is provided (from a nested route), render it directly
+
+
     ref.listen<SignupFormState>(signupFormViewModelProvider, (previous, next) {
       if (next.isSubmitting) {
         // Handle loading state
@@ -206,8 +209,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           alignment: Alignment.centerRight,
           child: TextButton(
             onPressed: () {
-              // Navigate to forgot password screen
-              context.push('/auth/forgot-password');
+              debugPrint('Forgot Password pressed');
+              GoRouter.of(context).push('/auth/forgot-password');
             },
             style: TextButton.styleFrom(
               padding: EdgeInsets.zero,
@@ -397,6 +400,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       switch (signupState.confirmedPassword.displayError!) {
         case ConfirmedPasswordValidationError.mismatch:
           confirmPasswordError = localizations.passwordValidationMismatch;
+          break;
+        case ConfirmedPasswordValidationError.empty:
+          confirmPasswordError = localizations.passwordValidationRequired;
           break;
       }
     }

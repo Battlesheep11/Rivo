@@ -101,9 +101,26 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
   }
 
   void removeMedia(UploadableMedia file) {
+    final updatedMedia = List<UploadableMedia>.from(state.media)..removeWhere((m) => m.path == file.path);
+    // Adjust cover image index if necessary
+    int newCoverIndex = state.coverImageIndex;
+    if (newCoverIndex >= updatedMedia.length && updatedMedia.isNotEmpty) {
+      newCoverIndex = 0; // Reset to first image if current cover was removed
+    } else if (updatedMedia.isEmpty) {
+      newCoverIndex = 0; // Reset if no media left
+    }
+    
     state = state.copyWith(
-      media: List.from(state.media)..removeWhere((m) => m.path == file.path),
+      media: updatedMedia,
+      coverImageIndex: newCoverIndex,
     );
+  }
+
+  /// Set the cover image index to specify which image should be used as the cover
+  void setCoverImageIndex(int index) {
+    if (index >= 0 && index < state.media.length) {
+      state = state.copyWith(coverImageIndex: index);
+    }
   }
 
   void updateMediaStatus(String mediaPath, UploadMediaStatus status) {

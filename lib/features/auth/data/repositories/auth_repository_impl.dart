@@ -132,6 +132,9 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     try {
       await remoteDataSource.resetPassword(token: token, newPassword: newPassword);
+      // Immediately sign the user out to invalidate the session after a password reset.
+      // This is a critical security step to ensure the user must re-authenticate.
+      await remoteDataSource.signOut();
       return right(true);
     } catch (e) {
       return left('Failed to reset password: ${e.toString()}');

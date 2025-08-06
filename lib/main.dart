@@ -32,6 +32,8 @@ Future<void> main() async {
       anonKey: supabaseAnonKey,
     );
 
+
+
     ToastService().init(messengerKey);
 
     runApp(

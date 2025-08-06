@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // For FilteringTextInputFormatter and TextInputFormatter
-import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
+import 'package:flutter/services.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:photo_manager/photo_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/features/post/presentation/viewmodels/upload_post_viewmodel.dart';
@@ -451,89 +449,139 @@ class _PostUploadScreenRefactoredState extends ConsumerState<PostUploadScreenRef
     int index, 
     UploadPostViewModel viewModel,
   ) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha((0.08 * 255).round()),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Photo image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: SizedBox(
-              width: double.infinity,
-              height: double.infinity,
-              child: AssetEntityImage(
-                media.asset,
-                isOriginal: false,
-                thumbnailSize: const ThumbnailSize.square(250),
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => _buildErrorPlaceholder(),
+    final state = ref.watch(uploadPostViewModelProvider);
+    final isCover = state.coverImageIndex == index;
+    
+    return GestureDetector(
+      // Allow tapping to select as cover image
+      onTap: () => viewModel.setCoverImageIndex(index),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          // Highlight border if this is the cover image
+          border: isCover ? Border.all(
+            color: const Color(0xFF6E8EFB),
+            width: 3,
+          ) : null,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha((0.08 * 255).round()),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Photo image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: FutureBuilder<Uint8List?>(
+                future: media.asset.thumbnailDataWithSize(
+                  const ThumbnailSize(200, 200),
+                  quality: 80,
+                ),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data != null) {
+                    return Image.memory(
+                      snapshot.data!,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                    );
+                  }
+                  return Container(
+                    color: Colors.grey[300],
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                },
               ),
             ),
-          ),
-          // Remove button
-          Positioned(
-            top: 6,
-            right: 6,
-            child: GestureDetector(
-              onTap: () => viewModel.removeMedia(media),
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: Colors.black.withAlpha((0.6 * 255).round()),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 14,
-                ),
-              ),
-            ),
-          ),
-          // First photo indicator (cover image)
-          if (index == 0)
+            // Remove button
             Positioned(
-              bottom: 6,
-              left: 6,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.black.withAlpha((0.7 * 255).round()),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'Cover',
-                  style: TextStyle(
+              top: 6,
+              right: 6,
+              child: GestureDetector(
+                onTap: () => viewModel.removeMedia(media),
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: Colors.red.withAlpha((0.8 * 255).round()),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
                     color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
+                    size: 16,
                   ),
                 ),
               ),
             ),
-        ],
-      ),
-    );
-  }
-  
-  /// Error placeholder for failed image loads
-  Widget _buildErrorPlaceholder() {
-    return Container(
-      color: Colors.grey.withAlpha((0.2 * 255).round()),
-      child: Icon(
-        Icons.broken_image_outlined,
-        color: Colors.grey.withAlpha((0.6 * 255).round()),
-        size: 32,
+            // Cover image indicator
+            if (isCover)
+              Positioned(
+                bottom: 6,
+                left: 6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6E8EFB),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha((0.2 * 255).round()),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.star,
+                        color: Colors.white,
+                        size: 12,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'Cover',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            // Tap hint for non-cover images
+            if (!isCover)
+              Positioned(
+                bottom: 6,
+                left: 6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withAlpha((0.5 * 255).round()),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Tap to set as cover',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1984,8 +2032,8 @@ void _handleCustomTagsInput(String input, UploadPostViewModel viewModel) {
     try {
       await viewModel.submit();
       if (mounted) {
-        // Navigate to the feed after successful upload
-        context.go('/feed');
+        // Navigate to the home screen after successful upload
+        context.go('/home');
       }
     } on AppException catch (e) {
       if (!mounted) return;

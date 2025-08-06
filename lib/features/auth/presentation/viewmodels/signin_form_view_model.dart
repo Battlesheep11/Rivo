@@ -60,7 +60,8 @@ class SigninFormViewModel extends StateNotifier<SigninFormState> {
   void onEmailChanged(String value) {
     final email = Email.dirty(value);
     final password = state.password;
-    final isValid = email.isValid && password.isValid;
+    // For login, only require password to be non-empty (not strong)
+    final isValid = email.isValid && password.value.isNotEmpty; // allow weak passwords for login
     state = state.copyWith(
       email: email,
       isValid: isValid,
@@ -70,7 +71,8 @@ class SigninFormViewModel extends StateNotifier<SigninFormState> {
   void onPasswordChanged(String value) {
     final password = Password.dirty(value);
     final email = state.email;
-    final isValid = email.isValid && password.isValid;
+    // For login, only require password to be non-empty (not strong)
+    final isValid = email.isValid && password.value.isNotEmpty; // allow weak passwords for login
     state = state.copyWith(
       password: password,
       isValid: isValid,

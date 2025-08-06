@@ -101,24 +101,29 @@ class AuthRemoteDataSource {
     required String token,
     required String newPassword,
   }) async {
-    // With Supabase, the password reset flow is:
-    // 1. User requests a password reset email (handled by sendPasswordResetEmail)
-    // 2. User clicks the link in the email, which contains a token
-    // 3. The app calls this method with the token and new password
-    
-    // The token is a JWT that contains the user's email
-    // We'll use it to update the user's password
-    
     try {
-      // Update the user's password
+      // First, sign out any existing session to prevent auto-login
+      await client.auth.signOut();
+      
+      // Verify the token and get the user's email
+      final session = await client.auth.verifyOTP(
+        token: token,
+        type: OtpType.recovery,
+      );
+      
+      if (session.user == null) {
+        throw Exception('Invalid or expired password reset link');
+      }
+      
+      // Update the password
       await client.auth.updateUser(
         UserAttributes(
           password: newPassword,
         ),
       );
       
-      // The token is automatically verified by Supabase when we try to update the password
-      // If the token is invalid or expired, an exception will be thrown
+      // Sign out again to ensure the user needs to log in with the new password
+      await client.auth.signOut();
       
     } catch (e) {
       throw Exception('Failed to reset password. The link may have expired or is invalid.');

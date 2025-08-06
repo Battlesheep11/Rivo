@@ -312,5 +312,33 @@
   "currencyShekel": "₪",
   "@currencyShekel": {
   "description": "סמל מטבע שקל ישראלי (משמש כקידומת בשדות מחיר)"
-  "signInToAccessSettings": "אנא התחבר כדי לגשת להגדרות"
+  },
+  "signInToAccessSettings": "אנא התחבר כדי לגשת להגדרות",
+  "forgotPasswordTitle": "איפוס סיסמה",
+  "forgotPasswordSubtitle": "הזן את כתובת האימייל שלך כדי לקבל קישור איפוס סיסמה",
+  "forgotPasswordEmailHint": "הזן את כתובת האימייל שלך",
+  "forgotPasswordSendLink": "שלח קישור איפוס סיסמה",
+  "forgotPasswordConfirmationTitle": "בדוק את האימייל שלך",
+  "forgotPasswordConfirmationSubtitle": "שלחנו קישור איפוס סיסמה לכתובת האימייל שלך",
+  "@forgotPasswordConfirmationSubtitle": {
+    "description": "Confirmation message after sending a password reset link.",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "user@example.com"
+      }
+    }
+  },
+  "forgotPasswordResendPrompt": " ?",
+  "forgotPasswordResendLink": " לחץ כדי לשלוח שוב",
+  "forgotPasswordResendTimer": "שליחה זמינה ב {seconds}s",
+  "@forgotPasswordResendTimer": {
+    "description": "Timer for resending a password reset link.",
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "forgotPasswordRemembered": "זכרת את הסיסמה?"
 }

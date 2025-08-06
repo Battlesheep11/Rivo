@@ -60,7 +60,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.example.rivo_app_beta</string>
+				<string>io.supabase.rivo-app-beta</string>
 			</array>
 		</dict>
 	</array>
