@@ -17,6 +17,7 @@ import 'package:rivo_app_beta/features/discovery/presentation/screens/discovery_
 import 'package:rivo_app_beta/features/product/presentation/screens/product_screen.dart';
 import 'package:rivo_app_beta/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:rivo_app_beta/features/auth/presentation/screens/reset_password_screen.dart';
+import 'package:rivo_app_beta/features/feed/presentation/screens/filtered_feed_screen.dart';
 
 
 class AppRouter {
@@ -91,6 +92,20 @@ class AppRouter {
              ),
            ],
          ),
+        GoRoute(
+          path: '/collection/:collectionId',
+          builder: (context, state) {
+            final id = state.pathParameters['collectionId']!;
+            return FilteredFeedScreen(collectionId: id);
+          },
+        ),
+        GoRoute(
+          path: '/tag/:tagId',
+          builder: (context, state) {
+            final tagId = state.pathParameters['tagId']!;
+            return FilteredFeedScreen(tagId: tagId);
+          },
+        ),
         GoRoute(
           path: '/reset-password',
           builder: (context, state) {

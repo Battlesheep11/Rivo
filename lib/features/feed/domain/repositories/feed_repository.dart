@@ -46,4 +46,7 @@ abstract class FeedRepository {
   Future<void> unlikePost(String postId);
 
   Future<bool> isCurrentUserSeller();
+
+  Future<List<FeedPostEntity>> getPostsByCollection(String collectionId);
+  Future<List<FeedPostEntity>> getPostsByTag(String tagId);
 }
