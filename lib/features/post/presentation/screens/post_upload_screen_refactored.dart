@@ -3,8 +3,7 @@ import 'package:flutter/services.dart'; // For FilteringTextInputFormatter and T
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rivo_app_beta/features/auth/presentation/providers/auth_session_provider.dart';
-import 'package:rivo_app_beta/features/settings/presentation/providers/settings_providers.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -1983,9 +1982,10 @@ void _handleCustomTagsInput(String input, UploadPostViewModel viewModel) {
 
   Future<void> _publishItem(UploadPostViewModel viewModel, AppLocalizations l10n) async {
     try {
-      final postId = await viewModel.submit();
+      await viewModel.submit();
       if (mounted) {
-        _showSuccessMessage(l10n, postId: postId);
+        // Navigate to the feed after successful upload
+        context.go('/feed');
       }
     } on AppException catch (e) {
       if (!mounted) return;
@@ -2018,215 +2018,7 @@ void _handleCustomTagsInput(String input, UploadPostViewModel viewModel) {
         ),
       );
     }
-  }
-
-  void _showSuccessMessage(AppLocalizations l10n, {required String postId}) {
-    // Get the current user's preferences
-        final user = ref.read(authSessionProvider).value;
-    if (user == null) {
-      // If user is not logged in (shouldn't happen), show default behavior
-      _showDefaultSuccessDialog(l10n, postId);
-      return;
-    }
-    
-    // Get the user's preferences
-    final settingsState = ref.read(settingsViewModelProvider(user.id));
-    
-    // Show the success dialog if the user wants to see it
-    if (settingsState.maybeWhen(
-      success: (prefs) => prefs.showPostUploadSuccessDialog,
-      orElse: () => true, // Default to showing the dialog if we can't load prefs
-    )) {
-      _showSuccessDialog(l10n, postId);
-    } else if (settingsState.maybeWhen(
-      success: (prefs) => prefs.autoNavigateToPostAfterUpload,
-      orElse: () => false, // Default to not auto-navigating if we can't load prefs
-    )) {
-      // If auto-navigate is enabled, go directly to the post
-      _navigateToPost(postId);
-    } else {
-      // If neither dialog nor auto-navigate is enabled, just go home
-      Navigator.of(context).popUntil((route) => route.isFirst);
-    }
-  }
-  
-  /// Shows a success dialog after an item is successfully published
-  /// Includes options to go home, view the item, or post a new item
-  void _showSuccessDialog(AppLocalizations l10n, String postId) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.green.withAlpha(26), // Using withAlpha instead of withOpacity
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: const Icon(
-                Icons.check,
-                color: Colors.green,
-                size: 30,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.itemPublishedSuccessfully,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.yourItemHasBeenPublished,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          // Go Home button
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            },
-            child: Text(l10n.goHome),
-          ),
-          
-          // Post New Item button
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // Reset the form and go back to the first step
-              ref.read(uploadPostViewModelProvider.notifier).reset();
-              setState(() {
-                _currentPage = 0;
-                _pageController.jumpToPage(0);
-              });
-            },
-            child: Text(l10n.postNewItem),
-          ),
-          
-          // View Item button (primary action)
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _navigateToPost(postId);
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).primaryColor,
-            ),
-            child: Text(l10n.viewItem),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  /// Navigates to the product page for the given post ID
-  /// Uses push instead of pushReplacement to maintain the navigation stack
-  /// and allow proper back navigation to the post-upload flow
-  void _navigateToPost(String postId) {
-    context.push('/product/$postId');
-  }
-
-  void _showDefaultSuccessDialog(AppLocalizations l10n, String postId) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.green.withAlpha((0.1 * 255).round()),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: const Icon(
-                Icons.check,
-                color: Colors.green,
-                size: 30,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.itemPublishedSuccessfully,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1A2E),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.yourItemHasBeenPublished,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF666666),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.go('/home');
-                    },
-                    child: Text(l10n.goHome),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.pushReplacement('/product/$postId');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6E8EFB),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      l10n.viewItem,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  }  
 }
 
 class _TagChip extends StatelessWidget {

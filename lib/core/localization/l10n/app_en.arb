@@ -336,5 +336,6 @@
   "showPostUploadDialogSubtitle": "Show a dialog after uploading a post",
   "autoNavigateToPost": "Auto-navigate to post",
   "autoNavigateToPostSubtitle": "Automatically navigate to the post after upload",
-  "postUploadPreferencesUpdated": "Post-upload preferences updated."
+  "postUploadPreferencesUpdated": "Post-upload preferences updated.",
+  "signInToAccessSettings": "Please sign in to access settings"
 }

@@ -311,6 +311,6 @@
   "custom_tags_hint": "לדוגמה: קיץ, מסיבה, נוח",
   "currencyShekel": "₪",
   "@currencyShekel": {
-    "description": "סמל מטבע שקל ישראלי (משמש כקידומת בשדות מחיר)"
-  }
+  "description": "סמל מטבע שקל ישראלי (משמש כקידומת בשדות מחיר)"
+  "signInToAccessSettings": "אנא התחבר כדי לגשת להגדרות"
 }

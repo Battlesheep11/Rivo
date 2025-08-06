@@ -53,5 +53,16 @@
 <string>We need access to your camera to take photos and videos.</string>
 <key>NSMicrophoneUsageDescription</key>
 <string>We need access to your microphone to record videos.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.example.rivo_app_beta</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

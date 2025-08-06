@@ -159,7 +159,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final googleLoading = ref.watch(googleSignInViewModelProvider(context));
 
     final isSubmitting = signinState.isSubmitting;
-    final isValid = signinState.isValid;
+
 
     ref.listen(signinFormViewModelProvider, (previous, next) {
       if (next.isSuccess && context.mounted) {
@@ -167,9 +167,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       }
     });
 
-    final VoidCallback? onSubmit = (isValid && !isSubmitting)
-        ? () => ref.read(signinFormViewModelProvider.notifier).submit(context)
-        : null;
+    final VoidCallback? onSubmit = !isSubmitting
+      ? () => ref.read(signinFormViewModelProvider.notifier).submit(context)
+      : null;
 
     return Column(
       key: const ValueKey('signInForm'),
