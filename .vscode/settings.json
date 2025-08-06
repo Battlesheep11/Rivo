@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "C:/Users/Danag/source/repos/rivo_app_beta/linux"
+    "cmake.sourceDirectory": "C:/Users/Danag/source/repos/rivo_app_beta/linux",
+    "deno.enable": true
 }

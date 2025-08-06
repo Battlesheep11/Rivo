@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
 import 'package:rivo_app_beta/features/auth/presentation/screens/auth_screen.dart';
 import 'package:rivo_app_beta/features/auth/presentation/screens/auth_redirector_screen.dart';
 import 'package:rivo_app_beta/features/onboarding/presentation/screens/onboarding_screen.dart';
