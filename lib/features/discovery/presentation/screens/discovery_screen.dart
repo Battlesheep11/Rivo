@@ -5,6 +5,8 @@ import 'package:rivo_app_beta/features/discovery/presentation/widgets/featured_p
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/features/discovery/presentation/widgets/trending_tag_grid.dart';
 import 'package:rivo_app_beta/features/discovery/presentation/widgets/curated_collection_grid.dart';
+import 'package:go_router/go_router.dart';
+
 
 class DiscoveryScreen extends ConsumerStatefulWidget {
   const DiscoveryScreen({super.key});
@@ -36,7 +38,13 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
             featuredAsync.when(
               data: (product) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: FeaturedProductCard(product: product),
+                child: FeaturedProductCard(
+  product: product,
+  onTap: () {
+    context.push('/product/${product.id}');
+  },
+),
+
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => const SizedBox.shrink(),
@@ -61,7 +69,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
               height: 44,
               child: TrendingTagGrid(
                 onTagTap: (tag) {
-                  debugPrint('Tapped trending tag: ${tag.name}');
+                  context.push('/tag/${tag.id}');
                 },
               ),
             ),
@@ -82,7 +90,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
             const SizedBox(height: 32),
             CuratedCollectionGrid(
               onTap: (collection) {
-                debugPrint('Tapped collection: ${collection.name}');
+                context.push('/collection/${collection.id}');
               },
             ),
 

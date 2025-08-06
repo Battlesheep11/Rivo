@@ -29,3 +29,8 @@ final recommendedProductsProvider =
   final productRepository = ref.watch(productRepositoryProvider);
   return productRepository.getRecommendedProducts(productId);
 });
+
+final productProviderByProductId = FutureProvider.family<Product, String>((ref, productId) {
+  final repo = ref.watch(productRepositoryProvider);
+  return repo.getProduct(productId); 
+});

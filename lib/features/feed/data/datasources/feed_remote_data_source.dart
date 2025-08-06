@@ -32,6 +32,55 @@ class FeedRemoteDataSource with RateLimited {
   /// [client]: The Supabase client to use for database operations
   FeedRemoteDataSource({required SupabaseClient client}) : _client = client;
 
+Future<List<FeedPostEntity>> getPostsByTag(String tagId) async {
+  // שלב 1 – שליפת postIds מה-tag
+  final postIdResults = await _client
+      .from('post_tags')
+      .select('post_id')
+      .eq('tag_id', tagId);
+
+  final postIds = (postIdResults as List)
+      .map((e) => e['post_id'] as String)
+      .toList();
+
+  if (postIds.isEmpty) return [];
+
+  // שלב 2 – שימוש בפונקציה קיימת
+  return await getPostsByIds(postIds);
+}
+
+
+Future<List<FeedPostEntity>> getPostsByCollection(String collectionId) async {
+  try {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw AppException.unauthorized('User not logged in');
+    }
+
+    await checkRateLimit(
+      key: '${_rateLimitKey}_collection_$collectionId',
+      maxRequests: _maxRequestsPerMinute,
+    );
+
+    // שלב 1: שליפת כל post_id לפי collection
+    final postIdsResponse = await _client
+        .from('curated_collection_posts')
+        .select('post_id')
+        .eq('collection_id', collectionId);
+
+    final postIds = (postIdsResponse as List)
+        .map((e) => e['post_id'] as String)
+        .toList();
+
+    if (postIds.isEmpty) return [];
+
+    // שלב 2: שימוש בפונקציה קיימת
+    return await getPostsByIds(postIds);
+  } catch (e) {
+    _logger.e('Error in getPostsByCollection: $e');
+    throw AppException.unexpected('Failed to load posts for collection');
+  }
+}
 
 
   /// Fetches posts created by a specific user.
@@ -94,48 +143,103 @@ class FeedRemoteDataSource with RateLimited {
   /// - Any post ID is invalid
   /// - The request is rate limited
   /// - There's a network error
-  Future<List<FeedPostEntity>> getPostsByIds(List<String> postIds) async {
-    try {
-      if (postIds.isEmpty) {
-        _logger.d('Empty post IDs list provided');
-        return [];
-      }
-
-      // Validate all post IDs
-      final validatedPostIds = InputValidator.validateIdList(
-        postIds,
-        fieldName: 'Post ID',
-      );
-
-      // Check rate limit
-      await checkRateLimit(
-        key: '${_rateLimitKey}_get_by_ids',
-        maxRequests: _maxRequestsPerMinute,
-      );
-
-      _logger.d('Fetching ${validatedPostIds.length} posts by IDs');
-      
-      final res = await _client
-          .from('feed_post')
-          .select('*, product(*, media(*))')
-          .inFilter('id', validatedPostIds)
-          .order('created_at', ascending: false);
-
-      // Supabase returns an empty list when no posts are found
-      if (res.isEmpty) {
-        _logger.w('No posts found for the provided IDs');
-        return [];
-      }
-
-      return (res as List).map((item) => FeedPostEntity.fromMap(item)).toList();
-    } on PostgrestException catch (e) {
-      _logger.e('Database error fetching posts by IDs: ${e.message}');
-      throw AppException.network('Failed to fetch posts: ${e.message}');
-    } catch (e) {
-      _logger.e('Unexpected error in getPostsByIds: $e');
-      throw AppException.unexpected('An error occurred while fetching posts');
+  
+Future<List<FeedPostEntity>> getPostsByIds(List<String> postIds) async {
+  try {
+    if (postIds.isEmpty) {
+      _logger.d('Empty post IDs list provided');
+      return [];
     }
+
+    final validatedPostIds = InputValidator.validateIdList(
+      postIds,
+      fieldName: 'Post ID',
+    );
+
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw AppException.unauthorized('User not logged in');
+    }
+
+    await checkRateLimit(
+      key: '${_rateLimitKey}_get_by_ids',
+      maxRequests: _maxRequestsPerMinute,
+    );
+
+    _logger.d('Fetching ${validatedPostIds.length} posts by IDs');
+
+    final res = await _client
+        .from('feed_post')
+        .select('''
+          id,
+          created_at,
+          like_count,
+          caption,
+          creator_id,
+          product_id,
+          product:product_id (
+            id,
+            title,
+            description,
+            price,
+            product_media:product_media (
+              media_id (
+                media_url
+              ),
+              sort_order
+            )
+          ),
+          creator:creator_id (
+            id,
+            username,
+            avatar_url
+          )
+        ''')
+        .inFilter('id', validatedPostIds)
+        .order('created_at', ascending: false);
+
+    final likesResponse = await _client
+        .from('post_likes')
+        .select('post_id')
+        .eq('user_id', userId);
+
+    final likedPostIds = (likesResponse as List)
+        .map((e) => e['post_id'] as String)
+        .toSet();
+
+    return (res as List).map((json) {
+      final product = json['product'] ?? {};
+      final mediaList = (product['product_media'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
+      final mediaUrls = mediaList
+          .map((m) => m['media_id']?['media_url'] as String?)
+          .whereType<String>()
+          .toList();
+
+      final postId = json['id'] as String;
+
+      return FeedPostEntity(
+        id: postId,
+        createdAt: DateTime.parse(json['created_at']),
+        likeCount: json['like_count'] ?? 0,
+        creatorId: json['creator_id'],
+        caption: json['caption'],
+        productId: json['product_id'],
+        username: json['creator']?['username'] ?? '',
+        avatarUrl: json['creator']?['avatar_url'],
+        productTitle: product['title'] ?? '',
+        productDescription: product['description'],
+        productPrice: (product['price'] ?? 0).toDouble(),
+        mediaUrls: mediaUrls,
+        tags: [],
+        isLikedByMe: likedPostIds.contains(postId),
+      );
+    }).toList();
+  } catch (e) {
+    _logger.e('Error in getPostsByIds: $e');
+    throw AppException.unexpected('Failed to load posts');
   }
+}
+
 
 
   
@@ -268,21 +372,19 @@ class FeedRemoteDataSource with RateLimited {
   /// - The request is rate limited
   /// - There's a network error
   Future<List<FeedPostEntity>> getFeedPosts() async {
-    try {
-      final userId = _client.auth.currentUser?.id;
-      if (userId == null) {
-        throw AppException.unauthorized('User not logged in');
-      }
-      
-      // Check rate limit
-      await checkRateLimit(
-        key: '${_rateLimitKey}_feed_$userId',
-        maxRequests: _maxRequestsPerMinute,
-      );
-      
-      _logger.d('Fetching feed for user: $userId');
+  try {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw AppException.unauthorized('User not logged in');
+    }
 
-    // 1. Get posts with related data using a single query with joins
+    await checkRateLimit(
+      key: '${_rateLimitKey}_feed_$userId',
+      maxRequests: _maxRequestsPerMinute,
+    );
+
+    _logger.d('Fetching feed for user: $userId');
+
     const postQuery = '''
       id,
       created_at,
@@ -314,7 +416,6 @@ class FeedRemoteDataSource with RateLimited {
         .select(postQuery)
         .order('created_at', ascending: false);
 
-    // 2. Get all post IDs that the current user has liked
     final likesResponse = await _client
         .from('post_likes')
         .select('post_id')
@@ -324,11 +425,6 @@ class FeedRemoteDataSource with RateLimited {
         .map((e) => e['post_id'] as String)
         .toSet();
 
-
-        
-
-
-    // 3. Transform raw database response into domain entities in FeedPostEntity
     final posts = (postResponse as List).map((json) {
       final product = json['product'] as Map<String, dynamic>? ?? {};
       final productMediaList = (product['product_media'] as List<dynamic>? ?? [])
@@ -366,6 +462,7 @@ class FeedRemoteDataSource with RateLimited {
     throw AppException.unexpected('An unexpected error occurred: $e');
   }
 }
+
 
 Future<bool> isCurrentUserSeller() async {
     try {

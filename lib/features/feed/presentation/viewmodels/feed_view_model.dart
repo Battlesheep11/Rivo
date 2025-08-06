@@ -66,6 +66,16 @@ class FeedViewModel extends StateNotifier<FeedState> {
     loadFeed();
   }
 
+  Future<List<FeedPostEntity>> loadPostsByTag(String tagId) async {
+final repository = ref.read(feedRepositoryProvider);
+  return await repository.getPostsByTag(tagId);
+}
+
+Future<List<FeedPostEntity>> loadPostsByCollection(String collectionId) async {
+  final repository = ref.read(feedRepositoryProvider);
+  return await repository.getPostsByCollection(collectionId);
+}
+
   /// Loads the feed posts from the repository.
   /// 
   /// This method:
@@ -195,3 +205,5 @@ final feedPostsProvider = FutureProvider.autoDispose<List<FeedPostEntity>>((ref)
   final repository = ref.read(feedRepositoryProvider);
   return repository.getFeedPosts();
 });
+
+

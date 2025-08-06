@@ -67,4 +67,16 @@ class FeedRepositoryImpl implements FeedRepository {
 
   @override
   Future<bool> isCurrentUserSeller() => remoteDataSource.isCurrentUserSeller();
+
+@override
+Future<List<FeedPostEntity>> getPostsByTag(String tagId) {
+  return remoteDataSource.getPostsByTag(tagId);
+}
+
+@override
+Future<List<FeedPostEntity>> getPostsByCollection(String collectionId) {
+  return remoteDataSource.getPostsByCollection(collectionId); 
+}
+
+
 }

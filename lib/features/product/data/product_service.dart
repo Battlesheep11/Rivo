@@ -8,62 +8,82 @@ class ProductService implements ProductRepository {
 
   final SupabaseClient _supabaseClient;
 
-  @override
-  Future<Product> getProduct(String postId) async {
-    try {
-      // 1. Get the product_id from the feed_post table.
-      final feedPostResponse = await _supabaseClient
+@override
+Future<Product> getProduct(String id) async {
+  try {
+    String? productId;
+
+    final productResponse = await _supabaseClient
+        .from('products')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+
+    if (productResponse != null) {
+      productId = productResponse['id'];
+    } else {
+      //  שלב 2 – אם לא מצאנו, נבדוק אם מדובר ב־postId
+      final maybePost = await _supabaseClient
           .from('feed_post')
           .select('product_id')
-          .eq('id', postId)
+          .eq('id', id)
           .maybeSingle();
 
-      if (feedPostResponse == null) {
-        throw Exception('Product not found for this post.');
+      if (maybePost != null && maybePost['product_id'] != null) {
+        productId = maybePost['product_id'];
+        // נטען את המוצר שוב לפי productId שנגזר מהפוסט
+        final secondTry = await _supabaseClient
+            .from('products')
+            .select()
+            .eq('id', productId!)
+            .maybeSingle();
+
+        if (secondTry != null) {
+          productId = secondTry['id'];
+          return await _buildProductFromData(secondTry);
+        }
       }
 
-      final productId = feedPostResponse['product_id'];
-      if (productId == null) {
-        throw Exception('Product not found for this post.');
-      }
-
-      // 2. Get the product details from the products table.
-      final productResponse = await _supabaseClient
-          .from('products')
-          .select()
-          .eq('id', productId)
-          .single();
-
-      // 3. Get media URLs from the product_media and media tables.
-      final mediaResponse = await _supabaseClient
-          .from('product_media')
-          .select('media(media_url)')
-          .eq('product_id', productId);
-
-      final imageUrls = mediaResponse
-          .map((e) => e['media']['media_url'] as String)
-          .toList();
-
-      final size = 'C: ${productResponse['chest']} W: ${productResponse['waist']} L: ${productResponse['length']}';
-
-      return Product(
-        id: productResponse['id'],
-        name: productResponse['title'],
-        price: productResponse['price']?.toDouble() ?? 0.0,
-        description: productResponse['description'],
-        imageUrls: imageUrls,
-        size: size,
-        fabric: productResponse['fabric'] ?? 'N/A',
-        condition: productResponse['condition'] ?? 'N/A',
-        brand: productResponse['brand'] ?? 'N/A',
-        sellerId: productResponse['seller_id'],
-      );
-    } catch (e) {
-      // ignore: avoid_print
-      print('Error fetching product: $e');
-      rethrow;
+      // אם לא מצאנו כלום
+      throw Exception('Product not found.');
     }
+
+    return await _buildProductFromData(productResponse);
+  } catch (e) {
+    // ignore: avoid_print
+    print('Error fetching product: $e');
+    rethrow;
   }
+}
+
+Future<Product> _buildProductFromData(Map<String, dynamic> productResponse) async {
+  final productId = productResponse['id'];
+
+  final mediaResponse = await _supabaseClient
+      .from('product_media')
+      .select('media(media_url)')
+      .eq('product_id', productId);
+
+  final imageUrls = mediaResponse
+      .map((e) => e['media']['media_url'] as String)
+      .toList();
+
+  final size = 'C: ${productResponse['chest']} W: ${productResponse['waist']} L: ${productResponse['length']}';
+
+  return Product(
+    id: productId,
+    name: productResponse['title'],
+    price: productResponse['price']?.toDouble() ?? 0.0,
+    description: productResponse['description'],
+    imageUrls: imageUrls,
+    size: size,
+    fabric: productResponse['fabric'] ?? 'N/A',
+    condition: productResponse['condition'] ?? 'N/A',
+    brand: productResponse['brand'] ?? 'N/A',
+    sellerId: productResponse['seller_id'],
+  );
+}
+
 
   @override
   Future<Seller> getSeller(String sellerId) async {
