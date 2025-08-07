@@ -195,7 +195,7 @@ Future<List<FeedPostEntity>> getPostsByIds(List<String> postIds) async {
             avatar_url
           )
         ''')
-        .inFilter('id', validatedPostIds)
+        .filter('id', 'in', '(${validatedPostIds.join(",")})')
         .order('created_at', ascending: false);
 
     final likesResponse = await _client

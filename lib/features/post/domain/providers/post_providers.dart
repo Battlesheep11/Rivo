@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
 import 'package:rivo_app_beta/features/post/data/datasources/post_remote_data_source.dart';
 import 'package:rivo_app_beta/features/post/data/repositories/post_repository_impl.dart';
 import 'package:rivo_app_beta/features/post/domain/repositories/post_repository.dart';

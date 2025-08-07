@@ -113,12 +113,13 @@ class AuthRemoteDataSource {
   /// Signs in with Google using Supabase OAuth.
   /// A profile will be created (if missing) once the auth state changes.
   Future<void> signInWithGoogle() async {
-    await client.auth.signInWithOAuth(
-      OAuthProvider.google,
-      redirectTo: 'com.example.rivo_app_beta://login-callback',
-    );
-    // Don't call ensureProfileCreated here – will be handled in authStateChanges
-  }
+  await client.auth.signInWithOAuth(
+    Provider.google,
+    redirectTo: 'com.example.rivo_app_beta://login-callback',
+  );
+  // Don't call ensureProfileCreated here – will be handled in authStateChanges
+}
+
 
   /// Sends a password reset email to the specified email address.
   Future<void> sendPasswordResetEmail(String email) async {

@@ -1,10 +1,10 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
 import 'package:rivo_app_beta/features/discovery/data/datasources/discovery_remote_data_source.dart';
 import 'package:rivo_app_beta/features/discovery/data/repositories/discovery_repository_impl.dart';
 import 'package:rivo_app_beta/features/discovery/domain/entities/discovery_tag_entity.dart';
 import 'package:rivo_app_beta/features/discovery/domain/usecases/get_curated_tags_use_case.dart';
 import 'package:rivo_app_beta/features/discovery/domain/repositories/discovery_repository.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rivo_app_beta/features/discovery/domain/usecases/get_featured_product_use_case.dart';
 import 'package:rivo_app_beta/features/discovery/domain/entities/discovery_product_entity.dart';
 
@@ -48,5 +48,3 @@ final curatedCollectionsProvider = FutureProvider.autoDispose((ref) {
   final repository = ref.watch(discoveryRepositoryProvider);
   return repository.getCuratedCollections();
 });
-
-

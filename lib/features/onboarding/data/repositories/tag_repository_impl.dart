@@ -14,7 +14,7 @@ class TagRepositoryImpl implements TagRepository {
     final response = await _client
         .from('tags')
         .select('id, name')
-        .inFilter('name', tagNames)
+        .filter('name', 'in', '(${tagNames.join(",")})')
         .eq('is_visible', true);
 
     final tagIds = response.map((t) => t['id'] as String).toList();

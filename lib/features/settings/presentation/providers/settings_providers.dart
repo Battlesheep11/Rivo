@@ -8,7 +8,7 @@ import 'package:rivo_app_beta/features/settings/domain/usecases/get_user_prefere
 import 'package:rivo_app_beta/features/settings/domain/usecases/update_user_preferences.dart';
 import 'package:rivo_app_beta/features/settings/domain/usecases/initialize_user_preferences.dart';
 import 'package:rivo_app_beta/features/settings/presentation/viewmodels/settings_viewmodel.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
 
 // Remote Data Source
 final userPreferencesRemoteDataSourceProvider = Provider<UserPreferencesRemoteDataSource>(

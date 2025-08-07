@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rivo_app_beta/core/design_system/design_system.dart';
@@ -8,6 +7,7 @@ import 'package:rivo_app_beta/features/profile/data/profile_service.dart';
 import 'package:rivo_app_beta/features/profile/presentation/widgets/profile_header.dart';
 import 'package:rivo_app_beta/features/profile/presentation/widgets/spotlight_section.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -20,14 +20,13 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   final ProfileService _profileService = ProfileService();
   late final TabController _tabController;
   late final String _userId;
-  
-  // Stream subscription for profile updates
+
   StreamSubscription<Map<String, dynamic>>? _profileSubscription;
-  
-  // Profile state
+
   Profile? _profile;
   bool _isLoading = true;
   String? _error;
+  bool _isDeleting = false;
 
   @override
   void initState() {
@@ -36,19 +35,16 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     _tabController = TabController(length: 2, vsync: this);
     _subscribeToProfileUpdates();
   }
-  
+
   @override
   void dispose() {
     _profileSubscription?.cancel();
     _tabController.dispose();
     super.dispose();
   }
-  
+
   void _subscribeToProfileUpdates() {
-    // Initial load
     _loadProfile();
-    
-    // Subscribe to updates
     _profileSubscription = _profileService.watchProfileData(_userId)?.listen(
       (profileData) {
         if (mounted) {
@@ -70,30 +66,71 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       cancelOnError: false,
     );
   }
-  
+
   Future<void> _loadProfile() async {
-    if (mounted) {
-      setState(() => _isLoading = true);
-    }
-    
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+
     try {
       final profileData = await _profileService.getProfileData(_userId);
-      if (mounted) {
-        setState(() {
-          _profile = Profile.fromData(profileData);
-          _isLoading = false;
-          _error = null;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _profile = Profile.fromData(profileData);
+        _isLoading = false;
+        _error = null;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString();
-          _isLoading = false;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
     }
   }
+
+  Future<void> _deleteUser() async {
+  final accessToken = Supabase.instance.client.auth.currentSession?.accessToken;
+
+  if (accessToken == null) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Not logged in')),
+    );
+    return;
+  }
+
+  setState(() => _isDeleting = true);
+
+  try {
+    final response = await http.post(
+      Uri.parse('https://nbrqyxsxsokrwkhpdvov.supabase.co/functions/v1/delete_user_self'),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (!mounted) return;
+
+    if (response.statusCode >= 400) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${response.body}')),
+      );
+      setState(() => _isDeleting = false);
+    } else {
+      await Supabase.instance.client.auth.signOut();
+      if (!mounted) return;
+      context.go('/');
+    }
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Exception: $e')),
+    );
+    setState(() => _isDeleting = false);
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +204,25 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
           ),
           SliverToBoxAdapter(child: ProfileHeader(profile: profile)),
           const SliverToBoxAdapter(child: SpotlightSection()),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: _isDeleting ? null : _deleteUser,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red[100],
+                  foregroundColor: Colors.red[800],
+                ),
+                child: _isDeleting
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Delete My Account'),
+              ),
+            ),
+          ),
           SliverPersistentHeader(
             pinned: true,
             delegate: _SliverTabBarDelegate(
@@ -175,11 +231,11 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                 labelColor: AppColors.primary,
                 unselectedLabelColor: AppColors.gray600,
                 indicatorColor: AppColors.primary,
-                tabs: [
+                tabs: const [
                   Tab(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Icon(Icons.grid_view_rounded),
                         SizedBox(width: 8),
                         Text('My Style'),
@@ -189,7 +245,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                   Tab(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Icon(Icons.receipt_long),
                         SizedBox(width: 8),
                         Text('Purchases'),

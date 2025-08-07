@@ -8,6 +8,7 @@ environment:
 
 
 dependencies: 
+  http: 1.4.0
   dotted_border: ^3.1.0
   device_info_plus: ^9.1.1
   flutter_image_compress: ^2.1.0
@@ -26,7 +27,7 @@ dependencies:
   video_player: ^2.7.0
   flutter_riverpod: ^2.5.1
   dartz: ^0.10.1
-  supabase_flutter: ^2.9.1
+  supabase_flutter: ^1.10.16
   flutter_dotenv: ^5.1.0
   freezed_annotation: ^2.4.1
   cached_network_image: ^3.3.1
@@ -55,7 +56,7 @@ dependencies:
   http2: ^2.3.0
   crypto: ^3.0.3
   path_provider: ^2.1.2
-  app_links: ^6.4.0
+  app_links: ^3.4.1
   glass_kit: ^4.0.1
   photo_manager_image_provider: ^2.2.0
 
