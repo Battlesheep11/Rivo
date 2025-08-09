@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Added for orientation lock
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,13 +7,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'package:rivo_app_beta/core/toast/toast_service.dart';
 
-final GlobalKey<ScaffoldMessengerState> messengerKey = GlobalKey<ScaffoldMessengerState>();
+final GlobalKey<ScaffoldMessengerState> messengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 
 Future<void> main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // Force portrait mode only
+    // Portrait only
     await SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
@@ -30,12 +31,14 @@ Future<void> main() async {
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabaseAnonKey,
+      // OAuth on mobile requires PKCE
+      authFlowType: AuthFlowType.pkce,
     );
 
     ToastService().init(messengerKey);
 
     runApp(
-      ProviderScope(
+      const ProviderScope(
         child: App(),
       ),
     );

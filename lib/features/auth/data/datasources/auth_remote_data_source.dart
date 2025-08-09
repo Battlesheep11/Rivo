@@ -6,22 +6,19 @@ class AuthRemoteDataSource {
 
   AuthRemoteDataSource({required this.client});
 
-  /// Listens to authentication state changes and returns a stream of UserEntity.
-  /// Also ensures a corresponding profile record exists for every logged-in user.
+  /// Stream of auth state → maps to your domain entity.
+  /// Also guarantees a profile row exists once a user is logged in.
   Stream<UserEntity?> authStateChanges() {
     return client.auth.onAuthStateChange.map((event) {
       final user = event.session?.user;
       if (user == null) return null;
 
-      // Ensure profile is created for Google or OAuth users
       ensureProfileCreatedFor(user);
-
       return UserEntity(id: user.id, email: user.email ?? '');
     });
   }
 
-  /// Signs up a user with email & password and stores username in metadata.
-  /// Creates a profile entry in the 'profiles' table.
+  /// Email/password sign up + store username.
   Future<AuthResponse> signUp({
     required String email,
     required String password,
@@ -30,50 +27,54 @@ class AuthRemoteDataSource {
     final response = await client.auth.signUp(
       email: email,
       password: password,
-      data: {
-        'username': username,
-      },
+      data: {'username': username},
     );
 
     final user = response.user;
     if (user != null) {
       await ensureProfileCreatedFor(user, usernameOverride: username);
     }
-
     return response;
   }
 
-  /// Ensures a `profiles` record exists for the given Supabase user.
-  /// Called after any type of authentication (OAuth, email, etc).
-  Future<void> ensureProfileCreatedFor(User user, {String? usernameOverride}) async {
-  final profile = await client
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .maybeSingle();
+  /// Ensure a row in `profiles` for this user.
+  Future<void> ensureProfileCreatedFor(
+    User user, {
+    String? usernameOverride,
+  }) async {
+    try {
+      final profile = await client
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
 
-  if (profile == null) {
-    final email = user.email;
-    if (email == null) return; 
+      if (profile == null) {
+        final email = user.email;
+        if (email == null) {
+          return;
+        }
 
-    final allowlisted = await client
-        .from('seller_allowlist')
-        .select('email')
-        .eq('email', email) 
-        .maybeSingle();
+        final allowlisted = await client
+            .from('seller_allowlist')
+            .select('email')
+            .eq('email', email)
+            .maybeSingle();
 
-    final isSeller = allowlisted != null;
+        final isSeller = allowlisted != null;
 
-    await client.from('profiles').insert({
-      'id': user.id,
-      'username': usernameOverride ?? email.split('@')[0],
-      'is_seller': isSeller,
-    });
+        await client.from('profiles').insert({
+          'id': user.id,
+          'username': usernameOverride ?? email.split('@').first,
+          'is_seller': isSeller,
+        });
+      }
+    } catch (_) {
+      // intentionally swallow to avoid breaking auth flow
+    }
   }
-}
 
-
-  /// Checks if the given username already exists in the profiles table.
+  /// Username exists?
   Future<bool> checkUsername(String username) async {
     final response = await client
         .from('profiles')
@@ -83,64 +84,65 @@ class AuthRemoteDataSource {
     return response != null;
   }
 
-  /// Checks if a given email already exists using a Supabase RPC function.
+  /// Email exists? (via RPC – ודאי שה־function קיים)
   Future<bool> checkEmail(String email) async {
-    final result = await client.rpc('email_exists', params: {'email_address': email});
+    final result = await client.rpc('email_exists', params: {
+      'email_address': email,
+    });
     return result as bool;
   }
 
-  /// Signs in a user with email and password.
+  /// Email/password sign in.
   Future<AuthResponse> signIn({
     required String email,
     required String password,
-  }) async {
-    return await client.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+  }) {
+    return client.auth.signInWithPassword(email: email, password: password);
   }
 
-  /// Signs the current user out.
-  Future<void> signOut() async {
-    await client.auth.signOut();
-  }
-
-  /// Returns the current authenticated Supabase user.
-  User? getCurrentUser() {
-    return client.auth.currentUser;
-  }
-
-  /// Signs in with Google using Supabase OAuth.
-  /// A profile will be created (if missing) once the auth state changes.
+  /// Google OAuth (Android/iOS Native).
+  /// ודאי שהוספת ב־AndroidManifest את ה־intent filter עם ה־scheme com.rivo.app
   Future<void> signInWithGoogle() async {
-  await client.auth.signInWithOAuth(
-    Provider.google,
-    redirectTo: 'com.example.rivo_app_beta://login-callback',
-  );
-  // Don't call ensureProfileCreated here – will be handled in authStateChanges
-}
+    try {
+      await client.auth.signInWithOAuth(
+        Provider.google,
+        redirectTo: 'com.rivo.app://login-callback',
+        queryParams: const {
+          'access_type': 'offline',
+          'prompt': 'consent',
+        },
+      );
 
+      final s = client.auth.currentSession;
+      if (s?.user != null) {
+        await ensureProfileCreatedFor(s!.user);
+      }
+    } catch (_) {
+      // intentionally swallow to avoid breaking auth flow
+    }
+  }
 
-  /// Sends a password reset email to the specified email address.
-  Future<void> sendPasswordResetEmail(String email) async {
-    await client.auth.resetPasswordForEmail(
+  Future<void> signOut() => client.auth.signOut();
+
+  User? getCurrentUser() => client.auth.currentUser;
+
+  Future<void> sendPasswordResetEmail(String email) {
+    return client.auth.resetPasswordForEmail(
       email,
-      redirectTo: 'com.example.rivo_app_beta://reset-password',
+      redirectTo: 'com.rivo.app://reset-password',
     );
   }
 
-  /// Resets the password using the provided token and new password.
-  /// Throws if the reset token is invalid or expired.
   Future<void> resetPassword({
-    required String token,
+    required String token, // kept for API symmetry
     required String newPassword,
   }) async {
     try {
-      await client.auth.updateUser(
-        UserAttributes(password: newPassword),
+      await client.auth.updateUser(UserAttributes(password: newPassword));
+    } catch (_) {
+      throw Exception(
+        'Failed to reset password. The link may have expired or is invalid.',
       );
-    } catch (e) {
-      throw Exception('Failed to reset password. The link may have expired or is invalid.');
     }
   }
 }
