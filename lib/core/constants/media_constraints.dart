@@ -9,6 +9,9 @@ class MediaConstraints {
     'video/mp4',
     'video/webm',
     'video/quicktime', // for iOS camera
+    'video/x-matroska', // for Android camera
+    'video/3gpp',
+    'video/3gpp2',
   ];
 
   static const int maxImageSizeInBytes = 5 * 1024 * 1024; // 5MB

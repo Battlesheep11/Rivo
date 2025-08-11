@@ -55,37 +55,52 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
   }
 
 
-  Future<void> setMedia(List<UploadableMedia> selectedMedia) async {
+Future<void> setMedia(List<UploadableMedia> selectedMedia) async {
   final processed = <UploadableMedia>[];
 
-  for (final media in selectedMedia) {
-    final file = await media.asset.file;
-    final bytes = await media.asset.originBytes;
+  for (var i = 0; i < selectedMedia.length; i++) {
+    final media = selectedMedia[i];
 
-    if (file == null || bytes == null) {
-      processed.add(media.copyWith(
-        status: UploadMediaStatus.invalid,
-        errorMessage: 'Media file not found or is empty',
-      ));
+    // לוקחים את הקובץ הפיזי מה-Asset; לא טוענים originBytes עבור וידאו
+    final file = await media.asset.file;
+    if (file == null) {
+      processed.add(
+        media.copyWith(
+          status: UploadMediaStatus.invalid,
+          errorMessage: 'Media file not found',
+          sortOrder: i,
+        ),
+      );
       continue;
     }
 
-    final validation = MediaValidator.validate(file);
+final validation = MediaValidator.validateSource(file, type: media.type);
 
     final validatedMedia = validation.fold(
-      (_) => media.copyWith(
-        file: file,
-        bytes: bytes,
-        status: UploadMediaStatus.valid,
-      ),
-      (error) => media.copyWith(
+      // Success path → מסמנים כ-valid; bytes רק לתמונה (חוסך זיכרון לוידאו)
+      (_) async {
+        final maybeBytes =
+            media.type == MediaType.image ? await media.asset.originBytes : null;
+
+        return media.copyWith(
+          file: file,
+          bytes: maybeBytes,
+          status: UploadMediaStatus.valid,
+          errorMessage: null,
+          sortOrder: i,
+        );
+      },
+      // Failure path → invalid עם הודעת שגיאה
+      (error) async => media.copyWith(
         file: file,
         status: UploadMediaStatus.invalid,
         errorMessage: error.toString(),
+        sortOrder: i,
       ),
     );
 
-    processed.add(validatedMedia);
+    // כי fold מחזיר Future<UploadableMedia>
+    processed.add(await validatedMedia);
   }
 
   state = state.copyWith(media: processed);
@@ -93,18 +108,35 @@ class UploadPostViewModel extends StateNotifier<UploadPostState> {
 
 
 
+
+
   void reorderMedia(int oldIndex, int newIndex) {
-    final items = List<UploadableMedia>.from(state.media);
-    final item = items.removeAt(oldIndex);
-    items.insert(newIndex, item);
-    state = state.copyWith(media: items);
+  final items = List<UploadableMedia>.from(state.media);
+  final item = items.removeAt(oldIndex);
+  items.insert(newIndex, item);
+
+  // עדכון sortOrder לפי הסדר החדש
+  final reindexed = <UploadableMedia>[];
+  for (var i = 0; i < items.length; i++) {
+    reindexed.add(items[i].copyWith(sortOrder: i));
   }
 
+  state = state.copyWith(media: reindexed);
+}
+
+
   void removeMedia(UploadableMedia file) {
-    state = state.copyWith(
-      media: List.from(state.media)..removeWhere((m) => m.path == file.path),
-    );
+  final remaining = List<UploadableMedia>.from(state.media)
+    ..removeWhere((m) => m.path == file.path);
+
+  final reindexed = <UploadableMedia>[];
+  for (var i = 0; i < remaining.length; i++) {
+    reindexed.add(remaining[i].copyWith(sortOrder: i));
   }
+
+  state = state.copyWith(media: reindexed);
+}
+
 
   void updateMediaStatus(String mediaPath, UploadMediaStatus status) {
   final updated = state.media.map((item) {

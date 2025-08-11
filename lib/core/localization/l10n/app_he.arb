@@ -312,5 +312,6 @@
   "currencyShekel": "₪",
   "@currencyShekel": {
     "description": "סמל מטבע שקל ישראלי (משמש כקידומת בשדות מחיר)"
-  }
+  },
+  "uploadVideoTooLargeBackend": "הסרטון גדול מדי"
 }

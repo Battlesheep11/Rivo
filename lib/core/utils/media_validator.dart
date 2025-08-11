@@ -1,27 +1,33 @@
+// media_validator.dart
+
 import 'dart:io';
-import 'package:flutter/foundation.dart'; // ← נדרש בשביל debugPrint
+import 'package:flutter/foundation.dart';
 import 'package:mime/mime.dart';
 import 'package:rivo_app_beta/core/constants/media_constraints.dart';
 import 'package:result_dart/result_dart.dart';
+import 'package:rivo_app_beta/core/media/domain/entities/uploadable_media.dart'; // בשביל MediaType
 
 enum MediaValidationError {
   unsupportedFormat,
-  fileTooLarge,
+  fileTooLarge, // נשתמש בזה רק לתמונות בשלב הזה
   fileNotFound,
 }
 
 class MediaValidator {
-  static Result<String, MediaValidationError> validate(File file) {
+  /// אם אין סיומת/‏MIME (נפוץ במדיה שצולמה עכשיו) – נשתמש ב-type כ-fallback.
+  static Result<String, MediaValidationError> validateSource(
+    File file, {
+    MediaType? type,
+  }) {
     if (!file.existsSync()) {
       debugPrint('❌ Validation failed: File not found: ${file.path}');
       return Failure(MediaValidationError.fileNotFound);
     }
 
-    final mimeType = lookupMimeType(file.path);
-    if (mimeType == null) {
-      debugPrint('❌ Validation failed: Unknown MIME type for ${file.path}');
-      return Failure(MediaValidationError.unsupportedFormat);
-    }
+    String? mimeType = lookupMimeType(file.path);
+
+    // fallback לפי ה-type מהשכבה הדומיינית (כשאין סיומת/‏MIME)
+    mimeType ??= (type == MediaType.video ? 'video/mp4' : 'image/jpeg');
 
     final isImage = MediaConstraints.supportedImageFormats.contains(mimeType);
     final isVideo = MediaConstraints.supportedVideoFormats.contains(mimeType);
@@ -32,18 +38,15 @@ class MediaValidator {
     }
 
     final fileSize = file.lengthSync();
-    debugPrint('📦 File size: $fileSize bytes | Type: $mimeType');
+    debugPrint('📦 Source file size: $fileSize bytes | Type: $mimeType');
 
+    // תמונות מוגבלות בשלב הזה; וידאו נבדוק אחרי דחיסה (אם תרצה).
     if (isImage && fileSize > MediaConstraints.maxImageSizeInBytes) {
-      debugPrint('❌ Validation failed: Image too large ($fileSize > ${MediaConstraints.maxImageSizeInBytes})');
-      return Failure(MediaValidationError.fileTooLarge);
-    }
-    if (isVideo && fileSize > MediaConstraints.maxVideoSizeInBytes) {
-      debugPrint('❌ Validation failed: Video too large ($fileSize > ${MediaConstraints.maxVideoSizeInBytes})');
+      debugPrint('❌ Image too large ($fileSize > ${MediaConstraints.maxImageSizeInBytes})');
       return Failure(MediaValidationError.fileTooLarge);
     }
 
-    debugPrint('✅ Validation passed: $mimeType');
+    debugPrint('✅ Source validation passed: $mimeType');
     return Success("valid");
   }
 }
