@@ -149,7 +149,11 @@ final validation = MediaValidator.validateSource(file, type: media.type);
   state = state.copyWith(media: updated);
 }
 
-
+void setCoverImageIndex(int index) {
+    if (index >= 0 && index < state.media.length) {
+      state = state.copyWith(coverImageIndex: index);
+    }
+  }
 
   Future<String> submit() async {
     // Throw specific validation errors for missing caption or price

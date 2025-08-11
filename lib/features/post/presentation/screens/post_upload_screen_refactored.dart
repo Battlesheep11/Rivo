@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // For FilteringTextInputFormatter and TextInputFormatter
-import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
+import 'package:flutter/services.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rivo_app_beta/features/auth/presentation/providers/auth_session_provider.dart';
-import 'package:rivo_app_beta/features/settings/presentation/providers/settings_providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:photo_manager/photo_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/features/post/presentation/viewmodels/upload_post_viewmodel.dart';
@@ -452,89 +449,139 @@ class _PostUploadScreenRefactoredState extends ConsumerState<PostUploadScreenRef
     int index, 
     UploadPostViewModel viewModel,
   ) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha((0.08 * 255).round()),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Photo image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: SizedBox(
-              width: double.infinity,
-              height: double.infinity,
-              child: AssetEntityImage(
-                media.asset,
-                isOriginal: false,
-                thumbnailSize: const ThumbnailSize.square(250),
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => _buildErrorPlaceholder(),
+    final state = ref.watch(uploadPostViewModelProvider);
+    final isCover = state.coverImageIndex == index;
+    
+    return GestureDetector(
+      // Allow tapping to select as cover image
+      onTap: () => viewModel.setCoverImageIndex(index),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          // Highlight border if this is the cover image
+          border: isCover ? Border.all(
+            color: const Color(0xFF6E8EFB),
+            width: 3,
+          ) : null,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha((0.08 * 255).round()),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Photo image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: FutureBuilder<Uint8List?>(
+                future: media.asset.thumbnailDataWithSize(
+                  const ThumbnailSize(200, 200),
+                  quality: 80,
+                ),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data != null) {
+                    return Image.memory(
+                      snapshot.data!,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                    );
+                  }
+                  return Container(
+                    color: Colors.grey[300],
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                },
               ),
             ),
-          ),
-          // Remove button
-          Positioned(
-            top: 6,
-            right: 6,
-            child: GestureDetector(
-              onTap: () => viewModel.removeMedia(media),
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: Colors.black.withAlpha((0.6 * 255).round()),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 14,
-                ),
-              ),
-            ),
-          ),
-          // First photo indicator (cover image)
-          if (index == 0)
+            // Remove button
             Positioned(
-              bottom: 6,
-              left: 6,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.black.withAlpha((0.7 * 255).round()),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'Cover',
-                  style: TextStyle(
+              top: 6,
+              right: 6,
+              child: GestureDetector(
+                onTap: () => viewModel.removeMedia(media),
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: Colors.red.withAlpha((0.8 * 255).round()),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
                     color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
+                    size: 16,
                   ),
                 ),
               ),
             ),
-        ],
-      ),
-    );
-  }
-  
-  /// Error placeholder for failed image loads
-  Widget _buildErrorPlaceholder() {
-    return Container(
-      color: Colors.grey.withAlpha((0.2 * 255).round()),
-      child: Icon(
-        Icons.broken_image_outlined,
-        color: Colors.grey.withAlpha((0.6 * 255).round()),
-        size: 32,
+            // Cover image indicator
+            if (isCover)
+              Positioned(
+                bottom: 6,
+                left: 6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6E8EFB),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha((0.2 * 255).round()),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.star,
+                        color: Colors.white,
+                        size: 12,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'Cover',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            // Tap hint for non-cover images
+            if (!isCover)
+              Positioned(
+                bottom: 6,
+                left: 6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withAlpha((0.5 * 255).round()),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Tap to set as cover',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1983,9 +2030,10 @@ void _handleCustomTagsInput(String input, UploadPostViewModel viewModel) {
 
   Future<void> _publishItem(UploadPostViewModel viewModel, AppLocalizations l10n) async {
     try {
-      final postId = await viewModel.submit();
+      await viewModel.submit();
       if (mounted) {
-        _showSuccessMessage(l10n, postId: postId);
+        // Navigate to the home screen after successful upload
+        context.go('/home');
       }
     } on AppException catch (e) {
       if (!mounted) return;
@@ -2018,215 +2066,7 @@ void _handleCustomTagsInput(String input, UploadPostViewModel viewModel) {
         ),
       );
     }
-  }
-
-  void _showSuccessMessage(AppLocalizations l10n, {required String postId}) {
-    // Get the current user's preferences
-        final user = ref.read(authSessionProvider).value;
-    if (user == null) {
-      // If user is not logged in (shouldn't happen), show default behavior
-      _showDefaultSuccessDialog(l10n, postId);
-      return;
-    }
-    
-    // Get the user's preferences
-    final settingsState = ref.read(settingsViewModelProvider(user.id));
-    
-    // Show the success dialog if the user wants to see it
-    if (settingsState.maybeWhen(
-      success: (prefs) => prefs.showPostUploadSuccessDialog,
-      orElse: () => true, // Default to showing the dialog if we can't load prefs
-    )) {
-      _showSuccessDialog(l10n, postId);
-    } else if (settingsState.maybeWhen(
-      success: (prefs) => prefs.autoNavigateToPostAfterUpload,
-      orElse: () => false, // Default to not auto-navigating if we can't load prefs
-    )) {
-      // If auto-navigate is enabled, go directly to the post
-      _navigateToPost(postId);
-    } else {
-      // If neither dialog nor auto-navigate is enabled, just go home
-      Navigator.of(context).popUntil((route) => route.isFirst);
-    }
-  }
-  
-  /// Shows a success dialog after an item is successfully published
-  /// Includes options to go home, view the item, or post a new item
-  void _showSuccessDialog(AppLocalizations l10n, String postId) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.green.withAlpha(26), // Using withAlpha instead of withOpacity
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: const Icon(
-                Icons.check,
-                color: Colors.green,
-                size: 30,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.itemPublishedSuccessfully,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.yourItemHasBeenPublished,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          // Go Home button
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            },
-            child: Text(l10n.goHome),
-          ),
-          
-          // Post New Item button
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // Reset the form and go back to the first step
-              ref.read(uploadPostViewModelProvider.notifier).reset();
-              setState(() {
-                _currentPage = 0;
-                _pageController.jumpToPage(0);
-              });
-            },
-            child: Text(l10n.postNewItem),
-          ),
-          
-          // View Item button (primary action)
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _navigateToPost(postId);
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).primaryColor,
-            ),
-            child: Text(l10n.viewItem),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  /// Navigates to the product page for the given post ID
-  /// Uses push instead of pushReplacement to maintain the navigation stack
-  /// and allow proper back navigation to the post-upload flow
-  void _navigateToPost(String postId) {
-    context.push('/product/$postId');
-  }
-
-  void _showDefaultSuccessDialog(AppLocalizations l10n, String postId) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.green.withAlpha((0.1 * 255).round()),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: const Icon(
-                Icons.check,
-                color: Colors.green,
-                size: 30,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.itemPublishedSuccessfully,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1A2E),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.yourItemHasBeenPublished,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF666666),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.go('/home');
-                    },
-                    child: Text(l10n.goHome),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.pushReplacement('/product/$postId');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6E8EFB),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      l10n.viewItem,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  }  
 }
 
 class _TagChip extends StatelessWidget {

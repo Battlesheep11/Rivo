@@ -33,6 +33,8 @@ mixin _$UploadPostState {
   String? get size => throw _privateConstructorUsedError; // item size
   List<UploadableMedia> get media => throw _privateConstructorUsedError;
   List<String> get tagNames => throw _privateConstructorUsedError;
+  int get coverImageIndex =>
+      throw _privateConstructorUsedError; // Index of the selected cover image
   bool get isSubmitting => throw _privateConstructorUsedError;
   FormStatus get status => throw _privateConstructorUsedError;
   int get uploadedMediaCount => throw _privateConstructorUsedError;
@@ -67,6 +69,7 @@ abstract class $UploadPostStateCopyWith<$Res> {
     String? size,
     List<UploadableMedia> media,
     List<String> tagNames,
+    int coverImageIndex,
     bool isSubmitting,
     FormStatus status,
     int uploadedMediaCount,
@@ -103,6 +106,7 @@ class _$UploadPostStateCopyWithImpl<$Res, $Val extends UploadPostState>
     Object? size = freezed,
     Object? media = null,
     Object? tagNames = null,
+    Object? coverImageIndex = null,
     Object? isSubmitting = null,
     Object? status = null,
     Object? uploadedMediaCount = null,
@@ -166,6 +170,10 @@ class _$UploadPostStateCopyWithImpl<$Res, $Val extends UploadPostState>
                 ? _value.tagNames
                 : tagNames // ignore: cast_nullable_to_non_nullable
                       as List<String>,
+            coverImageIndex: null == coverImageIndex
+                ? _value.coverImageIndex
+                : coverImageIndex // ignore: cast_nullable_to_non_nullable
+                      as int,
             isSubmitting: null == isSubmitting
                 ? _value.isSubmitting
                 : isSubmitting // ignore: cast_nullable_to_non_nullable
@@ -212,6 +220,7 @@ abstract class _$$UploadPostStateImplCopyWith<$Res>
     String? size,
     List<UploadableMedia> media,
     List<String> tagNames,
+    int coverImageIndex,
     bool isSubmitting,
     FormStatus status,
     int uploadedMediaCount,
@@ -247,6 +256,7 @@ class __$$UploadPostStateImplCopyWithImpl<$Res>
     Object? size = freezed,
     Object? media = null,
     Object? tagNames = null,
+    Object? coverImageIndex = null,
     Object? isSubmitting = null,
     Object? status = null,
     Object? uploadedMediaCount = null,
@@ -310,6 +320,10 @@ class __$$UploadPostStateImplCopyWithImpl<$Res>
             ? _value._tagNames
             : tagNames // ignore: cast_nullable_to_non_nullable
                   as List<String>,
+        coverImageIndex: null == coverImageIndex
+            ? _value.coverImageIndex
+            : coverImageIndex // ignore: cast_nullable_to_non_nullable
+                  as int,
         isSubmitting: null == isSubmitting
             ? _value.isSubmitting
             : isSubmitting // ignore: cast_nullable_to_non_nullable
@@ -349,6 +363,7 @@ class _$UploadPostStateImpl extends _UploadPostState {
     this.size = '',
     final List<UploadableMedia> media = const [],
     final List<String> tagNames = const [],
+    this.coverImageIndex = 0,
     this.isSubmitting = false,
     this.status = FormStatus.initial,
     this.uploadedMediaCount = 0,
@@ -411,6 +426,10 @@ class _$UploadPostStateImpl extends _UploadPostState {
 
   @override
   @JsonKey()
+  final int coverImageIndex;
+  // Index of the selected cover image
+  @override
+  @JsonKey()
   final bool isSubmitting;
   @override
   @JsonKey()
@@ -424,7 +443,7 @@ class _$UploadPostStateImpl extends _UploadPostState {
 
   @override
   String toString() {
-    return 'UploadPostState(title: $title, description: $description, price: $price, chest: $chest, waist: $waist, length: $length, caption: $caption, categoryId: $categoryId, brand: $brand, material: $material, condition: $condition, size: $size, media: $media, tagNames: $tagNames, isSubmitting: $isSubmitting, status: $status, uploadedMediaCount: $uploadedMediaCount, totalMediaCount: $totalMediaCount)';
+    return 'UploadPostState(title: $title, description: $description, price: $price, chest: $chest, waist: $waist, length: $length, caption: $caption, categoryId: $categoryId, brand: $brand, material: $material, condition: $condition, size: $size, media: $media, tagNames: $tagNames, coverImageIndex: $coverImageIndex, isSubmitting: $isSubmitting, status: $status, uploadedMediaCount: $uploadedMediaCount, totalMediaCount: $totalMediaCount)';
   }
 
   @override
@@ -450,6 +469,8 @@ class _$UploadPostStateImpl extends _UploadPostState {
             (identical(other.size, size) || other.size == size) &&
             const DeepCollectionEquality().equals(other._media, _media) &&
             const DeepCollectionEquality().equals(other._tagNames, _tagNames) &&
+            (identical(other.coverImageIndex, coverImageIndex) ||
+                other.coverImageIndex == coverImageIndex) &&
             (identical(other.isSubmitting, isSubmitting) ||
                 other.isSubmitting == isSubmitting) &&
             (identical(other.status, status) || other.status == status) &&
@@ -460,7 +481,7 @@ class _$UploadPostStateImpl extends _UploadPostState {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     title,
     description,
@@ -476,11 +497,12 @@ class _$UploadPostStateImpl extends _UploadPostState {
     size,
     const DeepCollectionEquality().hash(_media),
     const DeepCollectionEquality().hash(_tagNames),
+    coverImageIndex,
     isSubmitting,
     status,
     uploadedMediaCount,
     totalMediaCount,
-  );
+  ]);
 
   /// Create a copy of UploadPostState
   /// with the given fields replaced by the non-null parameter values.
@@ -510,6 +532,7 @@ abstract class _UploadPostState extends UploadPostState {
     final String? size,
     final List<UploadableMedia> media,
     final List<String> tagNames,
+    final int coverImageIndex,
     final bool isSubmitting,
     final FormStatus status,
     final int uploadedMediaCount,
@@ -545,6 +568,8 @@ abstract class _UploadPostState extends UploadPostState {
   List<UploadableMedia> get media;
   @override
   List<String> get tagNames;
+  @override
+  int get coverImageIndex; // Index of the selected cover image
   @override
   bool get isSubmitting;
   @override

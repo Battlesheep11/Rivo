@@ -90,6 +90,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // If a child widget is provided (from a nested route), render it directly
+
+
     ref.listen<SignupFormState>(signupFormViewModelProvider, (previous, next) {
       if (next.isSubmitting) {
         // Handle loading state
@@ -159,7 +162,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final googleLoading = ref.watch(googleSignInViewModelProvider(context));
 
     final isSubmitting = signinState.isSubmitting;
-    final isValid = signinState.isValid;
+
 
     ref.listen(signinFormViewModelProvider, (previous, next) {
       if (next.isSuccess && context.mounted) {
@@ -167,9 +170,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       }
     });
 
-    final VoidCallback? onSubmit = (isValid && !isSubmitting)
-        ? () => ref.read(signinFormViewModelProvider.notifier).submit(context)
-        : null;
+    final VoidCallback? onSubmit = !isSubmitting
+      ? () => ref.read(signinFormViewModelProvider.notifier).submit(context)
+      : null;
 
     return Column(
       key: const ValueKey('signInForm'),
@@ -202,28 +205,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
             child: AppErrorText(message: signinState.errorMessage!),
           ) else const SizedBox(height: 8),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () {
-              // Navigate to forgot password screen
-              context.push('/auth/forgot-password');
-            },
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(
-              localizations.forgotPassword,
-              style: const TextStyle(
-                color: Color(0xFF666666),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ),
+        // Forgot password entry removed
         const SizedBox(height: 8),
         ElevatedButton(
           onPressed: onSubmit,
@@ -397,6 +379,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       switch (signupState.confirmedPassword.displayError!) {
         case ConfirmedPasswordValidationError.mismatch:
           confirmPasswordError = localizations.passwordValidationMismatch;
+          break;
+        case ConfirmedPasswordValidationError.empty:
+          confirmPasswordError = localizations.passwordValidationRequired;
           break;
       }
     }

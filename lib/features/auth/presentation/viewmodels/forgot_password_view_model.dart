@@ -1,6 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rivo_app_beta/features/auth/domain/repositories/auth_repository.dart';
-import 'package:rivo_app_beta/features/auth/domain/repositories/auth_repository_provider.dart';
 import 'package:dartz/dartz.dart';
 
 class ForgotPasswordState {
@@ -28,37 +26,18 @@ class ForgotPasswordState {
 }
 
 class ForgotPasswordViewModel extends StateNotifier<ForgotPasswordState> {
-  final AuthRepository _authRepository;
-
-  ForgotPasswordViewModel(this._authRepository) : super(ForgotPasswordState());
+  ForgotPasswordViewModel() : super(ForgotPasswordState());
 
   Future<Either<String, bool>> sendPasswordResetEmail(String email) async {
-    state = state.copyWith(isSubmitting: true, error: null);
-    
-    try {
-      final result = await _authRepository.sendPasswordResetEmail(email);
-      
-      return result.fold(
-        (error) {
-          state = state.copyWith(isSubmitting: false, error: error);
-          return Left(error);
-        },
-        (success) {
-          state = state.copyWith(isSubmitting: false, isSuccess: true);
-          return const Right(true);
-        },
-      );
-    } catch (e) {
-      final error = 'An unexpected error occurred. Please try again.';
-      state = state.copyWith(isSubmitting: false, error: error);
-      return Left(error);
-    }
+    // Feature removed: always report failure quickly
+    state = state.copyWith(isSubmitting: false, isSuccess: false, error: null);
+    // Return empty error to avoid hardcoded string in UI
+    return const Left('');
   }
 }
 
 // Provider
 final forgotPasswordViewModelProvider =
     StateNotifierProvider<ForgotPasswordViewModel, ForgotPasswordState>((ref) {
-  final authRepository = ref.watch(authRepositoryProvider);
-  return ForgotPasswordViewModel(authRepository);
+  return ForgotPasswordViewModel();
 });

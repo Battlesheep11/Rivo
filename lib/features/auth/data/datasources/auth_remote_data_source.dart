@@ -20,22 +20,32 @@ class AuthRemoteDataSource {
 
   /// Email/password sign up + store username.
   Future<AuthResponse> signUp({
+    required String username,
     required String email,
     required String password,
-    required String username,
   }) async {
     final response = await client.auth.signUp(
       email: email,
       password: password,
-      data: {'username': username},
+      data: {
+        'username': username, // Pass username to the trigger
+      },
     );
 
-    final user = response.user;
-    if (user != null) {
-      await ensureProfileCreatedFor(user, usernameOverride: username);
+    if (response.user != null) {
+      // After successful signup, create a profile entry
+      // Note: first_name/last_name omitted to align with repository API
+      await client.from('profiles').insert({
+        'id': response.user!.id,
+        'username': username,
+      });
     }
+
     return response;
   }
+
+
+
 
   /// Ensure a row in `profiles` for this user.
   Future<void> ensureProfileCreatedFor(
@@ -145,4 +155,6 @@ class AuthRemoteDataSource {
       );
     }
   }
+
+
 }

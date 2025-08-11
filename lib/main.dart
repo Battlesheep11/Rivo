@@ -35,6 +35,8 @@ Future<void> main() async {
       authFlowType: AuthFlowType.pkce,
     );
 
+
+
     ToastService().init(messengerKey);
 
     runApp(

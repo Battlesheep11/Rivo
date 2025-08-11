@@ -1,6 +1,6 @@
 import 'package:formz/formz.dart';
 
-enum ConfirmedPasswordValidationError { mismatch }
+enum ConfirmedPasswordValidationError { mismatch, empty }
 
 class ConfirmedPassword extends FormzInput<String, ConfirmedPasswordValidationError> {
   final String password;
@@ -10,6 +10,9 @@ class ConfirmedPassword extends FormzInput<String, ConfirmedPasswordValidationEr
 
   @override
   ConfirmedPasswordValidationError? validator(String value) {
+    if (value.isEmpty) {
+      return ConfirmedPasswordValidationError.empty;
+    }
     if (password != value) {
       return ConfirmedPasswordValidationError.mismatch;
     }

@@ -60,7 +60,6 @@ dependencies:
   app_links: ^3.4.1
   glass_kit: ^4.0.1
   photo_manager_image_provider: ^2.2.0
-
   
   #supabase_flutter:
    # path: local_packages/supabase_flutter

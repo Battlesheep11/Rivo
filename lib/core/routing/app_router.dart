@@ -13,34 +13,28 @@ import 'package:rivo_app_beta/features/profile/presentation/widgets/settings_scr
 import 'package:rivo_app_beta/core/widgets/app_nav_bar.dart';
 import 'package:rivo_app_beta/features/discovery/presentation/screens/discovery_screen.dart';
 import 'package:rivo_app_beta/features/product/presentation/screens/product_screen.dart';
-import 'package:rivo_app_beta/features/auth/presentation/screens/forgot_password_screen.dart';
-import 'package:rivo_app_beta/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:rivo_app_beta/features/feed/presentation/screens/filtered_feed_screen.dart';
 
 
 class AppRouter {
   static GoRouter createRouter(WidgetRef ref) {
     final authState = ref.watch(authSessionProvider);
+    final isLoggedIn = authState.asData?.value != null;
+    // Note: authRepository no longer needed after removing reset/forgot flows
 
     return GoRouter(
       initialLocation: '/redirect',
-      redirect: (context, state) {
-        // Skip redirect for password reset screens
-        if (state.matchedLocation.startsWith('/reset-password')) {
-          return null;
-        }
+      redirect: (context, state) async {
 
-        // If the user is not logged in, they are redirected to the /auth screen
-        final loggedIn = authState.asData?.value != null;
-        final loggingIn = state.matchedLocation == '/auth';
+        final isAuthRoute = state.matchedLocation.startsWith('/auth');
 
-        if (!loggedIn) {
+        // If user is not logged in and not on an auth-related page, redirect to /auth
+        if (!isLoggedIn && !isAuthRoute) {
           return '/auth';
         }
 
-        // if the user is logged in but still on the login page, send them to
-        // the home page
-        if (loggingIn) {
+        // If user is logged in but on an auth-related page, redirect to /home
+        if (isLoggedIn && isAuthRoute) {
           return '/home';
         }
 
@@ -48,15 +42,9 @@ class AppRouter {
       },
       routes: [
         GoRoute(
-          path: '/auth',
-          builder: (context, state) => const AuthScreen(),
-          routes: [
-            GoRoute(
-              path: 'forgot-password',
-              builder: (context, state) => const ForgotPasswordScreen(),
-            ),
-          ],
-        ),
+           path: '/auth',
+           pageBuilder: (context, state) => MaterialPage(child: AuthScreen()),
+         ),
         GoRoute(
           path: '/collection/:collectionId',
           builder: (context, state) {
@@ -69,17 +57,6 @@ class AppRouter {
           builder: (context, state) {
             final tagId = state.pathParameters['tagId']!;
             return FilteredFeedScreen(tagId: tagId);
-          },
-        ),
-        GoRoute(
-          path: '/reset-password',
-          builder: (context, state) {
-            final token = state.uri.queryParameters['token'];
-            if (token == null || token.isEmpty) {
-              // If no token is provided, redirect to auth screen
-              return const AuthScreen();
-            }
-            return ResetPasswordScreen(token: token);
           },
         ),
         GoRoute(
