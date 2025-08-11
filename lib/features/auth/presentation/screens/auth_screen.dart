@@ -205,28 +205,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
             child: AppErrorText(message: signinState.errorMessage!),
           ) else const SizedBox(height: 8),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () {
-              debugPrint('Forgot Password pressed');
-              GoRouter.of(context).push('/auth/forgot-password');
-            },
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(
-              localizations.forgotPassword,
-              style: const TextStyle(
-                color: Color(0xFF666666),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ),
+        // Forgot password entry removed
         const SizedBox(height: 8),
         ElevatedButton(
           onPressed: onSubmit,

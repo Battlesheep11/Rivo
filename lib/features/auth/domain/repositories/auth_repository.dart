@@ -22,16 +22,4 @@ abstract class AuthRepository {
 
   Future<void> signInWithGoogle();
   
-  /// Sends a password reset email to the specified email address
-  /// Returns [Right(true)] if the email was sent successfully
-  /// Returns [Left(error)] if there was an error sending the email
-  Future<Either<String, bool>> sendPasswordResetEmail(String email);
-  
-  /// Resets the password using the provided token and new password
-  /// Returns [Right(true)] if the password was reset successfully
-  /// Returns [Left(error)] if there was an error resetting the password
-  Future<Either<String, bool>> resetPassword({
-    required String token,
-    required String newPassword,
-  });
 }

@@ -1,8 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
-import 'package:rivo_app_beta/features/auth/domain/repositories/auth_repository.dart';
-import 'package:rivo_app_beta/features/auth/domain/repositories/auth_repository_provider.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/confirmed_password.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/password.dart';
 
@@ -44,9 +42,7 @@ class ResetPasswordState extends Equatable {
 
 // ViewModel
 class ResetPasswordViewModel extends StateNotifier<ResetPasswordState> {
-  final AuthRepository _authRepository;
-
-  ResetPasswordViewModel(this._authRepository) : super(const ResetPasswordState());
+  ResetPasswordViewModel() : super(const ResetPasswordState());
 
   void onPasswordChanged(String value) {
     final password = Password.dirty(value);
@@ -77,31 +73,16 @@ class ResetPasswordViewModel extends StateNotifier<ResetPasswordState> {
 
     state = state.copyWith(submissionStatus: FormzSubmissionStatus.inProgress);
 
-    try {
-      final result = await _authRepository.resetPassword(
-        token: token,
-        newPassword: state.password.value,
-      );
-
-      result.fold(
-        (error) => state = state.copyWith(
-          submissionStatus: FormzSubmissionStatus.failure,
-          errorMessage: error,
-        ),
-        (_) => state = state.copyWith(submissionStatus: FormzSubmissionStatus.success),
-      );
-    } catch (e) {
-      state = state.copyWith(
-        submissionStatus: FormzSubmissionStatus.failure,
-        errorMessage: 'An unexpected error occurred. Please try again.',
-      );
-    }
+    // Feature removed: immediately fail gracefully without hardcoded UI string
+    state = state.copyWith(
+      submissionStatus: FormzSubmissionStatus.failure,
+      errorMessage: '',
+    );
   }
 }
 
 // Provider
 final resetPasswordViewModelProvider =
     StateNotifierProvider.autoDispose<ResetPasswordViewModel, ResetPasswordState>((ref) {
-  final authRepository = ref.watch(authRepositoryProvider);
-  return ResetPasswordViewModel(authRepository);
+  return ResetPasswordViewModel();
 });

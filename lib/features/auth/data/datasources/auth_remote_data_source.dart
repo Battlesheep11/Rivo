@@ -15,37 +15,29 @@ class AuthRemoteDataSource {
     }
 
     Future<AuthResponse> signUp({
-  required String email,
-  required String password,
-  required String username,
-}) async {
-  final response = await client.auth.signUp(
-    email: email,
-    password: password,
-    data: {
-      'username': username,
-    },
-  );
+    required String username,
+    required String email,
+    required String password,
+  }) async {
+    final response = await client.auth.signUp(
+      email: email,
+      password: password,
+      data: {
+        'username': username, // Pass username to the trigger
+      },
+    );
 
-  if (response.user != null) {
-    final allowlisted = await client
-        .from('seller_allowlist')
-        .select('email')
-        .eq('email', email)
-        .maybeSingle();
+    if (response.user != null) {
+      // After successful signup, create a profile entry
+      // Note: first_name/last_name omitted to align with repository API
+      await client.from('profiles').insert({
+        'id': response.user!.id,
+        'username': username,
+      });
+    }
 
-    final isSeller = allowlisted != null;
-
-    await client.from('profiles').insert({
-      'id': response.user!.id,
-      'username': username,
-      'is_seller': isSeller,
-    });
+    return response;
   }
-
-  return response;
-}
-
 
   Future<bool> checkUsername(String username) async {
     final response = await client
@@ -87,52 +79,6 @@ class AuthRemoteDataSource {
       OAuthProvider.google,
       redirectTo: 'com.example.rivo_app_beta://login-callback',
     );
-  }
-
-  /// Sends a password reset email to the specified email address
-  /// 
-  /// Throws an exception if there's an error sending the email
-  Future<void> sendPasswordResetEmail(String email) async {
-    await client.auth.resetPasswordForEmail(
-      email,
-      redirectTo: 'com.example.rivo_app_beta://reset-password',
-    );
-  }
-
-  /// Resets the password using the provided token and new password
-  /// 
-  /// Throws an exception if there's an error resetting the password
-  Future<void> resetPassword({
-    required String token,
-    required String newPassword,
-  }) async {
-    try {
-      // First, sign out any existing session to prevent auto-login
-      await client.auth.signOut();
-      
-      // Verify the token and get the user's email
-      final session = await client.auth.verifyOTP(
-        token: token,
-        type: OtpType.recovery,
-      );
-      
-      if (session.user == null) {
-        throw Exception('Invalid or expired password reset link');
-      }
-      
-      // Update the password
-      await client.auth.updateUser(
-        UserAttributes(
-          password: newPassword,
-        ),
-      );
-      
-      // Sign out again to ensure the user needs to log in with the new password
-      await client.auth.signOut();
-      
-    } catch (e) {
-      throw Exception('Failed to reset password. The link may have expired or is invalid.');
-    }
   }
 }
 

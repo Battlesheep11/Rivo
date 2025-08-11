@@ -58,8 +58,6 @@ dependencies:
   app_links: ^6.4.0
   glass_kit: ^4.0.1
   photo_manager_image_provider: ^2.2.0
-  rxdart: ^0.28.0
-
   
   #supabase_flutter:
    # path: local_packages/supabase_flutter
