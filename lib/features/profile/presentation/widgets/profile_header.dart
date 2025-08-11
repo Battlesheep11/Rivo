@@ -38,7 +38,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
             children: [
               CircleAvatar(
                 radius: 40,
-                backgroundImage: NetworkImage(_profile.avatarUrl ?? 'https://i.pravatar.cc/150?u=${_profile.id}'),
+                backgroundImage: NetworkImage(_profile.avatarUrl ?? 'https://nbrqyxsxsokrwkhpdvov.supabase.co/storage/v1/object/public/icons/greyicon.PNG'),
               ),
               const SizedBox(width: 16),
               Expanded(

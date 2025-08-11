@@ -1,0 +1,4 @@
+"NSPhotoLibraryUsageDescription" = "אפשרי גישה לגלריה כדי לבחור תמונות וסרטונים לפוסטים ולפרופיל.";
+"NSPhotoLibraryAddUsageDescription" = "אפשרי לשמור מדיה מעובדת חזרה לגלריה.";
+"NSCameraUsageDescription" = "אפשרי גישה למצלמה לצילום תמונות וסרטונים לפוסטים ולפרופיל.";
+"NSMicrophoneUsageDescription" = "אפשרי גישה למיקרופון להקלטת שמע בעת צילום וידאו.";

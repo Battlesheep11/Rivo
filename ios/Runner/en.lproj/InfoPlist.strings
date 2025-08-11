@@ -1,0 +1,4 @@
+"NSPhotoLibraryUsageDescription" = "Allow access to your photos to select images and videos for posts and your profile.";
+"NSPhotoLibraryAddUsageDescription" = "Allow saving edited or exported media back to your library.";
+"NSCameraUsageDescription" = "Allow camera access to capture photos and videos for posts and your profile.";
+"NSMicrophoneUsageDescription" = "Allow microphone access to record audio when capturing videos.";

@@ -313,5 +313,8 @@
       "seconds": { "type": "String" }
     }
   },
-  "forgotPasswordRemembered": "זכרת את הסיסמה?"
+  "forgotPasswordRemembered": "זכרת את הסיסמה?",
+  "permission_camera_explain": "כדי לצלם תמונות או וידאו ב‑RIVO, אפשרי גישה למצלמה (ולמיקרופון לוידאו) בהגדרות.",
+  "permission_go_to_settings": "פתח הגדרות",
+  "permission_not_now": "לא עכשיו"
 }
