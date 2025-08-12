@@ -8,12 +8,12 @@ import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart
 import 'package:rivo_app_beta/core/localization/widgets/language_selector.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/google_signin_provider.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/signin_form_provider.dart';
-import 'package:rivo_app_beta/features/auth/presentation/providers/signup_form_provider.dart';
-import 'package:rivo_app_beta/features/auth/presentation/state/auth_mode.dart';
-import 'package:rivo_app_beta/features/auth/presentation/viewmodels/signup_form_view_model.dart';
-import 'package:rivo_app_beta/features/auth/presentation/widgets/password_strength_indicator.dart';
-import 'package:rivo_app_beta/features/auth/presentation/forms/password.dart';
-import 'package:rivo_app_beta/features/auth/presentation/forms/confirmed_password.dart';
+import 'package:rivo_app_beta/core/design_system/app_error_text.dart';
+import 'package:rivo_app_beta/core/localization/widgets/language_selector.dart';
+import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
+
+// ⬇️ add this
+import 'package:rivo_app_beta/features/auth/presentation/providers/apple_signin_provider.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -31,56 +31,19 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   bool _confirmPasswordVisible = false;
   bool _termsAccepted = false;
 
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
   @override
+  @override
   void initState() {
     super.initState();
-
-    _emailController.addListener(() {
-      if (_authMode == AuthMode.signIn) {
-        ref.read(signinFormViewModelProvider.notifier).onEmailChanged(_emailController.text);
-      } else {
-        ref.read(signupFormViewModelProvider.notifier).onEmailChanged(_emailController.text);
-      }
-    });
-
-    _passwordController.addListener(() {
-      debugPrint('[DEBUG] PasswordController changed: ${_passwordController.text}');
-      if (_authMode == AuthMode.signIn) {
-        ref.read(signinFormViewModelProvider.notifier).onPasswordChanged(_passwordController.text);
-      } else {
-        ref.read(signupFormViewModelProvider.notifier).onPasswordChanged(_passwordController.text);
-      }
-    });
-
-    _firstNameController.addListener(() {
-      debugPrint('[DEBUG] FirstNameController changed: ${_firstNameController.text}');
-      ref.read(signupFormViewModelProvider.notifier).onFirstNameChanged(_firstNameController.text);
-    });
-    _lastNameController.addListener(() {
-      debugPrint('[DEBUG] LastNameController changed: ${_lastNameController.text}');
-      ref.read(signupFormViewModelProvider.notifier).onLastNameChanged(_lastNameController.text);
-    });
-    _usernameController.addListener(() {
-      debugPrint('[DEBUG] UsernameController changed: ${_usernameController.text}');
-      ref.read(signupFormViewModelProvider.notifier).onUsernameChanged(_usernameController.text);
-    });
-    _confirmPasswordController.addListener(() {
-      debugPrint('[DEBUG] ConfirmPasswordController changed: ${_confirmPasswordController.text}');
-      ref.read(signupFormViewModelProvider.notifier).onConfirmPasswordChanged(_confirmPasswordController.text);
-    });
   }
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
     _emailController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
@@ -160,6 +123,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final localizations = AppLocalizations.of(context)!;
     final signinState = ref.watch(signinFormViewModelProvider);
     final googleLoading = ref.watch(googleSignInViewModelProvider(context));
+    final appleLoading = ref.watch(appleSignInViewModelProvider(context)); // 
 
     final isSubmitting = signinState.isSubmitting;
 
@@ -204,9 +168,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           Padding(
             padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
             child: AppErrorText(message: signinState.errorMessage!),
-          ) else const SizedBox(height: 8),
-        // Forgot password entry removed
-        const SizedBox(height: 8),
+          )
+        else
+          const SizedBox(height: 24),
         ElevatedButton(
           onPressed: onSubmit,
           style: ElevatedButton.styleFrom(
@@ -225,11 +189,27 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         const SizedBox(height: 24),
         Row(
           children: [
-            Expanded(child: _buildSocialButton(localizations.authGoogle, 'assets/icons/google_logo.svg', () {
-              ref.read(googleSignInViewModelProvider(context).notifier).signInWithGoogle();
-            }, isLoading: googleLoading)),
+            Expanded(
+              child: _buildSocialButton(
+                localizations.authGoogle,
+                'assets/icons/google_logo.svg',
+                () {
+                  ref.read(googleSignInViewModelProvider(context).notifier).signInWithGoogle();
+                },
+                isLoading: googleLoading,
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _buildSocialButton(localizations.authApple, 'assets/icons/apple_logo.svg', () {})),
+            Expanded(
+              child: _buildSocialButton(
+                localizations.authApple,
+                'assets/icons/apple_logo.svg',
+                () {
+                  ref.read(appleSignInViewModelProvider(context).notifier).signInWithApple();
+                },
+                isLoading: appleLoading,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -255,8 +235,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final signupState = ref.watch(signupFormViewModelProvider);
     final signupNotifier = ref.read(signupFormViewModelProvider.notifier);
     final googleLoading = ref.watch(googleSignInViewModelProvider(context));
-
-    final isStep1Valid = Formz.validate([signupState.firstName, signupState.lastName, signupState.username, signupState.email]);
+    final appleLoading = ref.watch(appleSignInViewModelProvider(context)); // 
+    final isStep1Valid = formState.isStep1Valid;
 
     return Column(
       key: const ValueKey('userDetailsStep'),
@@ -266,40 +246,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         const SizedBox(height: 8),
         Text(localizations.authSubheading, style: const TextStyle(fontSize: 14, color: Color(0xFF666666))),
         const SizedBox(height: 32),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _firstNameController,
-                label: localizations.authFirstName,
-                hintText: localizations.authFirstNameHint,
-                icon: Icons.person_outline,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildTextField(
-                controller: _lastNameController,
-                label: localizations.authLastName,
-                hintText: localizations.authLastNameHint,
-                icon: Icons.person_outline,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _buildTextField(
-          controller: _usernameController,
-          hintText: localizations.authUsernameHint,
-          icon: Icons.account_circle_outlined,
-        ),
-        if (signupState.usernameExists)
-          Padding(
-            padding: const EdgeInsets.only(top: 4, left: 4),
-            child: Text(localizations.authUsernameTaken, style: const TextStyle(color: Colors.red, fontSize: 13)),
-          ),
-        const SizedBox(height: 16),
         _buildTextField(
           controller: _emailController,
           label: localizations.email,
@@ -348,11 +294,27 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         const SizedBox(height: 24),
         Row(
           children: [
-            Expanded(child: _buildSocialButton(localizations.authGoogle, 'assets/icons/google_logo.svg', () {
-              ref.read(googleSignInViewModelProvider(context).notifier).signInWithGoogle();
-            }, isLoading: googleLoading)),
+            Expanded(
+              child: _buildSocialButton(
+                localizations.authGoogle,
+                'assets/icons/google_logo.svg',
+                () {
+                  ref.read(googleSignInViewModelProvider(context).notifier).signInWithGoogle();
+                },
+                isLoading: googleLoading,
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _buildSocialButton(localizations.authApple, 'assets/icons/apple_logo.svg', () {})),
+            Expanded(
+              child: _buildSocialButton(
+                localizations.authApple,
+                'assets/icons/apple_logo.svg',
+                () {
+                  ref.read(appleSignInViewModelProvider(context).notifier).signInWithApple();
+                },
+                isLoading: appleLoading,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -534,7 +496,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Widget _buildSocialButton(String text, String assetName, VoidCallback onPressed, {bool isLoading = false}) {
     return OutlinedButton.icon(
-      onPressed: onPressed,
+      onPressed: isLoading ? null : onPressed,
       icon: isLoading
           ? const SizedBox.shrink()
           : SvgPicture.asset(assetName, height: 18, width: 18),
@@ -569,11 +531,23 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           visualDensity: VisualDensity.compact,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-        const SizedBox(width: 8),
-        const Expanded(
-          child: Text(
-            termsText,
-            style: TextStyle(fontSize: 14, color: Color(0xFF666666), fontFamily: 'Inter'),
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              style: const TextStyle(fontSize: 14, color: Color(0xFF666666), fontFamily: 'Inter'),
+              children: [
+                TextSpan(text: localizations.authTermsAccept),
+                TextSpan(
+                  text: localizations.authTermsOfService,
+                  style: const TextStyle(color: Color(0xFF1A73E8), fontWeight: FontWeight.w500),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      // ignore: avoid_print
+                      print('Terms of Service tapped');
+                    },
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -588,8 +562,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       onPressed: () {
         setState(() {
           _authMode = isSignIn ? AuthMode.signUp : AuthMode.signIn;
-          _firstNameController.clear();
-          _lastNameController.clear();
           _emailController.clear();
           _usernameController.clear();
           _passwordController.clear();

@@ -14,7 +14,6 @@ class SignupScreen extends ConsumerStatefulWidget {
 }
 
 class _SignupScreenState extends ConsumerState<SignupScreen> {
-  final fullNameController = TextEditingController();
   final usernameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -23,23 +22,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   @override
   void initState() {
     super.initState();
-    fullNameController.addListener(_onFirstNameChanged);
     usernameController.addListener(_onUsernameChanged);
     emailController.addListener(_onEmailChanged);
     passwordController.addListener(_onPasswordChanged);
-    confirmPasswordController.addListener(_onConfirmPasswordChanged);
-  }
-
-  void _onFirstNameChanged() {
-    // We'll need to split the fullNameController text into first and last name
-    // For now, we'll just use the first word as first name and the rest as last name
-    final fullName = fullNameController.text;
-    final parts = fullName.split(' ');
-    final firstName = parts.isNotEmpty ? parts[0] : '';
-    final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
-    
-    ref.read(signupFormViewModelProvider.notifier).onFirstNameChanged(firstName);
-    ref.read(signupFormViewModelProvider.notifier).onLastNameChanged(lastName);
   }
 
   void _onUsernameChanged() {
@@ -60,7 +45,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   void dispose() {
-        fullNameController.dispose();
     usernameController.dispose();
     emailController.dispose();
     passwordController.dispose();
@@ -85,15 +69,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppTextField(controller: fullNameController, hintText: localizations.authFullName),
-            const SizedBox(height: 16),
-            AppTextField(controller: usernameController, hintText: localizations.authUsername),
-            if (state.usernameExists)
-              AppErrorText(message: localizations.authUsernameTaken),
-            const SizedBox(height: 16),
-            AppTextField(controller: emailController, hintText: localizations.email),
-            if (state.emailExists)
-              AppErrorText(message: localizations.authEmailTaken),
+            AppTextField(controller: usernameController, hintText: 'Username'),
+            if (state.isUsernameTaken)
+              const AppErrorText(message: 'Username is already taken'),
             const SizedBox(height: 16),
             AppTextField(controller: passwordController, hintText: localizations.authPasswordHint, obscureText: true),
             // Show password validation errors

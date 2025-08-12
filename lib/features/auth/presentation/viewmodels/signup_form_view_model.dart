@@ -9,8 +9,6 @@ import 'package:rivo_app_beta/features/auth/domain/repositories/auth_repository.
 
 import 'package:rivo_app_beta/features/auth/presentation/forms/confirmed_password.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/email.dart';
-import 'package:rivo_app_beta/features/auth/presentation/forms/first_name.dart';
-import 'package:rivo_app_beta/features/auth/presentation/forms/last_name.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/password.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/username.dart';
 import 'package:rivo_app_beta/core/navigation/navigator_key_provider.dart';
@@ -18,8 +16,6 @@ import 'package:rivo_app_beta/core/security/field_security.dart';
 import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
 
 class SignupFormState {
-  final FirstName firstName;
-  final LastName lastName;
   final Username username;
   final Email email;
   final Password password;
@@ -34,8 +30,6 @@ class SignupFormState {
   final bool emailExists;
 
   SignupFormState({
-    this.firstName = const FirstName.pure(),
-    this.lastName = const LastName.pure(),
     this.username = const Username.pure(),
     this.email = const Email.pure(),
     this.password = const Password.pure(),
@@ -51,9 +45,7 @@ class SignupFormState {
     this.emailExists = false,
   });
 
-  SignupFormState copyWith({
-    FirstName? firstName,
-    LastName? lastName,
+    SignupFormState copyWith({
     Username? username,
     Email? email,
     Password? password,
@@ -69,8 +61,6 @@ class SignupFormState {
     bool? emailExists,
   }) {
     return SignupFormState(
-      firstName: firstName ?? this.firstName,
-      lastName: lastName ?? this.lastName,
       username: username ?? this.username,
       email: email ?? this.email,
       password: password ?? this.password,
@@ -93,35 +83,17 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
   final Ref _ref;
 
   SignupFormViewModel({
-    required AuthRepository repository,
-    required Ref ref,
-  })  : _repository = repository,
-        _ref = ref,
-        super(SignupFormState());
-
-  void onFirstNameChanged(String value) {
-    final firstName = FirstName.dirty(value);
-    state = state.copyWith(
-      firstName: firstName,
-      isValid: Formz.validate([firstName, state.lastName, state.username, state.email, state.password, state.confirmedPassword]),
-    );
-  }
-
-  void onLastNameChanged(String value) {
-    final lastName = LastName.dirty(value);
-    state = state.copyWith(
-      lastName: lastName,
-      isValid: Formz.validate([state.firstName, lastName, state.username, state.email, state.password, state.confirmedPassword]),
-    );
-  }
+    required this.repository,
+    required this.ref,
+  }) : super(SignupFormState());
 
   /// Called when the username text field changes. Resets usernameExists flag.
   void onUsernameChanged(String value) {
     final username = Username.dirty(value);
     state = state.copyWith(
       username: username,
-      isValid: Formz.validate([state.firstName, state.lastName, username, state.email, state.password, state.confirmedPassword]),
-      usernameExists: false,
+      isStep1Valid: Formz.validate([username, state.email]),
+      isUsernameTaken: false,
     );
   }
 
@@ -130,8 +102,8 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
     final email = Email.dirty(value);
     state = state.copyWith(
       email: email,
-      isValid: Formz.validate([state.firstName, state.lastName, state.username, email, state.password, state.confirmedPassword]),
-      emailExists: false,
+      isStep1Valid: Formz.validate([state.username, email]),
+      isEmailTaken: false,
     );
   }
 
@@ -142,8 +114,7 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
     state = state.copyWith(
       password: password,
       confirmedPassword: confirmedPassword,
-      passwordStrength: strength,
-      isValid: Formz.validate([state.firstName, state.lastName, state.username, state.email, password, confirmedPassword]),
+      isValid: Formz.validate([state.username, state.email, password, confirmedPassword]),
     );
   }
 
@@ -151,7 +122,7 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
     final confirmedPassword = ConfirmedPassword.dirty(password: state.password.value, value: value);
     state = state.copyWith(
       confirmedPassword: confirmedPassword,
-      isValid: Formz.validate([state.firstName, state.lastName, state.username, state.email, state.password, confirmedPassword]),
+      isValid: Formz.validate([state.username, state.email, state.password, confirmedPassword]),
     );
   }
 
@@ -217,11 +188,11 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
       state = state.copyWith(isSubmitting: true, isFailure: false, isSuccess: false);
       overlay.show(context);
 
-      final result = await _repository.signUp(
-        username: username,
-        email: email,
-        password: state.password.value,
-      );
+    final result = await repository.signUp(
+      username: state.username.value,
+      email: state.email.value,
+      password: state.password.value,
+    );
 
       final currentContext = _ref.read(navigatorKeyProvider).currentContext;
       if (currentContext != null && currentContext.mounted) {

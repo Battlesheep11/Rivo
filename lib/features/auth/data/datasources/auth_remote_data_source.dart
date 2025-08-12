@@ -1,4 +1,11 @@
+// lib/features/auth/data/datasources/auth_remote_data_source.dart
+import 'dart:convert'; // utf8
+import 'dart:math';    // Random.secure
+
+import 'package:crypto/crypto.dart'; // sha256
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:rivo_app_beta/features/auth/domain/entities/user_entity.dart';
 
 class AuthRemoteDataSource {
@@ -6,8 +13,7 @@ class AuthRemoteDataSource {
 
   AuthRemoteDataSource({required this.client});
 
-  /// Stream of auth state → maps to your domain entity.
-  /// Also guarantees a profile row exists once a user is logged in.
+  /// Emits your domain user (or null) on auth state changes
   Stream<UserEntity?> authStateChanges() {
     return client.auth.onAuthStateChange.map((event) {
       final user = event.session?.user;
@@ -17,8 +23,15 @@ class AuthRemoteDataSource {
       return UserEntity(id: user.id, email: user.email ?? '');
     });
   }
+    return client.auth.onAuthStateChange.map((event) {
+      final user = event.session?.user;
+      if (user == null) return null;
+      return UserEntity(id: user.id, email: user.email ?? '');
+    });
+  }
 
   /// Email/password sign up + store username.
+  Future<AuthResponse> signUp({
   Future<AuthResponse> signUp({
     required String username,
     required String email,
@@ -28,19 +41,9 @@ class AuthRemoteDataSource {
       email: email,
       password: password,
       data: {
-        'username': username, // Pass username to the trigger
+        'username': username,
       },
     );
-
-    if (response.user != null) {
-      // After successful signup, create a profile entry
-      // Note: first_name/last_name omitted to align with repository API
-      await client.from('profiles').insert({
-        'id': response.user!.id,
-        'username': username,
-      });
-    }
-
     return response;
   }
 
@@ -106,55 +109,83 @@ class AuthRemoteDataSource {
   Future<AuthResponse> signIn({
     required String email,
     required String password,
-  }) {
-    return client.auth.signInWithPassword(email: email, password: password);
-  }
-
-  /// Google OAuth (Android/iOS Native).
-  /// ודאי שהוספת ב־AndroidManifest את ה־intent filter עם ה־scheme com.rivo.app
-  Future<void> signInWithGoogle() async {
-    try {
-      await client.auth.signInWithOAuth(
-        Provider.google,
-        redirectTo: 'com.rivo.app://login-callback',
-        queryParams: const {
-          'access_type': 'offline',
-          'prompt': 'consent',
-        },
-      );
-
-      final s = client.auth.currentSession;
-      if (s?.user != null) {
-        await ensureProfileCreatedFor(s!.user);
-      }
-    } catch (_) {
-      // intentionally swallow to avoid breaking auth flow
-    }
-  }
-
-  Future<void> signOut() => client.auth.signOut();
-
-  User? getCurrentUser() => client.auth.currentUser;
-
-  Future<void> sendPasswordResetEmail(String email) {
-    return client.auth.resetPasswordForEmail(
-      email,
-      redirectTo: 'com.rivo.app://reset-password',
-    );
-  }
-
-  Future<void> resetPassword({
-    required String token, // kept for API symmetry
-    required String newPassword,
   }) async {
-    try {
-      await client.auth.updateUser(UserAttributes(password: newPassword));
-    } catch (_) {
-      throw Exception(
-        'Failed to reset password. The link may have expired or is invalid.',
-      );
-    }
+    final response = await client.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+    return response;
   }
 
+  Future<void> signOut() async {
+    await client.auth.signOut();
+  }
 
+  User? getCurrentUser() {
+    return client.auth.currentUser;
+  }
+
+  Future<void> signInWithGoogle() async {
+    await client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: 'com.example.rivo_app_beta://login-callback',
+    );
+    // Note: your authStateChanges() stream should take care of navigation.
+  }
+
+  Future<bool> checkUsername(String username) async {
+    final response =
+        await client.from('profiles').select('id').eq('username', username);
+    return response.isNotEmpty;
+  }
+
+  Future<bool> checkEmail(String email) async {
+    final response =
+        await client.from('profiles').select('id').eq('email', email);
+    return response.isNotEmpty;
+  }
+
+  // -------- Apple Sign-In (native token flow via Supabase) --------
+
+  String _randomNonce([int length = 32]) {
+    const charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(
+      length,
+      (_) => charset[random.nextInt(charset.length)],
+    ).join();
+  }
+
+  String _sha256ofString(String input) {
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
+  Future<AuthResponse> signInWithApple() async {
+    final rawNonce = _randomNonce();
+    final hashedNonce = _sha256ofString(rawNonce);
+
+    final appleCred = await SignInWithApple.getAppleIDCredential(
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+      nonce: hashedNonce, // Apple expects SHA256(nonce)
+    );
+
+    final idToken = appleCred.identityToken;
+    if (idToken == null) {
+      throw Exception('No identityToken from Apple');
+    }
+
+    final res = await client.auth.signInWithIdToken(
+      provider: OAuthProvider.apple,
+      idToken: idToken,
+      nonce: rawNonce, // RAW nonce here
+    );
+
+    return res;
+  }
 }
