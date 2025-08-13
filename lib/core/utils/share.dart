@@ -1,9 +1,11 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Build the base URL for invoking Supabase Edge Functions for this project.
-/// Example: https://xyzcompany.supabase.co/functions/v1
+/// Example produced: https://xyzcompany.supabase.co/functions/v1
 String _functionsBaseUrl(SupabaseClient client) {
-  final base = client.supabaseUrl; // e.g., https://xyzcompany.supabase.co
+  // rest.url is like: https://xyzcompany.supabase.co/rest/v1
+  final restUri = Uri.parse(client.rest.url);
+  final base = '${restUri.scheme}://${restUri.authority}';
   return '$base/functions/v1';
 }
 

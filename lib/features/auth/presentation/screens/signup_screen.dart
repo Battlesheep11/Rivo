@@ -25,6 +25,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     usernameController.addListener(_onUsernameChanged);
     emailController.addListener(_onEmailChanged);
     passwordController.addListener(_onPasswordChanged);
+    confirmPasswordController.addListener(_onConfirmPasswordChanged);
   }
 
   void _onUsernameChanged() {
@@ -70,7 +71,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             AppTextField(controller: usernameController, hintText: 'Username'),
-            if (state.isUsernameTaken)
+            if (state.usernameExists)
               const AppErrorText(message: 'Username is already taken'),
             const SizedBox(height: 16),
             AppTextField(controller: passwordController, hintText: localizations.authPasswordHint, obscureText: true),

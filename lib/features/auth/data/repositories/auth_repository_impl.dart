@@ -35,25 +35,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  @override
-  Future<Either<String, bool>> checkUsername(String username) async {
-    try {
-      final exists = await remoteDataSource.checkUsername(username);
-      return right(exists);
-    } catch (e) {
-      return left(e.toString());
-    }
-  }
 
-  @override
-  Future<Either<String, bool>> checkEmail(String email) async {
-    try {
-      final exists = await remoteDataSource.checkEmail(email);
-      return right(exists);
-    } catch (e) {
-      return left(e.toString());
-    }
-  }
 
   @override
   Future<Either<String, bool>> checkUsername(String username) async {
@@ -125,8 +107,6 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  @override
-  Future<void> signInWithGoogle() async {
   @override
   Future<void> signInWithGoogle() async {
     await remoteDataSource.signInWithGoogle();

@@ -107,7 +107,7 @@ class FeedRemoteDataSource with RateLimited {
           .from('feed_post')
           .select('*, product(*, media(*))')
           .eq('creator_id', validatedUserId)
-          .is_('deleted_at', null) // exclude soft-deleted
+          .isFilter('deleted_at', null) // exclude soft-deleted
           .order('created_at', ascending: false);
 
       // Supabase returns an empty list when no posts are found
@@ -182,9 +182,7 @@ class FeedRemoteDataSource with RateLimited {
             avatar_url
           )
         ''')
-          // keep your existing in-filter style
-          .filter('id', 'in', '(${validatedPostIds.join(",")})')
-          .is_('deleted_at', null) // exclude soft-deleted
+          .filter('id', 'in', '(${validatedPostIds.map((e) => "'$e'").join(",")})')
           .order('created_at', ascending: false);
 
       final likesResponse = await _client
@@ -343,7 +341,7 @@ class FeedRemoteDataSource with RateLimited {
       final postResponse = await _client
           .from('feed_post')
           .select(postQuery)
-          .is_('deleted_at', null) // exclude soft-deleted
+          .isFilter('deleted_at', null) // exclude soft-deleted
           .order('created_at', ascending: false);
 
       final likesResponse = await _client
@@ -446,8 +444,7 @@ class FeedRemoteDataSource with RateLimited {
       if (hard) 'delete_product': deleteProduct,
     });
     if (res.status != 200) {
-      throw AppException.unexpected('delete_post_failed',
-          code: 'delete_post_failed');
+      throw AppException.unexpected('delete_post_failed', code: 'delete_post_failed');
     }
   }
 }

@@ -31,8 +31,6 @@ Future<void> main() async {
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabaseAnonKey,
-      // OAuth on mobile requires PKCE
-      authFlowType: AuthFlowType.pkce,
     );
 
 

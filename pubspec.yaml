@@ -26,6 +26,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   crypto: ^3.0.3
   result_dart: ^1.1.0
+  mime: ^1.0.5
 
   # State & routing
   flutter_riverpod: ^2.5.1
@@ -48,6 +49,7 @@ dependencies:
   video_player: ^2.7.0
   video_compress: ^3.1.4
   image: ^4.0.17
+  flutter_image_compress: ^2.3.0
   photo_manager: ^3.0.0
   photo_manager_image_provider: ^2.2.0
   device_info_plus: ^9.1.1
@@ -61,8 +63,8 @@ dependencies:
   app_links: ^3.4.1
 
   # Supabase & Apple (v1-compatible)
-  supabase_flutter: ^1.10.16
-  sign_in_with_apple: ^5.0.0
+  supabase_flutter: ^2.9.1
+  sign_in_with_apple: ^6.1.0
 
   # i18n
   flutter_localizations:

@@ -16,10 +16,11 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStateMixin {
+class _ProfilePageState extends State<ProfilePage>
+    with SingleTickerProviderStateMixin {
   final ProfileService _profileService = ProfileService();
   late final TabController _tabController;
-  late final String _userId;
+  String? _userId;
 
   StreamSubscription<Map<String, dynamic>>? _profileSubscription;
 
@@ -31,7 +32,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    _userId = Supabase.instance.client.auth.currentUser!.id;
+    _userId = Supabase.instance.client.auth.currentUser?.id;
     _tabController = TabController(length: 2, vsync: this);
     _subscribeToProfileUpdates();
   }
@@ -44,38 +45,61 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   }
 
   void _subscribeToProfileUpdates() {
+    // If no user yet, show a friendly state instead of crashing.
+    final uid = _userId;
+    if (uid == null || uid.isEmpty) {
+      setState(() {
+        _isLoading = false;
+        _error = 'Not logged in';
+      });
+      return;
+    }
+
     _loadProfile();
-    _profileSubscription = _profileService.watchProfileData(_userId)?.listen(
-      (profileData) {
-        if (mounted) {
-          setState(() {
-            _profile = Profile.fromData(profileData);
-            _isLoading = false;
-            _error = null;
-          });
+
+    _profileSubscription =
+        _profileService.watchProfileData(uid)?.listen((profileData) {
+      if (!mounted) return;
+      setState(() {
+        // Accepts either joined payload or plain row.
+        final parsed = Profile.tryParse(profileData);
+        if (parsed == null) {
+          _profile = null; // e.g., row deleted or not created yet
+        } else {
+          _profile = parsed;
         }
-      },
-      onError: (error) {
-        if (mounted) {
-          setState(() {
-            _error = error.toString();
-            _isLoading = false;
-          });
-        }
-      },
-      cancelOnError: false,
-    );
+        _isLoading = false;
+        _error = null;
+      });
+    }, onError: (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error.toString();
+        _isLoading = false;
+      });
+    }, cancelOnError: false);
   }
 
   Future<void> _loadProfile() async {
+    final uid = _userId;
+    if (uid == null || uid.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = 'Not logged in';
+      });
+      return;
+    }
+
     if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
-      final profileData = await _profileService.getProfileData(_userId);
+      final profileData = await _profileService.getProfileData(uid);
       if (!mounted) return;
       setState(() {
-        _profile = Profile.fromData(profileData);
+        final parsed = Profile.tryParse(profileData);
+        _profile = parsed; // can be null if not found
         _isLoading = false;
         _error = null;
       });
@@ -89,48 +113,49 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   }
 
   Future<void> _deleteUser() async {
-  final accessToken = Supabase.instance.client.auth.currentSession?.accessToken;
+    final accessToken =
+        Supabase.instance.client.auth.currentSession?.accessToken;
 
-  if (accessToken == null) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Not logged in')),
-    );
-    return;
-  }
-
-  setState(() => _isDeleting = true);
-
-  try {
-    final response = await http.post(
-      Uri.parse('https://nbrqyxsxsokrwkhpdvov.supabase.co/functions/v1/delete_user_self'),
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (!mounted) return;
-
-    if (response.statusCode >= 400) {
+    if (accessToken == null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${response.body}')),
+        const SnackBar(content: Text('Not logged in')),
+      );
+      return;
+    }
+
+    setState(() => _isDeleting = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'https://nbrqyxsxsokrwkhpdvov.supabase.co/functions/v1/delete_user_self'),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode >= 400) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${response.body}')),
+        );
+        setState(() => _isDeleting = false);
+      } else {
+        await Supabase.instance.client.auth.signOut();
+        if (!mounted) return;
+        context.go('/');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Exception: $e')),
       );
       setState(() => _isDeleting = false);
-    } else {
-      await Supabase.instance.client.auth.signOut();
-      if (!mounted) return;
-      context.go('/');
     }
-  } catch (e) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Exception: $e')),
-    );
-    setState(() => _isDeleting = false);
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -210,7 +235,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
               child: ElevatedButton(
                 onPressed: _isDeleting ? null : _deleteUser,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red[100],
+                  backgroundColor: Colors.redAccent.withOpacity(0.15),
                   foregroundColor: Colors.red[800],
                 ),
                 child: _isDeleting
@@ -288,7 +313,5 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
-    return false;
-  }
+  bool shouldRebuild(_SliverTabBarDelegate oldDelegate) => false;
 }

@@ -1,5 +1,5 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/datasources/feed_remote_data_source.dart';
 import '../../data/repositories/feed_repository_impl.dart';
 import 'feed_repository.dart';

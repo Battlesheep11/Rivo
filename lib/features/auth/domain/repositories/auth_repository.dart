@@ -24,7 +24,4 @@ abstract class AuthRepository {
     Future<void> signInWithApple();
 
 
-  Future<Either<String, bool>> checkUsername(String username);
-
-  Future<Either<String, bool>> checkEmail(String email);
 }

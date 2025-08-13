@@ -1,5 +1,5 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'delete_user_repository.dart';
 
 final deleteUserRepositoryProvider = Provider<DeleteUserRepository>((ref) {

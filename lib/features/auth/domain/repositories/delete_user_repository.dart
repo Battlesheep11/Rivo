@@ -13,12 +13,14 @@ class SupabaseDeleteUserRepository implements DeleteUserRepository {
   Future<bool> deleteUser() async {
     final response = await client.functions.invoke('delete_user_self');
 
-    if ((response.status ?? 500) >= 400) {
-      final errorMessage = response.data?['error'] ?? 'Unknown error';
+    // status is non-null in v2, so no null-coalescing
+    if (response.status >= 400) {
+      final errorMessage = (response.data is Map)
+          ? (response.data as Map)['error'] ?? 'Unknown error'
+          : 'Unknown error';
       throw Exception('Failed to delete user: $errorMessage');
     }
 
-    // Optionally inspect response.data if needed
     return true;
   }
 }

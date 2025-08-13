@@ -1,5 +1,5 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rivo_app_beta/features/discovery/data/datasources/discovery_remote_data_source.dart';
 import 'package:rivo_app_beta/features/discovery/data/repositories/discovery_repository_impl.dart';
 import 'package:rivo_app_beta/features/discovery/domain/entities/discovery_tag_entity.dart';

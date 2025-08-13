@@ -8,11 +8,14 @@ import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart
 import 'package:rivo_app_beta/core/localization/widgets/language_selector.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/google_signin_provider.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/signin_form_provider.dart';
-import 'package:rivo_app_beta/core/design_system/app_error_text.dart';
-import 'package:rivo_app_beta/core/localization/widgets/language_selector.dart';
-import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
+import 'package:rivo_app_beta/features/auth/presentation/providers/signup_form_provider.dart';
+import 'package:rivo_app_beta/features/auth/presentation/state/auth_mode.dart';
+import 'package:rivo_app_beta/features/auth/presentation/viewmodels/signup_form_view_model.dart';
+import 'package:rivo_app_beta/features/auth/presentation/widgets/password_strength_indicator.dart';
+import 'package:rivo_app_beta/features/auth/presentation/forms/password.dart';
+import 'package:rivo_app_beta/features/auth/presentation/forms/confirmed_password.dart';
 
-// ⬇️ add this
+// ⬇️ Apple Sign-In provider (from v2)
 import 'package:rivo_app_beta/features/auth/presentation/providers/apple_signin_provider.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
@@ -37,9 +40,34 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   final _confirmPasswordController = TextEditingController();
 
   @override
-  @override
   void initState() {
     super.initState();
+
+    _emailController.addListener(() {
+      if (_authMode == AuthMode.signIn) {
+        ref.read(signinFormViewModelProvider.notifier).onEmailChanged(_emailController.text);
+      } else {
+        ref.read(signupFormViewModelProvider.notifier).onEmailChanged(_emailController.text);
+      }
+    });
+
+    _passwordController.addListener(() {
+      debugPrint('[DEBUG] PasswordController changed: ${_passwordController.text}');
+      if (_authMode == AuthMode.signIn) {
+        ref.read(signinFormViewModelProvider.notifier).onPasswordChanged(_passwordController.text);
+      } else {
+        ref.read(signupFormViewModelProvider.notifier).onPasswordChanged(_passwordController.text);
+      }
+    });
+
+    _usernameController.addListener(() {
+      debugPrint('[DEBUG] UsernameController changed: ${_usernameController.text}');
+      ref.read(signupFormViewModelProvider.notifier).onUsernameChanged(_usernameController.text);
+    });
+    _confirmPasswordController.addListener(() {
+      debugPrint('[DEBUG] ConfirmPasswordController changed: ${_confirmPasswordController.text}');
+      ref.read(signupFormViewModelProvider.notifier).onConfirmPasswordChanged(_confirmPasswordController.text);
+    });
   }
 
   @override
@@ -53,15 +81,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // If a child widget is provided (from a nested route), render it directly
-
-
     ref.listen<SignupFormState>(signupFormViewModelProvider, (previous, next) {
       if (next.isSubmitting) {
-        // Handle loading state
+        // loading started
       }
       if (!next.isSubmitting && (previous?.isSubmitting ?? false)) {
-        // Handle end of loading state
+        // loading ended
       }
     });
 
@@ -123,10 +148,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final localizations = AppLocalizations.of(context)!;
     final signinState = ref.watch(signinFormViewModelProvider);
     final googleLoading = ref.watch(googleSignInViewModelProvider(context));
-    final appleLoading = ref.watch(appleSignInViewModelProvider(context)); // 
+    // ⬇️ Apple loading (from v2)
+    final appleLoading = ref.watch(appleSignInViewModelProvider(context));
 
     final isSubmitting = signinState.isSubmitting;
-
 
     ref.listen(signinFormViewModelProvider, (previous, next) {
       if (next.isSuccess && context.mounted) {
@@ -135,8 +160,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     });
 
     final VoidCallback? onSubmit = !isSubmitting
-      ? () => ref.read(signinFormViewModelProvider.notifier).submit(context)
-      : null;
+        ? () => ref.read(signinFormViewModelProvider.notifier).submit(context)
+        : null;
 
     return Column(
       key: const ValueKey('signInForm'),
@@ -170,7 +195,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             child: AppErrorText(message: signinState.errorMessage!),
           )
         else
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
+        const SizedBox(height: 8),
         ElevatedButton(
           onPressed: onSubmit,
           style: ElevatedButton.styleFrom(
@@ -181,7 +207,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, fontFamily: 'Inter'),
           ),
           child: isSubmitting
-              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                )
               : Text(localizations.signIn),
         ),
         const SizedBox(height: 24),
@@ -204,6 +234,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               child: _buildSocialButton(
                 localizations.authApple,
                 'assets/icons/apple_logo.svg',
+                // ⬇️ from v2: actual Apple call + loading
                 () {
                   ref.read(appleSignInViewModelProvider(context).notifier).signInWithApple();
                 },
@@ -221,12 +252,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   Widget _buildSignUpForm(BuildContext context) {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
-      transitionBuilder: (child, animation) {
-        return FadeTransition(opacity: animation, child: child);
-      },
-      child: _signupStep == _SignupStep.userDetails
-          ? _buildUserDetailsStep(context)
-          : _buildCreatePasswordStep(context),
+      transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+      child: _signupStep == _SignupStep.userDetails ? _buildUserDetailsStep(context) : _buildCreatePasswordStep(context),
     );
   }
 
@@ -235,8 +262,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final signupState = ref.watch(signupFormViewModelProvider);
     final signupNotifier = ref.read(signupFormViewModelProvider.notifier);
     final googleLoading = ref.watch(googleSignInViewModelProvider(context));
-    final appleLoading = ref.watch(appleSignInViewModelProvider(context)); // 
-    final isStep1Valid = formState.isStep1Valid;
+    // ⬇️ Apple loading (from v2)
+    final appleLoading = ref.watch(appleSignInViewModelProvider(context));
+
+    final isStep1Valid = Formz.validate([signupState.username, signupState.email]);
+
 
     return Column(
       key: const ValueKey('userDetailsStep'),
@@ -246,6 +276,17 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         const SizedBox(height: 8),
         Text(localizations.authSubheading, style: const TextStyle(fontSize: 14, color: Color(0xFF666666))),
         const SizedBox(height: 32),
+        _buildTextField(
+          controller: _usernameController,
+          hintText: localizations.authUsernameHint,
+          icon: Icons.account_circle_outlined,
+        ),
+        if (signupState.usernameExists)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 4),
+            child: Text(localizations.authUsernameTaken, style: const TextStyle(color: Colors.red, fontSize: 13)),
+          ),
+        const SizedBox(height: 16),
         _buildTextField(
           controller: _emailController,
           label: localizations.email,
@@ -309,6 +350,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               child: _buildSocialButton(
                 localizations.authApple,
                 'assets/icons/apple_logo.svg',
+                // ⬇️ from v2: actual Apple call + loading
                 () {
                   ref.read(appleSignInViewModelProvider(context).notifier).signInWithApple();
                 },
@@ -350,7 +392,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
     final VoidCallback? onSubmit = (isValid && !isSubmitting && _termsAccepted)
         ? () async {
-            bool success = await ref.read(signupFormViewModelProvider.notifier).submit(context);
+            final success = await ref.read(signupFormViewModelProvider.notifier).submit(context);
             if (success && context.mounted) {
               context.go('/redirect');
             }
@@ -402,9 +444,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
-              !_termsAccepted
-                  ? localizations.authTermsAcceptanceRequired
-                  : localizations.authPasswordValidationRequired,
+              !_termsAccepted ? localizations.authTermsAcceptanceRequired : localizations.authPasswordValidationRequired,
               style: const TextStyle(color: Colors.orange, fontSize: 13, fontWeight: FontWeight.w500),
               textAlign: TextAlign.center,
             ),
@@ -419,7 +459,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, fontFamily: 'Inter'),
           ),
           child: isSubmitting
-              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                )
               : Text(localizations.authCreateAccount),
         ),
         const SizedBox(height: 24),
@@ -435,12 +479,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     String? label,
     bool obscureText = false,
     Widget? suffixIcon,
-    String? errorText, // Add error text parameter for validation feedback
+    String? errorText,
   }) {
-    // Determine border color based on error state
     final borderColor = errorText != null ? Colors.red : const Color(0xFFE0E0E0);
     final focusedBorderColor = errorText != null ? Colors.red : const Color(0xFF1A73E8);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -462,19 +505,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: borderColor)),
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: borderColor)),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: focusedBorderColor)),
-            // Add error styling when there's an error
             errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.red)),
             focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.red)),
           ),
         ),
-        // Display error text below the field if present
         if (errorText != null)
           Padding(
             padding: const EdgeInsets.only(top: 4, left: 4),
-            child: Text(
-              errorText,
-              style: const TextStyle(color: Colors.red, fontSize: 13),
-            ),
+            child: Text(errorText, style: const TextStyle(color: Colors.red, fontSize: 13)),
           ),
       ],
     );
@@ -497,9 +535,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   Widget _buildSocialButton(String text, String assetName, VoidCallback onPressed, {bool isLoading = false}) {
     return OutlinedButton.icon(
       onPressed: isLoading ? null : onPressed,
-      icon: isLoading
-          ? const SizedBox.shrink()
-          : SvgPicture.asset(assetName, height: 18, width: 18),
+      icon: isLoading ? const SizedBox.shrink() : SvgPicture.asset(assetName, height: 18, width: 18),
       label: isLoading
           ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
           : Text(text, style: const TextStyle(color: Color(0xFF333333), fontWeight: FontWeight.w500, fontSize: 14)),
@@ -513,9 +549,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   Widget _buildTermsAndConditions(BuildContext context) {
-    // Using a simple string for now since we're having issues with the placeholder replacement
+    // Keeping v1’s simple message for now
     const termsText = 'By creating an account, you agree to our Terms of Service and Privacy Policy';
-    
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -531,23 +567,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           visualDensity: VisualDensity.compact,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-        Expanded(
-          child: RichText(
-            text: TextSpan(
-              style: const TextStyle(fontSize: 14, color: Color(0xFF666666), fontFamily: 'Inter'),
-              children: [
-                TextSpan(text: localizations.authTermsAccept),
-                TextSpan(
-                  text: localizations.authTermsOfService,
-                  style: const TextStyle(color: Color(0xFF1A73E8), fontWeight: FontWeight.w500),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () {
-                      // ignore: avoid_print
-                      print('Terms of Service tapped');
-                    },
-                ),
-              ],
-            ),
+        const SizedBox(width: 8),
+        const Expanded(
+          child: Text(
+            termsText,
+            style: TextStyle(fontSize: 14, color: Color(0xFF666666), fontFamily: 'Inter'),
           ),
         ),
       ],
