@@ -7,7 +7,6 @@ import 'package:rivo_app_beta/features/profile/data/profile_service.dart';
 import 'package:rivo_app_beta/features/profile/presentation/widgets/profile_header.dart';
 import 'package:rivo_app_beta/features/profile/presentation/widgets/spotlight_section.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:http/http.dart' as http;
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -27,14 +26,18 @@ class _ProfilePageState extends State<ProfilePage>
   Profile? _profile;
   bool _isLoading = true;
   String? _error;
-  bool _isDeleting = false;
 
   @override
   void initState() {
     super.initState();
+    // Safely get current user ID, handle case where user might be signed out
     _userId = Supabase.instance.client.auth.currentUser?.id;
     _tabController = TabController(length: 2, vsync: this);
-    _subscribeToProfileUpdates();
+    
+    // Only subscribe to profile updates if user is logged in
+    if (_userId != null) {
+      _subscribeToProfileUpdates();
+    }
   }
 
   @override
@@ -112,50 +115,7 @@ class _ProfilePageState extends State<ProfilePage>
     }
   }
 
-  Future<void> _deleteUser() async {
-    final accessToken =
-        Supabase.instance.client.auth.currentSession?.accessToken;
 
-    if (accessToken == null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Not logged in')),
-      );
-      return;
-    }
-
-    setState(() => _isDeleting = true);
-
-    try {
-      final response = await http.post(
-        Uri.parse(
-            'https://nbrqyxsxsokrwkhpdvov.supabase.co/functions/v1/delete_user_self'),
-        headers: {
-          'Authorization': 'Bearer $accessToken',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (!mounted) return;
-
-      if (response.statusCode >= 400) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${response.body}')),
-        );
-        setState(() => _isDeleting = false);
-      } else {
-        await Supabase.instance.client.auth.signOut();
-        if (!mounted) return;
-        context.go('/');
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Exception: $e')),
-      );
-      setState(() => _isDeleting = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -229,25 +189,6 @@ class _ProfilePageState extends State<ProfilePage>
           ),
           SliverToBoxAdapter(child: ProfileHeader(profile: profile)),
           const SliverToBoxAdapter(child: SpotlightSection()),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: _isDeleting ? null : _deleteUser,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent.withOpacity(0.15),
-                  foregroundColor: Colors.red[800],
-                ),
-                child: _isDeleting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Delete My Account'),
-              ),
-            ),
-          ),
           SliverPersistentHeader(
             pinned: true,
             delegate: _SliverTabBarDelegate(

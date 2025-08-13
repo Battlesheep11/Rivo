@@ -55,17 +55,17 @@ class Profile {
         : data;
 
     // Followers / following can live at root (joined) or inside profile (plain none).
-    int _asInt(dynamic v) => (v is num) ? v.toInt() : 0;
+    int asInt(dynamic v) => (v is num) ? v.toInt() : 0;
     final followers =
-        _asInt(data['followers_count'] ?? profileMap['followers_count']);
+        asInt(data['followers_count'] ?? profileMap['followers_count']);
     final following =
-        _asInt(data['following_count'] ?? profileMap['following_count']);
+        asInt(data['following_count'] ?? profileMap['following_count']);
 
     // Tags can be:
     // - List<Map> with {name}
     // - List<String>
     // - missing/null → []
-    List<String> _parseTags(dynamic raw) {
+    List<String> parseTags(dynamic raw) {
       if (raw is List) {
         return raw
             .map((e) {
@@ -79,10 +79,10 @@ class Profile {
       return const <String>[];
     }
 
-    final tags = _parseTags(data['tags'] ?? profileMap['tags']);
+    final tags = parseTags(data['tags'] ?? profileMap['tags']);
 
     // full_name fallback: first_name + last_name
-    String _buildFullName(Map<String, dynamic> m) {
+    String buildFullName(Map<String, dynamic> m) {
       final explicit = m['full_name'] as String?;
       if (explicit != null && explicit.trim().isNotEmpty) return explicit;
       final fn = (m['first_name'] as String?)?.trim() ?? '';
@@ -101,7 +101,7 @@ class Profile {
 
     return Profile(
       id: id,
-      fullName: _buildFullName(profileMap),
+      fullName: buildFullName(profileMap),
       username: username,
       avatarUrl: profileMap['avatar_url'] as String?,
       bio: profileMap['bio'] as String?,
