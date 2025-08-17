@@ -12,22 +12,23 @@ class CategoryDropdown extends ConsumerWidget {
     final categoriesAsync = ref.watch(categoriesProvider);
     final viewModel = ref.read(uploadPostViewModelProvider.notifier);
     final state = ref.watch(uploadPostViewModelProvider);
-    final localizations = AppLocalizations.of(context)!;
+    final t = AppLocalizations.of(context)!;
 
     return categoriesAsync.when(
       loading: () => const CircularProgressIndicator(),
-      error: (error, _) => Text(localizations.uploadUnexpectedError),
+      error: (error, _) => Text(t.uploadUnexpectedError),
       data: (categories) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              localizations.category,
+              t.category,
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: state.categoryId,
+              // ✅ use initialValue instead of deprecated `value`
+              initialValue: state.categoryId,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -37,12 +38,14 @@ class CategoryDropdown extends ConsumerWidget {
                   vertical: 12,
                 ),
               ),
-              hint: Text(localizations.selectCategory),
+              hint: Text(t.selectCategory),
               items: categories
-                  .map((category) => DropdownMenuItem(
-                        value: category.id,
-                        child: Text(category.name),
-                      ))
+                  .map(
+                    (category) => DropdownMenuItem(
+                      value: category.id,
+                      child: Text(category.name),
+                    ),
+                  )
                   .toList(),
               onChanged: (value) {
                 if (value != null) {
@@ -51,7 +54,7 @@ class CategoryDropdown extends ConsumerWidget {
               },
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return localizations.fieldRequired;
+                  return t.fieldRequired;
                 }
                 return null;
               },

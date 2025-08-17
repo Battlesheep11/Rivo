@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.rivo.app"
-    compileSdk = 35
+    compileSdk = 36  // bump to 36 for the newer plugins
 
     defaultConfig {
         applicationId = "com.rivo.app"
@@ -16,6 +16,7 @@ android {
         versionName = flutter.versionName
     }
 
+    // Toolchain is on JDK 21 (AGP 8.7.3 + Gradle 8.9 support it)
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
@@ -35,7 +36,7 @@ android {
         }
     }
 
-    // Optional – only if you hit META-INF duplicate errors
+    // If you ever hit META-INF duplicate errors, uncomment:
     // packaging {
     //     resources {
     //         excludes += setOf(

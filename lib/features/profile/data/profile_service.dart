@@ -109,18 +109,25 @@ class ProfileService {
 
     try {
       final results = await Future.wait<dynamic>([
-        // maybeSingle() → returns Map<String, dynamic>? (null if not found)
-        _supabase.from('profiles').select().eq('id', userId).maybeSingle(),
-        _supabase
-            .from('user_following')
-            .select('follower_id')
-            .eq('followed_seller_id', userId),
-        _supabase
-            .from('user_following')
-            .select('followed_seller_id')
-            .eq('follower_id', userId),
-        _supabase.from('user_tags').select('tags(name)').eq('user_id', userId),
-      ]);
+  _supabase
+      .from('profiles')
+      .select('id, username, first_name, last_name, bio, avatar_url, is_seller, created_at, language, last_seen_at')
+      .eq('id', userId)
+      .maybeSingle(),
+  _supabase
+      .from('user_following')
+      .select('follower_id')
+      .eq('followed_seller_id', userId),
+  _supabase
+      .from('user_following')
+      .select('followed_seller_id')
+      .eq('follower_id', userId),
+  _supabase
+      .from('user_tags')
+      .select('tags(name)')
+      .eq('user_id', userId),
+]);
+
 
       final profileRow = results[0] as Map<String, dynamic>?; // may be null
       final followersRows = results[1] as List;

@@ -85,48 +85,105 @@ class FeedRemoteDataSource with RateLimited {
   /// [userId]: The ID of the user whose posts to fetch
   ///
   /// Returns a list of [FeedPostEntity] objects.
-  Future<List<FeedPostEntity>> getPostsByCreator(String userId) async {
-    try {
-      // Validate input
-      final validatedUserId =
-          InputValidator.validateId(userId, fieldName: 'User ID');
+ Future<List<FeedPostEntity>> getPostsByCreator(String userId) async {
+  try {
+    final validatedUserId = InputValidator.validateId(userId, fieldName: 'User ID');
 
-      // Check rate limit based on the current user making the request
-      final callerId = _client.auth.currentUser?.id;
-      if (callerId == null) {
-        throw AppException.unauthorized('User not authenticated');
-      }
-      await checkRateLimit(
-        key: '${_rateLimitKey}_getPostsByCreator_$callerId',
-        maxRequests: _maxRequestsPerMinute,
-      );
-
-      _logger.d('Fetching posts for user: $validatedUserId');
-
-      final res = await _client
-          .from('feed_post')
-          .select('*, product(*, media(*))')
-          .eq('creator_id', validatedUserId)
-          .isFilter('deleted_at', null) // exclude soft-deleted
-          .order('created_at', ascending: false);
-
-      // Supabase returns an empty list when no posts are found
-      if (res.isEmpty) {
-        _logger.w('No posts found for user: $validatedUserId');
-        return [];
-      }
-
-      return (res as List)
-          .map((item) => FeedPostEntity.fromMap(item))
-          .toList();
-    } on PostgrestException catch (e) {
-      _logger.e('Database error fetching posts: ${e.message}');
-      throw AppException.network('Failed to fetch posts: ${e.message}');
-    } catch (e) {
-      _logger.e('Unexpected error in getPostsByCreator: $e');
-      throw AppException.unexpected('An error occurred while fetching posts');
+    final callerId = _client.auth.currentUser?.id;
+    if (callerId == null) {
+      throw AppException.unauthorized('User not authenticated');
     }
+    await checkRateLimit(
+      key: '${_rateLimitKey}_getPostsByCreator_$callerId',
+      maxRequests: _maxRequestsPerMinute,
+    );
+
+    _logger.d('Fetching posts for user: $validatedUserId');
+
+    const postQuery = '''
+      id,
+      created_at,
+      like_count,
+      caption,
+      creator_id,
+      product_id,
+      product:product_id (
+        id,
+        title,
+        description,
+        price,
+        product_media:product_media (
+          media_id (
+            media_url
+          ),
+          sort_order
+        )
+      ),
+      creator:creator_id (
+        id,
+        username,
+        avatar_url
+      )
+    ''';
+
+    final res = await _client
+        .from('feed_post')
+        .select(postQuery)
+        .eq('creator_id', validatedUserId)
+        .eq('is_deleted', false)
+        .order('created_at', ascending: false);
+
+    if (res.isEmpty) {
+      _logger.w('No posts found for user: $validatedUserId');
+      return [];
+    }
+
+    // Optionally: which of these posts the caller liked
+    final likesResponse = await _client
+        .from('post_likes')
+        .select('post_id')
+        .eq('user_id', callerId);
+
+    final likedPostIds =
+        (likesResponse as List).map((e) => e['post_id'] as String).toSet();
+
+    return (res as List).map((json) {
+      final product = json['product'] as Map<String, dynamic>? ?? {};
+      final mediaList =
+          (product['product_media'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
+      final mediaUrls = mediaList
+          .map((m) => m['media_id']?['media_url'] as String?)
+          .whereType<String>()
+          .toList();
+
+      final postId = json['id'] as String;
+
+      return FeedPostEntity(
+        id: postId,
+        createdAt: DateTime.parse(json['created_at']),
+        likeCount: (json['like_count'] ?? 0) as int,
+        creatorId: json['creator_id'] as String,
+        caption: json['caption'] as String?,
+        productId: json['product_id'] as String?,
+        username: json['creator']?['username'] ?? '',
+        avatarUrl: json['creator']?['avatar_url'], // ← same source as profile
+        productTitle: product['title'] ?? '',
+        productDescription: product['description'],
+        productPrice: (product['price'] ?? 0).toDouble(),
+        mediaUrls: mediaUrls,
+        tags: const [],
+        isLikedByMe: likedPostIds.contains(postId),
+      );
+    }).toList();
+  } on PostgrestException catch (e) {
+    _logger.e('Database error fetching posts: ${e.message}');
+    throw AppException.network('Failed to fetch posts: ${e.message}');
+  } catch (e) {
+    _logger.e('Unexpected error in getPostsByCreator: $e');
+    throw AppException.unexpected('An error occurred while fetching posts');
   }
+}
+
 
   /// Fetches posts by their IDs.
   ///

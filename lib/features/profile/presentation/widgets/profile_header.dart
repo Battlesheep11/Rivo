@@ -130,11 +130,14 @@ class _ProfileHeaderState extends State<ProfileHeader> {
 
                   try {
                     final profileData = await ProfileService().getProfileData(_profile.id);
-                    if (mounted) {
+                    final row = profileData['profile'] as Map<String, dynamic>?;
+
+                    if (mounted && row != null) {
                       setState(() {
-                        _profile = Profile.fromData(profileData);
+                        _profile = Profile.fromData(row); // <- now includes avatar_url correctly
                       });
                     }
+
                   } catch (e) {
                     messenger.showSnackBar(
                       SnackBar(

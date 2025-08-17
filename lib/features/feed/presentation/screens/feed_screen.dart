@@ -158,90 +158,100 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _buildPostItem(FeedPostEntity post, BuildContext context) {
-    final isVisible = _postTextBoxVisibility.putIfAbsent(post.id, () => true);
+  final isVisible = _postTextBoxVisibility.putIfAbsent(post.id, () => true);
 
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _postTextBoxVisibility[post.id] = !isVisible;
-        });
-      },
-      onDoubleTap: () {
-        if (post.productId != null) {
-          context.push('/product/${post.id}');
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.black.withAlpha(13), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(26),
-              blurRadius: 25,
-              offset: const Offset(0, 10),
+  return GestureDetector(
+    onTap: () {
+      setState(() {
+        _postTextBoxVisibility[post.id] = !isVisible;
+      });
+    },
+    onDoubleTap: () {
+      if (post.productId != null) {
+        // Use productId, not post.id
+        context.push('/product/${post.productId}');
+      }
+    },
+    child: Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black.withAlpha(13), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(26),
+            blurRadius: 25,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: Colors.black.withAlpha(26),
+            blurRadius: 10,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // --- Media layer ---
+            if (post.mediaUrls.length > 1)
+              Positioned.fill(
+                child: ImageGallery(
+                  urls: post.mediaUrls.reversed.toList(),
+                  onUserScroll: () {
+                    _isGalleryScrolling = true;
+                    Future.delayed(const Duration(milliseconds: 600), () {
+                      if (mounted) setState(() => _isGalleryScrolling = false);
+                    });
+                  },
+                ),
+              )
+            else
+              Positioned.fill(
+                child: MediaRendererWidget(
+                  urls: post.mediaUrls,
+                ),
+              ),
+
+            // --- Caption overlay (glass box) ---
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: AnimatedOpacity(
+                opacity: isVisible ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: CaptionGlassBox(
+                  username: post.username,
+                  caption: post.caption,
+                  height: MediaQuery.of(context).size.height / 5,
+                ),
+              ),
             ),
-            BoxShadow(
-              color: Colors.black.withAlpha(26),
-              blurRadius: 10,
-              offset: const Offset(0, 8),
+
+            // --- Action column (like, etc.) ---
+            Positioned(
+              right: 10,
+              bottom: 20,
+              child: PostActionColumn(
+                isLikedByMe: post.isLikedByMe,
+                likeCount: post.likeCount,
+                onLike: () => ref.read(feedViewModelProvider.notifier).toggleLike(post.id),
+                onComment: () {},
+                onAdd: () {},
+                avatarUrl: post.avatarUrl,
+              ),
             ),
           ],
         ),
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (post.mediaUrls.isNotEmpty && post.mediaUrls.length > 1)
-                Positioned.fill(
-                  child: ImageGallery(
-                    urls: post.mediaUrls.reversed.toList(),
-                    onUserScroll: () {
-                      _isGalleryScrolling = true;
-                      Future.delayed(const Duration(milliseconds: 600), () {
-                        if (mounted) setState(() => _isGalleryScrolling = false);
-                      });
-                    },
-                  ),
-                ),
-              if (post.mediaUrls.length == 1)
-                MediaRendererWidget(
-                  urls: post.mediaUrls,
-                ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: AnimatedOpacity(
-                  opacity: isVisible ? 1 : 0.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: CaptionGlassBox(
-                    username: post.username,
-                    caption: post.caption,
-                    height: MediaQuery.of(context).size.height / 5,
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 10,
-                bottom: 20,
-                child: PostActionColumn(
-                  isLikedByMe: post.isLikedByMe,
-                  likeCount: post.likeCount,
-                  onLike: () => ref.read(feedViewModelProvider.notifier).toggleLike(post.id),
-                  onComment: () {},
-                  onAdd: () {},
-                  avatarUrl: post.avatarUrl,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
-    );
-  }
+    ),
+  );
+}
+
+      
 }
