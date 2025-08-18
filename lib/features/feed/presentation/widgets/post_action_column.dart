@@ -9,6 +9,7 @@ class PostActionColumn extends StatelessWidget {
   final VoidCallback onComment;
   final VoidCallback onAdd;
   final String? avatarUrl;
+  final VoidCallback? onAvatarTap;
   
   const PostActionColumn({
     super.key,
@@ -18,6 +19,7 @@ class PostActionColumn extends StatelessWidget {
     required this.onComment,
     required this.onAdd,
     this.avatarUrl,
+    this.onAvatarTap,
   });
 
   @override
@@ -56,29 +58,32 @@ class PostActionColumn extends StatelessWidget {
           const SizedBox(height: 16),
           
           // User avatar
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha((255 * 0.1).round()),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: CircleAvatar(
-              radius: 22,
-              backgroundColor: Colors.grey[200],
-              backgroundImage: avatarUrl != null && avatarUrl!.startsWith('http')
-                  ? NetworkImage(avatarUrl!) as ImageProvider
-                  : null,
-              child: (avatarUrl == null || !avatarUrl!.startsWith('http'))
-                  ? const Icon(Icons.person, size: 24, color: Colors.grey)
-                  : null,
+          GestureDetector(
+            onTap: onAvatarTap,
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha((255 * 0.1).round()),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: CircleAvatar(
+                radius: 22,
+                backgroundColor: Colors.grey[200],
+                backgroundImage: avatarUrl != null && avatarUrl!.startsWith('http')
+                    ? NetworkImage(avatarUrl!) as ImageProvider
+                    : null,
+                child: (avatarUrl == null || !avatarUrl!.startsWith('http'))
+                    ? const Icon(Icons.person, size: 24, color: Colors.grey)
+                    : null,
+              ),
             ),
           ),
         ],
