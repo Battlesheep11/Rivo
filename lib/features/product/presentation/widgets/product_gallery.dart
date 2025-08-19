@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:rivo_app_beta/core/cache/image_cache_manager.dart';
 
 class ProductGallery extends StatefulWidget {
   const ProductGallery({super.key, required this.imageUrls});
@@ -26,9 +28,14 @@ class _ProductGalleryState extends State<ProductGallery> {
               });
             },
             itemBuilder: (context, index) {
-              return Image.network(
-                widget.imageUrls[index],
+              return CachedNetworkImage(
+                imageUrl: widget.imageUrls[index],
+                cacheManager: ImageCacheManager(),
                 fit: BoxFit.cover,
+                errorWidget: (context, url, error) => const ColoredBox(
+                  color: Colors.grey,
+                  child: Center(child: Icon(Icons.image, color: Colors.white)),
+                ),
               );
             },
           ),

@@ -376,5 +376,6 @@
   "forgotPasswordRemembered": "Remember your password?",
    "permission_camera_explain": "To take photos or videos in RIVO, enable camera (and microphone for video) in Settings.",
   "permission_go_to_settings": "Open Settings",
-  "permission_not_now": "Not now"
+  "permission_not_now": "Not now",
+  "noInternetConnection": "No internet connection. Please check your connection and try again."
 }

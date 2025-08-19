@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'video_player_widget.dart';
+import 'package:rivo_app_beta/core/cache/image_cache_manager.dart';
 
 class MediaRendererWidget extends StatefulWidget {
   final List<String> urls;
@@ -33,6 +34,7 @@ Widget build(BuildContext context) {
   } else {
     mediaWidget = CachedNetworkImage(
       imageUrl: currentUrl,
+      cacheManager: ImageCacheManager(),
       fit: BoxFit.cover,
       placeholder: (context, url) => Container(
         color: Colors.black12,

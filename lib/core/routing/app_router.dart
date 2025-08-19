@@ -14,17 +14,33 @@ import 'package:rivo_app_beta/core/widgets/app_nav_bar.dart';
 import 'package:rivo_app_beta/features/discovery/presentation/screens/discovery_screen.dart';
 import 'package:rivo_app_beta/features/product/presentation/screens/product_screen.dart';
 import 'package:rivo_app_beta/features/feed/presentation/screens/filtered_feed_screen.dart';
-
+import 'package:rivo_app_beta/core/connectivity/connectivity_provider.dart';
+import 'package:rivo_app_beta/core/screens/offline_screen.dart';
+import 'package:rivo_app_beta/core/routing/go_router_refresh_stream_from_riverpod.dart';
 
 class AppRouter {
   static GoRouter createRouter(WidgetRef ref) {
     final authState = ref.watch(authSessionProvider);
     final isLoggedIn = authState.asData?.value != null;
+    // Also watch connectivity to recreate router on start and keep types handy
+    final _ = ref.watch(connectivityStatusProvider);
     // Note: authRepository no longer needed after removing reset/forgot flows
 
     return GoRouter(
       initialLocation: '/redirect',
+      // Ensure router reevaluates redirects when connectivity changes
+      refreshListenable: GoRouterRefreshStreamFromRiverpod(ref, connectivityStatusProvider),
       redirect: (context, state) async {
+        // Global offline guard
+        final isOnline = ref.read(connectivityStatusProvider);
+        final isOfflineRoute = state.matchedLocation == '/offline';
+        if (!isOnline && !isOfflineRoute) {
+          return '/offline';
+        }
+        if (isOnline && isOfflineRoute) {
+          // Go back to app redirector to resolve auth flow and deep links
+          return '/redirect';
+        }
 
         final isAuthRoute = state.matchedLocation.startsWith('/auth');
 
@@ -41,6 +57,10 @@ class AppRouter {
         return null;
       },
       routes: [
+        GoRoute(
+          path: '/offline',
+          builder: (context, state) => const OfflineScreen(),
+        ),
         GoRoute(
            path: '/auth',
            pageBuilder: (context, state) => MaterialPage(child: AuthScreen()),
