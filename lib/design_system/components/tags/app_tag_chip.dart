@@ -12,7 +12,7 @@ class AppTagChip extends StatelessWidget {
     this.isActive = false,
   });
 
-   @override
+  @override
   Widget build(BuildContext context) {
     final bgColor = const Color(0xFFF3F4F6);
     final textColor = const Color(0xFF606975);

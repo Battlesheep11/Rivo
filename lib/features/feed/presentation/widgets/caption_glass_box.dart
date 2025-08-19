@@ -144,9 +144,9 @@ class CaptionGlassBox extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: [
                   Colors.transparent,
-                  Colors.black.withValues(alpha: 0.1),   // 10% opacity at 10%
-                  Colors.black.withValues(alpha: 0.8),   // 80% opacity at 60%
-                  Colors.black.withValues(alpha: 0.95),  // 95% opacity at 100%
+                  Colors.black.withAlpha((0.1 * 255).round()),   // 10% opacity at 10%
+                  Colors.black.withAlpha((0.8 * 255).round()),   // 80% opacity at 60%
+                  Colors.black.withAlpha((0.95 * 255).round()),  // 95% opacity at 100%
                 ],
                 stops: const [0.0, 0.1, 0.6, 1.0],
                 tileMode: TileMode.clamp,

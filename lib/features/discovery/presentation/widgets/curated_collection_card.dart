@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rivo_app_beta/features/discovery/domain/entities/curated_collection_entity.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
-import 'package:rivo_app_beta/core/design_system/widgets/app_svg_icon.dart'; // ✅ שימוש ב־AppSvgIcon
+import 'package:rivo_app_beta/design_system/exports.dart'; // ✅ Barrel import
 
 class CuratedCollectionCard extends StatelessWidget {
   final CuratedCollectionEntity collection;
@@ -40,7 +40,7 @@ class CuratedCollectionCard extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.black.withValues(alpha: 0.5),
+                    Colors.black.withAlpha((0.5 * 255).round()),
                     Colors.transparent,
                   ],
                   begin: Alignment.bottomCenter,

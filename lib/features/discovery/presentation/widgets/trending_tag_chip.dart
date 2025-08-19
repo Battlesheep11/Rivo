@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rivo_app_beta/features/discovery/domain/entities/discovery_tag_entity.dart';
-import 'package:rivo_app_beta/core/design_system/tags/app_tag_chip.dart';
+import 'package:rivo_app_beta/design_system/exports.dart';
 
 class TrendingTagChip extends StatelessWidget {
   final DiscoveryTagEntity tag;

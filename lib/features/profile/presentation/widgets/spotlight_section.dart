@@ -1,6 +1,6 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
-import 'package:rivo_app_beta/core/design_system/design_system.dart';
+import 'package:rivo_app_beta/design_system/exports.dart';
 
 class SpotlightSection extends StatelessWidget {
   const SpotlightSection({super.key});

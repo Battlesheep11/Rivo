@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rivo_app_beta/core/design_system/cards/featured_card_base.dart';
-import 'package:rivo_app_beta/core/design_system/widgets/glass_text.dart';
-import 'package:rivo_app_beta/core/design_system/buttons/app_button.dart';
+import 'package:rivo_app_beta/design_system/exports.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/features/discovery/domain/entities/discovery_product_entity.dart';
 

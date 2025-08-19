@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:formz/formz.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rivo_app_beta/core/design_system/app_error_text.dart';
+import 'package:rivo_app_beta/design_system/exports.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/core/localization/widgets/language_selector.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/google_signin_provider.dart';
@@ -106,7 +106,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
+                        color: Colors.black.withAlpha((0.06 * 255).round()),
                         blurRadius: 20,
                         offset: const Offset(0, 4),
                       ),

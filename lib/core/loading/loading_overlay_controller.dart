@@ -14,7 +14,7 @@ class LoadingOverlayController {
 
     _overlayEntry = OverlayEntry(
       builder: (context) => Container(
-        color: Colors.black.withValues(alpha: 0.3 * 255),
+        color: Colors.black.withAlpha((0.3 * 255).round()),
         child: const Center(
           child: CircularProgressIndicator(),
         ),
