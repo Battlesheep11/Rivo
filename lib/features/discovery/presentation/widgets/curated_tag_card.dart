@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rivo_app_beta/core/design_system/widgets/glass_card.dart';
-import 'package:rivo_app_beta/core/design_system/widgets/glass_text.dart';
+import 'package:rivo_app_beta/design_system/exports.dart';
 import 'package:rivo_app_beta/features/discovery/domain/entities/discovery_tag_entity.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:rivo_app_beta/core/cache/image_cache_manager.dart';

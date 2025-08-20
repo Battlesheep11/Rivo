@@ -43,11 +43,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     super.dispose();
   }
 
-  String _formatPrice(double price) {
-    final isInt = price == price.roundToDouble();
-    return isInt ? '₪${price.toStringAsFixed(0)}' : '₪${price.toStringAsFixed(2)}';
-  }
-
+  
   void _handleScroll() {
     if (!_pageController.hasClients) return;
 
@@ -234,12 +230,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 duration: const Duration(milliseconds: 300),
                 child: CaptionGlassBox(
                   title: post.productTitle,
-                  caption: post.caption, // optional
                   seller: post.username,
-                  price: _formatPrice(post.productPrice),
-                  height: MediaQuery.of(context).size.height / 5,
-                  onUsernameTap: () => context.push('/profile/${post.creatorId}'),
-                ),
+                  price: '₪${post.productPrice.toStringAsFixed(2)}',
+                  height: MediaQuery.of(context).size.height / 3.5,
+                  caption: post.caption,
+                )
               ),
             ),
 

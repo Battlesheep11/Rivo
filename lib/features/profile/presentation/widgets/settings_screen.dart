@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:rivo_app_beta/core/design_system/design_system.dart';
+import 'package:rivo_app_beta/design_system/exports.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/auth_session_provider.dart';
 import 'package:rivo_app_beta/features/profile/presentation/providers/auth_view_model_provider.dart';

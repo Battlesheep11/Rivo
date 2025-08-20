@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rivo_app_beta/core/design_system/design_system.dart';
+import 'package:rivo_app_beta/design_system/exports.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/email.dart';
 import 'package:rivo_app_beta/features/auth/presentation/viewmodels/forgot_password_view_model.dart';
