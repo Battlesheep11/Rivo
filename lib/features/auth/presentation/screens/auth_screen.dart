@@ -33,6 +33,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   bool _passwordVisible = false;
   bool _confirmPasswordVisible = false;
   bool _termsAccepted = false;
+  // Tracks whether the user attempted to create an account to reveal validation
+  bool _attemptedCreate = false;
+  // Focus node to detect when username editing finishes (blur) to check availability
+  late final FocusNode _usernameFocus;
 
   final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
@@ -42,6 +46,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Initialize focus node for username and set listener for availability check
+    _usernameFocus = FocusNode();
+    _usernameFocus.addListener(() async {
+      if (!_usernameFocus.hasFocus) {
+        // On blur: if username is valid, check availability against backend
+        final s = ref.read(signupFormViewModelProvider);
+        if (s.username.isValid) {
+          await ref.read(signupFormViewModelProvider.notifier).checkUsername();
+        }
+      }
+    });
 
     _emailController.addListener(() {
       if (_authMode == AuthMode.signIn) {
@@ -76,6 +92,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _usernameFocus.dispose();
     super.dispose();
   }
 
@@ -90,7 +107,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       }
     });
 
-    return Scaffold(
+    // Prevent system back once in password step of sign-up (use PopScope for predictive back)
+    return PopScope(
+      canPop: !(_authMode == AuthMode.signUp && _signupStep == _SignupStep.createPassword),
+      child: Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
         child: Stack(
@@ -106,7 +126,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
+                        color: Colors.black.withAlpha(15), // ~6% opacity as alpha
                         blurRadius: 20,
                         offset: const Offset(0, 4),
                       ),
@@ -138,10 +158,31 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 ),
               ),
             ),
+            // Back arrow only on username step (before proceeding)
+            if (_authMode == AuthMode.signUp && _signupStep == _SignupStep.userDetails)
+              Align(
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
+                    onPressed: () {
+                      if (Navigator.of(context).canPop()) {
+                        Navigator.of(context).pop();
+                      } else {
+                        setState(() {
+                          // If no route to pop, toggle back to sign-in
+                          _authMode = AuthMode.signIn;
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ),
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildSignInForm(BuildContext context) {
@@ -280,6 +321,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           controller: _usernameController,
           hintText: localizations.authUsernameHint,
           icon: Icons.account_circle_outlined,
+          // Attach focus node to detect when user leaves the field to check availability
+          focusNode: _usernameFocus,
         ),
         if (signupState.usernameExists)
           Padding(
@@ -305,7 +348,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   final success = await signupNotifier.validateStep1();
                   if (!context.mounted) return;
                   if (success) {
-                    setState(() => _signupStep = _SignupStep.createPassword);
+                    setState(() {
+                      _signupStep = _SignupStep.createPassword;
+                      _attemptedCreate = false; // reset error reveal flag entering password step
+                    });
                   } else {
                     if (!context.mounted) return;
                     final currentState = ref.read(signupFormViewModelProvider);
@@ -373,28 +419,47 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
     final isValid = signupState.isValid;
 
+    // Only show field errors after first input or after pressing Create Account
+    final bool showPasswordErrors = _attemptedCreate || _passwordController.text.isNotEmpty;
     String? passwordError;
-    if (signupState.password.displayError != null) {
-      passwordError = signupState.password.error?.getErrorMessage(context);
-    }
-
-    String? confirmPasswordError;
-    if (signupState.confirmedPassword.displayError != null) {
-      switch (signupState.confirmedPassword.displayError!) {
-        case ConfirmedPasswordValidationError.mismatch:
-          confirmPasswordError = localizations.passwordValidationMismatch;
-          break;
-        case ConfirmedPasswordValidationError.empty:
-          confirmPasswordError = localizations.passwordValidationRequired;
-          break;
+    if (showPasswordErrors) {
+      if (_passwordController.text.isEmpty) {
+        passwordError = localizations.passwordValidationRequired;
+      } else if (signupState.password.displayError != null) {
+        passwordError = signupState.password.error?.getErrorMessage(context);
       }
     }
 
-    final VoidCallback? onSubmit = (isValid && !isSubmitting && _termsAccepted)
+    final bool showConfirmErrors = _attemptedCreate || _confirmPasswordController.text.isNotEmpty;
+    String? confirmPasswordError;
+    if (showConfirmErrors) {
+      if (_confirmPasswordController.text.isEmpty) {
+        confirmPasswordError = localizations.passwordValidationRequired;
+      } else if (signupState.confirmedPassword.displayError != null) {
+        switch (signupState.confirmedPassword.displayError!) {
+          case ConfirmedPasswordValidationError.mismatch:
+            confirmPasswordError = localizations.passwordValidationMismatch;
+            break;
+          case ConfirmedPasswordValidationError.empty:
+            confirmPasswordError = localizations.passwordValidationRequired;
+            break;
+        }
+      }
+    }
+
+    // Keep button clickable to reveal errors when invalid
+    final VoidCallback? onSubmit = !isSubmitting
         ? () async {
-            final success = await ref.read(signupFormViewModelProvider.notifier).submit(context);
-            if (success && context.mounted) {
-              context.go('/redirect');
+            if (isValid && _termsAccepted) {
+              final success = await ref.read(signupFormViewModelProvider.notifier).submit(context);
+              if (success && context.mounted) {
+                context.go('/redirect');
+              }
+            } else {
+              // Reveal validation messages
+              setState(() {
+                _attemptedCreate = true;
+              });
             }
           }
         : null;
@@ -480,6 +545,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     bool obscureText = false,
     Widget? suffixIcon,
     String? errorText,
+    FocusNode? focusNode,
   }) {
     final borderColor = errorText != null ? Colors.red : const Color(0xFFE0E0E0);
     final focusedBorderColor = errorText != null ? Colors.red : const Color(0xFF1A73E8);
@@ -493,6 +559,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF333333))),
           ),
         TextFormField(
+          focusNode: focusNode,
           controller: controller,
           obscureText: obscureText,
           decoration: InputDecoration(
@@ -591,6 +658,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           _passwordController.clear();
           _confirmPasswordController.clear();
           _signupStep = _SignupStep.userDetails; // Reset to first step
+          _attemptedCreate = false; // reset error reveal flag when switching modes
         });
       },
       child: RichText(

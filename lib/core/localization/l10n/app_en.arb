@@ -389,5 +389,6 @@
 "conditionNeverWorn": "Never worn",
 "conditionAsNew": "As new",
 "conditionRequired": "Please select a condition",
-"conditionRequiredError": "Please select the item's condition."
+"conditionRequiredError": "Please select the item's condition.",
+  "onboardingSkip": "Skip"
 }

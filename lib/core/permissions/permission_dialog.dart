@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/core/media/domain/entities/uploadable_media.dart';
 import 'package:rivo_app_beta/core/utils/permission_utils.dart';
@@ -132,12 +133,29 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
       return;
     }
 
-    // Permissions granted -> TODO: open your camera capture flow here.
-    // For example: context.push('/camera'); or invoke your camera screen.
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Camera permission granted')),
-    );
+    // Permissions granted -> mirror upload flow camera capture
+    final picker = ImagePicker();
+    final XFile? file = await picker.pickImage(source: ImageSource.camera);
+
+    if (file == null) return; // user canceled
+
+    try {
+      // Save captured image to gallery and obtain AssetEntity
+      final asset = await PhotoManager.editor.saveImageWithPath(file.path);
+
+      final media = UploadableMedia(
+        id: asset.id,
+        asset: asset,
+        type: MediaType.image,
+      );
+
+      if (!mounted) return;
+      // Return the captured media to the caller, same contract as gallery selection
+      Navigator.of(context).pop(<UploadableMedia>[media]);
+    } catch (e) {
+      // Fallback: quietly fail to avoid new hardcoded strings; log for debugging
+      debugPrint('❌ Failed to save captured media: $e');
+    }
   }
 
   Future<bool> _requestCamera({required bool includeMic}) async {

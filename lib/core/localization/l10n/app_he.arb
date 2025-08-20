@@ -337,5 +337,20 @@
 "conditionGood": "מצב טוב",
 "conditionFair": "מצב סביר",
 "conditionRequired": "נא לבחור את מצב הפריט",
-"conditionRequiredError": "יש לבחור את מצב הפריט"
-}
+"conditionRequiredError": "יש לבחור את מצב הפריט",
+  "onboardingSkip": "דלג",
+  "publishButton" : "פרסם",
+  "maxPhotosError" : "אפשרי מקסימום 10 תמונות",
+  "savePhotoError" : "שגיאה בשמירת תמונה",
+  "selectConditionTitle" : "בחר מצב",
+  "conditionNewWithTags" : "חדש עם תגיות",
+  "conditionNewWithoutTags" : "חדש בלי תגיות",
+  "conditionLikeNew" : "נוסף",
+  "conditionVeryGood" : "מצב מאוד טוב",
+  "conditionGood" : "מצב טוב",
+  "conditionFair" : "מצב בינוני",
+  "optional" : "אופציונלי",
+  "itemDetailsDescription" : "פרטי הפריט",
+  "measurementsLabel" : "מידות",
+  "tagsAndStyleDescription" : "הוסף תגיות סגנון שיעזרו לקונים למצוא את הפריט שלך"
+  }

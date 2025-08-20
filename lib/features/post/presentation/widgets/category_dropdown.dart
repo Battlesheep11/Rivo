@@ -27,7 +27,7 @@ class CategoryDropdown extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: state.categoryId,
+              initialValue: state.categoryId,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),

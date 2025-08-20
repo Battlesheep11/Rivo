@@ -214,15 +214,25 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
         overlay.hide();
       }
 
+      // If the notifier was disposed in the meantime (e.g., screen navigated away),
+      // avoid touching state to prevent "after dispose" errors.
+      if (!mounted) {
+        return false;
+      }
+
       bool success = false;
       result.fold(
         (failure) {
-          state = state.copyWith(isSubmitting: false, isFailure: true, errorMessage: failure);
+          if (mounted) {
+            state = state.copyWith(isSubmitting: false, isFailure: true, errorMessage: failure);
+          }
           ToastService().showError(failure);
           success = false;
         },
         (_) {
-          state = state.copyWith(isSubmitting: false, isSuccess: true);
+          if (mounted) {
+            state = state.copyWith(isSubmitting: false, isSuccess: true);
+          }
           ToastService().showSuccess("Success");
           success = true;
         },
@@ -230,12 +240,16 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
       return success;
     } on AppException catch (e) {
       final msg = e.toString();
-      state = state.copyWith(isSubmitting: false, isFailure: true, errorMessage: msg);
+      if (mounted) {
+        state = state.copyWith(isSubmitting: false, isFailure: true, errorMessage: msg);
+      }
       ToastService().showError(msg);
       return false;
     } catch (_) {
       const msg = 'An unexpected error occurred. Please try again.';
-      state = state.copyWith(isSubmitting: false, isFailure: true, errorMessage: msg);
+      if (mounted) {
+        state = state.copyWith(isSubmitting: false, isFailure: true, errorMessage: msg);
+      }
       ToastService().showError(msg);
       return false;
     }
