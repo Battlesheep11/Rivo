@@ -1,1 +1,18 @@
-{}
+{
+  "he": [
+    "publishButton",
+    "maxPhotosError",
+    "savePhotoError",
+    "selectConditionTitle",
+    "conditionNewWithTags",
+    "conditionNewWithoutTags",
+    "conditionLikeNew",
+    "conditionVeryGood",
+    "conditionGood",
+    "conditionFair",
+    "optional",
+    "itemDetailsDescription",
+    "measurementsLabel",
+    "tagsAndStyleDescription"
+  ]
+}

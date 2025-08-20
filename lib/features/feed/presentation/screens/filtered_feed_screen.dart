@@ -128,12 +128,13 @@ class _FilteredFeedScreenState extends ConsumerState<FilteredFeedScreen> {
                 left: 0,
                 right: 0,
                 child: AnimatedOpacity(
-                  opacity: isVisible ? 1 : 0.0,
-                  duration: const Duration(milliseconds: 300),
+                  opacity: isVisible ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
                   child: CaptionGlassBox(
-                    username: post.username,
-                    caption: post.caption,
-                    height: MediaQuery.of(context).size.height / 5,
+                    title: post.productTitle,
+                    seller: post.username,
+                    price: '\$${post.productPrice.toStringAsFixed(2)}',
+                    height: MediaQuery.of(context).size.height / 3.5,
                   ),
                 ),
               ),
