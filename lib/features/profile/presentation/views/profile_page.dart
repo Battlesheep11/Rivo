@@ -9,7 +9,11 @@ import 'package:rivo_app_beta/features/profile/presentation/widgets/spotlight_se
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  // When provided, renders the profile for the specified user in read-only mode
+  // unless it matches the currently authenticated user.
+  final String? userId;
+
+  const ProfilePage({super.key, this.userId});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -30,8 +34,9 @@ class _ProfilePageState extends State<ProfilePage>
   @override
   void initState() {
     super.initState();
-    // Safely get current user ID, handle case where user might be signed out
-    _userId = Supabase.instance.client.auth.currentUser?.id;
+    // Determine which user's profile to show: explicit userId param or current user.
+    // If no user is logged in, _userId will be null and we will show an error state gracefully.
+    _userId = widget.userId ?? Supabase.instance.client.auth.currentUser?.id;
     _tabController = TabController(length: 2, vsync: this);
     
     // Only subscribe to profile updates if user is logged in
@@ -119,6 +124,10 @@ class _ProfilePageState extends State<ProfilePage>
 
   @override
   Widget build(BuildContext context) {
+    // Determine edit/view permissions by comparing the requested user to the current user
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final isOwnProfile = _userId != null && _userId == currentUserId;
+
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: AppColors.background,
@@ -177,17 +186,21 @@ class _ProfilePageState extends State<ProfilePage>
             centerTitle: true,
             pinned: true,
             floating: true,
-            actions: [
-              IconButton(
-                onPressed: () => context.push('/settings'),
-                icon: const Icon(
-                  Icons.settings_outlined,
-                  color: AppColors.onSurface,
-                ),
-              ),
-            ],
+            // Show settings only for own profile
+            actions: isOwnProfile
+                ? [
+                    IconButton(
+                      onPressed: () => context.push('/settings'),
+                      icon: const Icon(
+                        Icons.settings_outlined,
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                  ]
+                : null,
           ),
-          SliverToBoxAdapter(child: ProfileHeader(profile: profile)),
+          // Pass canEdit to control edit buttons visibility based on permissions
+          SliverToBoxAdapter(child: ProfileHeader(profile: profile, canEdit: isOwnProfile)),
           const SliverToBoxAdapter(child: SpotlightSection()),
           SliverPersistentHeader(
             pinned: true,

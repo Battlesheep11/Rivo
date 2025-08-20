@@ -9,8 +9,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class ProfileHeader extends StatefulWidget {
   final Profile profile;
+  // Controls whether edit UI (bio/tags) is visible. False for viewing other users.
+  final bool canEdit;
 
-  const ProfileHeader({super.key, required this.profile});
+  const ProfileHeader({super.key, required this.profile, this.canEdit = true});
 
   @override
   State<ProfileHeader> createState() => _ProfileHeaderState();
@@ -75,26 +77,27 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.edit, size: 18, color: AppColors.gray500),
-                tooltip: AppLocalizations.of(context)!.editBio,
-                onPressed: () async {
-                  // Show edit bio dialog and wait for result
-                  final newBio = await showDialog<String>(
-                    context: context,
-                    builder: (context) => _EditBioDialog(
-                      initialBio: _profile.bio ?? '',
-                      userId: _profile.id,
-                    ),
-                  );
+              if (widget.canEdit)
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 18, color: AppColors.gray500),
+                  tooltip: AppLocalizations.of(context)!.editBio,
+                  onPressed: () async {
+                    // Show edit bio dialog and wait for result
+                    final newBio = await showDialog<String>(
+                      context: context,
+                      builder: (context) => _EditBioDialog(
+                        initialBio: _profile.bio ?? '',
+                        userId: _profile.id,
+                      ),
+                    );
 
-                  if (newBio != null) {
-                    setState(() {
-                      _profile = _profile.copyWith(bio: newBio);
-                    });
-                  }
-                },
-              ),
+                    if (newBio != null) {
+                      setState(() {
+                        _profile = _profile.copyWith(bio: newBio);
+                      });
+                    }
+                  },
+                ),
             ],
           ),
           const SizedBox(height: 16),
@@ -116,38 +119,39 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                         children: _profile.tags.map((tag) => _buildTag(tag)).toList(),
                       ),
               ),
-              IconButton(
-                icon: const Icon(Icons.edit, size: 18, color: AppColors.gray500),
-                tooltip: AppLocalizations.of(context)!.editTags,
-                onPressed: () async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  final saved = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => const _EditTagsDialog(),
-                  );
-
-                  if (saved != true || !mounted) return;
-
-                  try {
-                    final profileData = await ProfileService().getProfileData(_profile.id);
-                    final row = profileData['profile'] as Map<String, dynamic>?;
-
-                    if (mounted && row != null) {
-                      setState(() {
-                        _profile = Profile.fromData(row); // <- now includes avatar_url correctly
-                      });
-                    }
-
-                  } catch (e) {
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: Text('Failed to refresh profile: $e'),
-                        backgroundColor: AppColors.error,
-                      ),
+              if (widget.canEdit)
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 18, color: AppColors.gray500),
+                  tooltip: AppLocalizations.of(context)!.editTags,
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final saved = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => const _EditTagsDialog(),
                     );
-                  }
-                },
-              ),
+
+                    if (saved != true || !mounted) return;
+
+                    try {
+                      final profileData = await ProfileService().getProfileData(_profile.id);
+                      final row = profileData['profile'] as Map<String, dynamic>?;
+
+                      if (mounted && row != null) {
+                        setState(() {
+                          _profile = Profile.fromData(row); // <- now includes avatar_url correctly
+                        });
+                      }
+
+                    } catch (e) {
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to refresh profile: $e'),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                    }
+                  },
+                ),
             ],
           ),
         ],

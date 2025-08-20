@@ -119,6 +119,14 @@ class AppRouter {
               path: '/profile',
               builder: (context, state) => const ProfilePage(),
             ),
+            // View other users' profiles by ID (read-only in UI)
+            GoRoute(
+              path: '/profile/:userId',
+              builder: (context, state) {
+                final userId = state.pathParameters['userId']!;
+                return ProfilePage(userId: userId);
+              },
+            ),
           ],
         ),
       ],
@@ -126,17 +134,11 @@ class AppRouter {
   }
 
   static int _calculateIndex(String location) {
-    switch (location) {
-      case '/home':
-        return 0;
-      case '/search':
-        return 1;
-
-      case '/profile':
-        return 2;
-      default:
-        return 0;
-    }
+    if (location == '/home') return 0;
+    if (location == '/search') return 1;
+    // Treat any profile path (e.g., /profile or /profile/:userId) as index 2
+    if (location.startsWith('/profile')) return 2;
+    return 0;
   }
 
   static String _getPath(int index) {

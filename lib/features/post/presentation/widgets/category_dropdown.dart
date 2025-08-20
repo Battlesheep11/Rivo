@@ -27,8 +27,7 @@ class CategoryDropdown extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              // ✅ use initialValue instead of deprecated `value`
-              initialValue: state.categoryId,
+              value: state.categoryId,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),

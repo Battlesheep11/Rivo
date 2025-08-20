@@ -9,12 +9,15 @@ class CaptionGlassBox extends StatelessWidget {
   final String? caption;
   // Height of the caption box
   final double height;
+  // Optional: called when the username is tapped
+  final VoidCallback? onUsernameTap;
 
   const CaptionGlassBox({
     super.key,
     required this.username,
     this.caption,
     required this.height,
+    this.onUsernameTap,
   });
 
   /// Detects if the given text contains any RTL (right-to-left) characters
@@ -34,15 +37,19 @@ class CaptionGlassBox extends StatelessWidget {
       children: [
         Align(
           alignment: Alignment.centerLeft,
-          child: Text(
-            username,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onUsernameTap,
+            child: Text(
+              username,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+              textAlign: TextAlign.left,
+              textDirection: TextDirection.ltr,
             ),
-            textAlign: TextAlign.left,
-            textDirection: TextDirection.ltr,
           ),
         ),
         const SizedBox(height: 5),
@@ -78,14 +85,18 @@ class CaptionGlassBox extends StatelessWidget {
       children: [
         Align(
           alignment: Alignment.centerLeft,
-          child: Text(
-            username,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onUsernameTap,
+            child: Text(
+              username,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+              textAlign: TextAlign.start,
             ),
-            textAlign: TextAlign.start,
           ),
         ),
         const SizedBox(height: 5),
