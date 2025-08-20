@@ -29,6 +29,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   double _lastScrollPosition = 0;
   bool _isUserDragging = false;
   bool _isGalleryScrolling = false;
+  
 
   @override
   void initState() {
@@ -40,6 +41,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  String _formatPrice(double price) {
+    final isInt = price == price.roundToDouble();
+    return isInt ? '₪${price.toStringAsFixed(0)}' : '₪${price.toStringAsFixed(2)}';
   }
 
   void _handleScroll() {
@@ -218,6 +224,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               ),
 
             // --- Caption overlay (glass box) ---
+            // --- Caption overlay (glass box) ---
             Positioned(
               left: 0,
               right: 0,
@@ -226,13 +233,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 opacity: isVisible ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 300),
                 child: CaptionGlassBox(
-                  username: post.username,
-                  caption: post.caption,
+                  title: post.productTitle,
+                  caption: post.caption, // optional
+                  seller: post.username,
+                  price: _formatPrice(post.productPrice),
                   height: MediaQuery.of(context).size.height / 5,
                   onUsernameTap: () => context.push('/profile/${post.creatorId}'),
                 ),
               ),
             ),
+
 
             // --- Action column (like, etc.) ---
             Positioned(

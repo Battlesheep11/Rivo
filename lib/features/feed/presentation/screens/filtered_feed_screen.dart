@@ -8,6 +8,8 @@ import 'package:rivo_app_beta/features/feed/presentation/widgets/image_gallery.d
 import 'package:rivo_app_beta/features/feed/presentation/widgets/caption_glass_box.dart';
 import 'package:rivo_app_beta/features/feed/presentation/widgets/post_action_column.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rivo_app_beta/core/utils/price_formatter.dart';
+
 
 class FilteredFeedScreen extends ConsumerStatefulWidget {
   final String? tagId;
@@ -128,12 +130,15 @@ class _FilteredFeedScreenState extends ConsumerState<FilteredFeedScreen> {
                 left: 0,
                 right: 0,
                 child: AnimatedOpacity(
-                  opacity: isVisible ? 1 : 0.0,
-                  duration: const Duration(milliseconds: 300),
+                  opacity: isVisible ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
                   child: CaptionGlassBox(
-                    username: post.username,
-                    caption: post.caption,
+                    title: post.productTitle,
+                    caption: post.caption, // optional
+                    seller: post.username,
+                    price: formatPrice(post.productPrice),
                     height: MediaQuery.of(context).size.height / 5,
+                    onUsernameTap: () => context.push('/profile/${post.creatorId}'),
                   ),
                 ),
               ),

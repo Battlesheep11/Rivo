@@ -1,178 +1,113 @@
 import 'package:flutter/material.dart';
-import 'package:glass_kit/glass_kit.dart';
 
-/// A reusable glass caption overlay for feed posts, with iOS-style liquid glass and gradient.
 class CaptionGlassBox extends StatelessWidget {
-  // Username to display at the top of the caption box
-  final String username;
-  // Caption text, can be null
-  final String? caption;
-  // Height of the caption box
-  final double height;
-  // Optional: called when the username is tapped
+  final String title;            // product title
+  final String seller;           // username
+  final String price;            // formatted price text (e.g., ₪120)
+  final double height;           // box height
+  final String? caption;         // OPTIONAL: post caption
   final VoidCallback? onUsernameTap;
 
   const CaptionGlassBox({
     super.key,
-    required this.username,
-    this.caption,
+    required this.title,
+    required this.seller,
+    required this.price,
     required this.height,
+    this.caption,
     this.onUsernameTap,
   });
 
-  /// Detects if the given text contains any RTL (right-to-left) characters
-  bool _isRtl(String text) {
-    // This regex checks for characters in the Hebrew, Arabic, and other RTL blocks.
-    return RegExp(r'[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]').hasMatch(text);
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Determine if the caption is RTL
-    final isRtl = caption != null && _isRtl(caption!); 
-
-    final ltrLayout = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onUsernameTap,
-            child: Text(
-              username,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-              textAlign: TextAlign.left,
-              textDirection: TextDirection.ltr,
-            ),
-          ),
-        ),
-        const SizedBox(height: 5),
-        if (caption != null && caption!.isNotEmpty)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 50),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width - 70,
-                ),
-                child: Text(
-                  caption!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.left,
-                  textDirection: TextDirection.ltr,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-
-    final rtlLayout = Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onUsernameTap,
-            child: Text(
-              username,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-              textAlign: TextAlign.start,
-            ),
-          ),
-        ),
-        const SizedBox(height: 5),
-        if (caption != null && caption!.isNotEmpty)
-          Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 50),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width - 70,
-                ),
-                child: Text(
-                  caption!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.right,
-                  textDirection: TextDirection.rtl,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-
     return SizedBox(
-      height: height,
       width: double.infinity,
-      child: Stack(
-        children: [
-          // Background glass effect mimicking CSS `backdrop-filter: blur(6px)`
-          GlassContainer.frostedGlass(
-            height: height,
-            blur: 6, // matches CSS blur(6px)
-            frostedOpacity: 0.07,
-            borderWidth: 0,
-            // Only round the bottom corners to mirror card style in mockup
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(12),
-              bottomRight: Radius.circular(12),
-            ),
-            padding: EdgeInsets.zero,
-            child: const SizedBox.shrink(),
+      height: height,
+      child: DecoratedBox(
+        // remove `const` to avoid const-eval complaints
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0x00000000), // transparent
+              Color(0xB8000000), // 72% black
+            ],
+            stops: [0.0, 0.8],
           ),
-          Container(
-            height: double.infinity,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              // More dramatic gradient with deeper contrast
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: 0.1),   // 10% opacity at 10%
-                  Colors.black.withValues(alpha: 0.8),   // 80% opacity at 60%
-                  Colors.black.withValues(alpha: 0.95),  // 95% opacity at 100%
-                ],
-                stops: const [0.0, 0.1, 0.6, 1.0],
-                tileMode: TileMode.clamp,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 24, bottom: 16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title (product title)
+              Text(
+                title,
+                style: const TextStyle(
+                  fontFamily: 'SF Pro',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 28,
+                  height: 1.2,
+                  color: Colors.white,
+                  letterSpacing: -0.5,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
+
+              if (caption != null && caption!.trim().isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  caption!.trim(),
+                  style: const TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14,
+                    height: 1.3,
+                    color: Color(0xE6FFFFFF),
+                    letterSpacing: -0.2,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+
+              const SizedBox(height: 8),
+              // Seller (tap to profile)
+              GestureDetector(
+                onTap: onUsernameTap,
+                child: Text(
+                  'By $seller', // TODO: localize "By"
+                  style: const TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontWeight: FontWeight.w400,
+                    fontSize: 16,
+                    height: 1.3,
+                    color: Color(0xE6FFFFFF),
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+              // Price
+              Text(
+                price,
+                style: const TextStyle(
+                  fontFamily: 'SF Pro',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 24,
+                  height: 1.0,
+                  color: Color(0xE6FFFFFF),
+                  letterSpacing: -0.4,
+                ),
+              ),
+            ],
           ),
-          Padding(
-            // CSS padding: 24px 20px 20px (top, horizontal, bottom)
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-            child: SizedBox(
-              width: double.infinity,
-              child: isRtl ? rtlLayout : ltrLayout,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

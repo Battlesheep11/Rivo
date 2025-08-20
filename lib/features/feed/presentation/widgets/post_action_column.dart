@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'action_glass_button.dart';
 
-/// The right-side vertical column of action buttons for a feed post.
 class PostActionColumn extends StatelessWidget {
   final bool isLikedByMe;
   final int likeCount;
@@ -25,69 +24,65 @@ class PostActionColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.only(bottom: 80),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Like button: uses red icon if liked, otherwise default ActionGlassButton color
+          // Like button
           ActionGlassButton(
             icon: isLikedByMe ? Icons.favorite : Icons.favorite_border,
-            iconColor: isLikedByMe ? Colors.red : Colors.white,
-            backgroundColor: Colors.white, // matches ActionGlassButton default
             count: likeCount,
             onPressed: onLike,
+            isActive: isLikedByMe,
           ),
-          
-          const SizedBox(height: 12),
-          
-          // Comment button: uses ActionGlassButton defaults
-          // TODO: Implement comment count functionality - currently using placeholder value of 0
+          // Save button
           ActionGlassButton(
-            icon: Icons.comment_bank_outlined,
-            onPressed: onComment,
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // Save button: uses ActionGlassButton defaults
-          ActionGlassButton(
-            icon: Icons.save,
+            icon: Icons.bookmark_border_rounded,
             onPressed: onAdd,
           ),
           
           const SizedBox(height: 16),
           
           // User avatar
-          GestureDetector(
-            onTap: onAvatarTap,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha((255 * 0.1).round()),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withAlpha(200),
+                width: 2,
               ),
-              child: CircleAvatar(
-                radius: 22,
-                backgroundColor: Colors.grey[200],
-                backgroundImage: avatarUrl != null && avatarUrl!.startsWith('http')
-                    ? NetworkImage(avatarUrl!) as ImageProvider
-                    : null,
-                child: (avatarUrl == null || !avatarUrl!.startsWith('http'))
-                    ? const Icon(Icons.person, size: 24, color: Colors.grey)
-                    : null,
-              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(25),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: avatarUrl != null && avatarUrl!.startsWith('http')
+                  ? Image.network(
+                      avatarUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar(),
+                    )
+                  : _buildDefaultAvatar(),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDefaultAvatar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        shape: BoxShape.circle,
+      ),
+      child: const Icon(Icons.person, size: 24, color: Colors.grey),
     );
   }
 }
