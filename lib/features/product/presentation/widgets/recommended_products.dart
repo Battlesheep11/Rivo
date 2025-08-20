@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/features/product/domain/product.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:rivo_app_beta/core/cache/image_cache_manager.dart';
 
 class RecommendedProducts extends StatelessWidget {
   const RecommendedProducts({super.key, required this.products});
@@ -47,11 +49,21 @@ class RecommendedProducts extends StatelessWidget {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: product.imageUrls.isNotEmpty
-                            ? Image.network(
-                                product.imageUrls.first,
+                            ? CachedNetworkImage(
+                                imageUrl: product.imageUrls.first,
+                                cacheManager: ImageCacheManager(),
                                 height: 160,
                                 width: 160,
                                 fit: BoxFit.cover,
+                                errorWidget: (context, url, error) => Container(
+                                  height: 160,
+                                  width: 160,
+                                  color: Colors.grey[200],
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    color: Colors.grey[400],
+                                  ),
+                                ),
                               )
                             : Container(
                                 height: 160,

@@ -6,6 +6,8 @@ import 'package:rivo_app_beta/core/toast/toast_service.dart';
 import 'package:rivo_app_beta/features/auth/domain/repositories/auth_repository.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/email.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/password.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 
 class SigninFormState {
   final Email email;
@@ -82,6 +84,9 @@ class SigninFormViewModel extends StateNotifier<SigninFormState> {
   Future<void> submit(BuildContext context) async {
     if (!state.isValid || state.isSubmitting) return;
 
+    // Grab localization early (before any awaits)
+    final l10n = AppLocalizations.of(context)!;
+
     // Check rate limiting before attempting login
     final rateLimiter = RateLimiterService();
     final rateLimitError = rateLimiter.checkLoginAttempt(state.email.value);
@@ -93,6 +98,20 @@ class SigninFormViewModel extends StateNotifier<SigninFormState> {
         errorMessage: rateLimitError,
       );
       ToastService().showError(rateLimitError);
+      return;
+    }
+
+    // Early connectivity check to avoid futile network calls (v6 returns a list)
+    final results = await Connectivity().checkConnectivity();
+    final bool isOffline = results.every((r) => r == ConnectivityResult.none);
+    if (isOffline) {
+      final msg = l10n.noInternetConnection; // localized message
+      state = state.copyWith(
+        isSubmitting: false,
+        isFailure: true,
+        errorMessage: msg,
+      );
+      ToastService().showError(msg);
       return;
     }
 

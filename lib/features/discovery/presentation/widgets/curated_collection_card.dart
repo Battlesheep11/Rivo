@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:rivo_app_beta/features/discovery/domain/entities/curated_collection_entity.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/core/design_system/widgets/app_svg_icon.dart'; // ✅ שימוש ב־AppSvgIcon
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:rivo_app_beta/core/cache/image_cache_manager.dart';
 
 class CuratedCollectionCard extends StatelessWidget {
   final CuratedCollectionEntity collection;
@@ -23,11 +25,12 @@ class CuratedCollectionCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // ✅ תמונת רקע
-            Image.network(
-              collection.imageUrl,
+            // ✅ תמונת רקע (עם cache ב־TTL של 7 ימים)
+            CachedNetworkImage(
+              imageUrl: collection.imageUrl,
+              cacheManager: ImageCacheManager(),
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const ColoredBox(
+              errorWidget: (context, url, error) => const ColoredBox(
                 color: Colors.grey,
                 child: Center(
                   child: Icon(Icons.image, size: 32, color: Colors.white),

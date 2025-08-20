@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:rivo_app_beta/core/design_system/widgets/glass_card.dart';
 import 'package:rivo_app_beta/core/design_system/widgets/glass_text.dart';
 import 'package:rivo_app_beta/features/discovery/domain/entities/discovery_tag_entity.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:rivo_app_beta/core/cache/image_cache_manager.dart';
 
 class CuratedTagCard extends StatelessWidget {
   final DiscoveryTagEntity tag;
@@ -25,11 +27,20 @@ class CuratedTagCard extends StatelessWidget {
           if (tag.imageUrl != null && tag.imageUrl!.isNotEmpty)
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
-              child: Image.network(
-                tag.imageUrl!,
+              child: CachedNetworkImage(
+                imageUrl: tag.imageUrl!,
+                cacheManager: ImageCacheManager(),
                 width: double.infinity,
                 height: 120,
                 fit: BoxFit.cover,
+                errorWidget: (context, url, error) => Container(
+                  height: 120,
+                  width: double.infinity,
+                  color: Colors.grey[300],
+                  child: const Center(
+                    child: Icon(Icons.image, color: Colors.white),
+                  ),
+                ),
               ),
             )
           else

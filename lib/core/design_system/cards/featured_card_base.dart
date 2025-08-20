@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:rivo_app_beta/core/cache/image_cache_manager.dart';
 
 class FeaturedCardBase extends StatelessWidget {
   final String imageUrl;
@@ -28,9 +30,16 @@ class FeaturedCardBase extends StatelessWidget {
             children: [
               // רקע תמונה
               Positioned.fill(
-                child: Image.network(
-                  imageUrl,
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  cacheManager: ImageCacheManager(), // 7-day TTL disk cache
                   fit: BoxFit.cover,
+                  errorWidget: (context, url, error) => const ColoredBox(
+                    color: Colors.grey,
+                    child: Center(
+                      child: Icon(Icons.image, size: 32, color: Colors.white),
+                    ),
+                  ),
                 ),
               ),
 

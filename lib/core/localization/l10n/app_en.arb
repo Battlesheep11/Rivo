@@ -390,5 +390,6 @@
 "conditionAsNew": "As new",
 "conditionRequired": "Please select a condition",
 "conditionRequiredError": "Please select the item's condition.",
-  "onboardingSkip": "Skip"
+  "onboardingSkip": "Skip",
+  "noInternetConnection": "No internet connection. Please check your connection and try again."
 }

@@ -9,6 +9,8 @@ import 'package:rivo_app_beta/core/utils/password_strength_checker.dart';
 import 'package:rivo_app_beta/core/navigation/navigator_key_provider.dart';
 import 'package:rivo_app_beta/core/security/field_security.dart';
 import 'package:rivo_app_beta/core/error_handling/app_exception.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 
 import 'package:rivo_app_beta/features/auth/domain/repositories/auth_repository.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/username.dart';
@@ -190,6 +192,19 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
   Future<bool> submit(BuildContext context) async {
     if (!state.isValid) return false;
 
+    // Grab localization early (before any awaits)
+    final l10n = AppLocalizations.of(context)!;
+
+    // Early connectivity check to avoid futile network calls (v6 returns a list)
+    final results = await Connectivity().checkConnectivity();
+    final bool isOffline = results.every((r) => r == ConnectivityResult.none);
+    if (isOffline) {
+      final msg = l10n.noInternetConnection; // localized message
+      state = state.copyWith(isSubmitting: false, isFailure: true, errorMessage: msg);
+      ToastService().showError(msg);
+      return false;
+    }
+
     try {
       // extra sanitize
       FieldSecurity.sanitizeString(
@@ -198,6 +213,8 @@ class SignupFormViewModel extends StateNotifier<SignupFormState> {
         isRequired: true,
         maxLength: 30,
       );
+
+      if (!context.mounted) return false; // context safety after await above
 
       final overlay = _ref.read(loadingOverlayProvider);
       state = state.copyWith(isSubmitting: true, isFailure: false, isSuccess: false);
