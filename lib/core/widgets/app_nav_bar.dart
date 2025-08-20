@@ -1,8 +1,9 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:glass_kit/glass_kit.dart';
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:rivo_app_beta/core/presentation/providers/nav_bar_provider.dart';
+import 'package:flutter/cupertino.dart';
 
 class _NavItem {
   final String label;
@@ -37,16 +38,29 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
     widget.onTap(index);
   }
 
+  List<_NavItem> get _navItems {
+    final localizations = AppLocalizations.of(context)!;
+    return [
+      _NavItem(
+        label: localizations.navBarHome, 
+        icon: CupertinoIcons.collections, 
+        activeIcon: CupertinoIcons.collections_solid
+      ),
+      _NavItem(
+        label: localizations.navBarSearch, 
+        icon: CupertinoIcons.news, 
+        activeIcon: CupertinoIcons.news_solid
+      ),
+      _NavItem(
+        label: localizations.navBarProfile, 
+        icon: CupertinoIcons.person, 
+        activeIcon: CupertinoIcons.person_fill
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Listen to navBarVisibilityProvider for minimized/expanded state
-    final localizations = AppLocalizations.of(context)!;
-    final navItems = [
-      _NavItem(label: localizations.navBarHome, icon: Icons.home_outlined, activeIcon: Icons.home),
-      _NavItem(label: localizations.navBarSearch, icon: Icons.search_outlined, activeIcon: Icons.search),
-      _NavItem(label: localizations.navBarProfile, icon: Icons.person_outline, activeIcon: Icons.person),
-    ];
-
     final isVisible = ref.watch(navBarVisibilityProvider);
 
     // Use SafeArea to avoid system UI overlap
@@ -59,41 +73,49 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
         switchInCurve: Curves.easeOutCubic,
         switchOutCurve: Curves.easeInCubic,
           child: isVisible
-              ? _buildNavBar(context, Theme.of(context), navItems)
+              ? _buildNavBar(context, Theme.of(context), _navItems)
               : _buildMinimizedIcon(context),
         ),
       ),
     );
   }
 
-  /// Builds the minimized floating home icon
+  /// Builds the minimized floating icon
   Widget _buildMinimizedIcon(BuildContext context) {
+    // Get the active tab's icon
+    final activeIcon = _navItems[widget.currentIndex].activeIcon;
+    
     return Align(
       alignment: Alignment.bottomLeft,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 25, bottom: 20),
-        child: GestureDetector(
-          onTap: () => ref.read(navBarVisibilityProvider.notifier).state = true,
-          child: Material(
-            color: Colors.transparent,
-            elevation: 8,
-            shape: const CircleBorder(),
-            child: GlassContainer(
-              height: 56,
-              width: 56,
-              borderRadius: BorderRadius.circular(28),
-              blur: 25,
-              borderWidth: 0,
-              color: Colors.white.withAlpha(120),
-              borderGradient: LinearGradient(
-                colors: [Colors.white.withAlpha(60), Colors.white.withAlpha(20)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      child: Container(
+        margin: const EdgeInsets.only(left: 16, bottom: 20),
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25),
+          color: Colors.white.withAlpha(200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(30),
+              blurRadius: 10,
+              spreadRadius: 0,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(25),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25),
+                color: Colors.white.withAlpha(180),
               ),
               child: Icon(
-                Icons.home,
-                color: const Color(0xFF007AFF),
-                size: 32,
+                activeIcon,
+                color: const Color(0xFF0088FF),
+                size: 28,
               ),
             ),
           ),
@@ -104,34 +126,63 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
 
   /// Builds the main nav bar UI with glass effect and animated indicator
   Widget _buildNavBar(BuildContext context, ThemeData theme, List<_NavItem> navItems) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(50.0, 0, 50.0, 17.0),
-      child: GlassContainer(
-        height: 70,
-        width: double.infinity,
-        borderRadius: BorderRadius.circular(50),
-        blur: 25,
-        borderWidth: 0,
-        color: Colors.white.withAlpha(75), // 30% opacity
-        borderGradient: LinearGradient(
-          colors: [Colors.white.withAlpha(25), Colors.white.withAlpha(12)], // 10% and 5% opacity
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        child: Directionality(
-          // Force LTR for the navigation items to maintain order
-          textDirection: TextDirection.ltr,
-          child: Row(
-            children: List.generate(
-              navItems.length,
-              (index) => _buildNavButton(
-                index,
-                navItems[index].label,
-                navItems[index].icon,
-                navItems[index].activeIcon,
-                theme,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(100),
+        child: Container(
+          height: 54,
+          width: 286,
+          decoration: BoxDecoration(
+            color: Colors.white.withAlpha(180),
+            borderRadius: BorderRadius.circular(100),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(20),
+                blurRadius: 10,
+                spreadRadius: 0,
+                offset: const Offset(0, 4),
               ),
-            ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              // Selection highlight
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                left: (widget.currentIndex * (286.0 / navItems.length)) + 4,
+                width: (286.0 / navItems.length) - 8,
+                top: 4,
+                bottom: 4,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEDEDED).withAlpha(200),
+                    borderRadius: BorderRadius.circular(100),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(30),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Navigation items
+              Row(
+                children: List.generate(
+                  navItems.length,
+                  (index) => _buildNavButton(
+                    index,
+                    navItems[index].label,
+                    navItems[index].icon,
+                    navItems[index].activeIcon,
+                    theme,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -142,8 +193,11 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
   /// Builds a single navigation button with icon and label
   Widget _buildNavButton(int index, String label, IconData icon, IconData activeIcon, ThemeData theme) {
     final bool isActive = widget.currentIndex == index;
-    final activeColor = const Color(0xFF007AFF);
-    final inactiveColor = theme.textTheme.bodyLarge?.color?.withAlpha((255 * 0.7).round()) ?? Colors.black54;
+    // Ensure the tab bar items are in the correct order (left to right)
+    final int displayIndex = widget.currentIndex;
+    final bool isCorrectlyPositioned = index == displayIndex;
+    final activeColor = const Color(0xFF0088FF);
+    final inactiveColor = const Color(0xFF404040);
 
     return Expanded(
       child: GestureDetector(
@@ -155,16 +209,17 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
             Icon(
               isActive ? activeIcon : icon,
               color: isActive ? activeColor : inactiveColor,
-              size: isActive ? 28.0 : 22.0,
+              size: isActive ? 24.0 : 22.0,
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 1),
             Text(
               label,
               style: TextStyle(
                 color: isActive ? activeColor : inactiveColor,
-                fontSize: isActive ? 12.0 : 10.0,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                letterSpacing: 0.5,
+                fontSize: 10,
+                height: 1.2,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                fontFamily: 'SF Pro', 
               ),
             ),
           ],
@@ -173,4 +228,3 @@ class _AppNavBarState extends ConsumerState<AppNavBar> {
     );
   }
 }
-

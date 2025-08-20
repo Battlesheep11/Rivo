@@ -1,62 +1,81 @@
 import 'package:flutter/material.dart';
-import 'dart:ui'; // For ImageFilter
+import 'dart:ui';
 
-/// A circular solid white action button with icon and optional count.
+/// A circular glass-style action button with icon and optional count
 class ActionGlassButton extends StatelessWidget {
   final IconData icon;
   final int? count;
-  final Color iconColor;
-  final Color backgroundColor;
+  final Color? iconColor;
+  final Color? backgroundColor;
+  final bool isActive;
   final VoidCallback onPressed;
   
   const ActionGlassButton({
     super.key,
     required this.icon,
     this.count,
-    this.iconColor = Colors.white,
-    this.backgroundColor = Colors.white,
+    this.iconColor,
+    this.backgroundColor,
+    this.isActive = false,
     required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Reverted to a simpler button style to fix theming issues.
-    // Re-introducing glass effect as requested.
+    final activeColor = const Color(0xFF0088FF);
+    final defaultColor = const Color(0xFF404040);
+    final currentIconColor = isActive ? activeColor : (iconColor ?? defaultColor);
+    final currentBgColor = backgroundColor ?? Colors.white.withAlpha(180);
+
     return GestureDetector(
       onTap: onPressed,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24.0), // Half of width/height to make it circular
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              // Semi-transparent white for the glass effect
-              color: Colors.white.withAlpha(51), // 0.2 * 255 ≈ 51 alpha value
-              shape: BoxShape.circle,
-            ),
-            child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      child: Container(
+        width: 50,
+        height: 50,
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Stack(
           children: [
-            Icon(icon, color: iconColor, size: 24),
-            if (icon != Icons.comment_bank_outlined && (count ?? 0) > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 2.0),
-                child: Text(
-                  _formatCount(count!),
-                  style: TextStyle(
-                    color: iconColor.withAlpha(51), // 80% opacity of the original color
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+            // Background blur effect
+            ClipRRect(
+              borderRadius: BorderRadius.circular(25),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: currentBgColor,
+                    borderRadius: BorderRadius.circular(25),
+                    border: Border.all(
+                      color: Colors.white.withAlpha(120),
+                      width: 1,
+                    ),
                   ),
                 ),
               ),
+            ),
+            
+            // Icon and count
+            Positioned.fill(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: currentIconColor, size: 24),
+                  if (count != null && count! > 0) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      _formatCount(count!),
+                      style: TextStyle(
+                        color: currentIconColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
-        ), // Close Column
-          ), // Close Container
-        ), // Close BackdropFilter
-      ), // Close ClipRRect
+        ),
+      ),
     );
   }
 
@@ -64,7 +83,7 @@ class ActionGlassButton extends StatelessWidget {
     if (count >= 1000000) {
       return '${(count / 1000000).toStringAsFixed(1)}M';
     } else if (count >= 1000) {
-      return '${(count / 1000).toStringAsFixed(1)}K';
+      return '${(count / 1000).toStringAsFixed(0)}K';
     }
     return count.toString();
   }

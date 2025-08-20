@@ -226,9 +226,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 opacity: isVisible ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 300),
                 child: CaptionGlassBox(
-                  username: post.username,
-                  caption: post.caption,
-                  height: MediaQuery.of(context).size.height / 5,
+                  title: post.productTitle,
+                  seller: post.username,
+                  price: post.productPrice != null
+                      ? '\$${post.productPrice!.toStringAsFixed(2)}'
+                      : '',
+                  height: MediaQuery.of(context).size.height / 3.5,
                 ),
               ),
             ),
