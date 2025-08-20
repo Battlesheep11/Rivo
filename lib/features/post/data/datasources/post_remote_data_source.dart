@@ -8,13 +8,13 @@ import 'package:rivo_app_beta/core/media/data/media_compressor.dart';
 import 'package:rivo_app_beta/core/constants/media_constraints.dart';
 import 'package:uuid/uuid.dart';
 
-
 class PostRemoteDataSource {
   final SupabaseClient client;
 
   PostRemoteDataSource({required this.client});
 
-  Future<String> uploadPost(
+  /// End-to-end upload (Product → media → post → tags + product_* M:N joins)
+    Future<String> uploadPost(
     UploadPostPayload payload, {
     void Function(int uploaded, int total)? onMediaUploaded,
     void Function(String mediaPath, UploadMediaStatus status)? onMediaStatusChanged,
@@ -25,9 +25,31 @@ class PostRemoteDataSource {
         throw AppException.unauthorized('User not logged in');
       }
 
-      String? productId;
-      String postId = '';
+      // Thin safety net (server-side rules)
+      if ((payload.productPrice ?? 0) <= 1) {
+        throw AppException.validation('uploadPriceRequiredBackend');
+      }
+      if (payload.productTitle == null || payload.productTitle!.trim().isEmpty) {
+        throw AppException.validation('uploadTitleRequiredBackend');
+      }
+      if ((payload.conditionCode ?? '').isEmpty) {
+        throw AppException.validation('upload.required_fields_missing');
+      }
+      if ((payload.conditionCode == 'good' || payload.conditionCode == 'fair') &&
+          ((payload.defectCodes == null) || payload.defectCodes!.isEmpty)) {
+        throw AppException.validation('defects_required_for_condition');
+      }
 
+      // Helpful diagnostics
+      log('[PAYLOAD] title=${payload.productTitle} '
+          'price=${payload.productPrice} '
+          'category=${payload.categoryId} '
+          'condition=${payload.conditionCode} '
+          'defects=${payload.defectCodes} '
+          'materials=${payload.materialCodes} '
+          'colors=${payload.colorCodes}');
+
+      String? productId;
       if (payload.hasProduct) {
         productId = await _uploadProduct(
           payload,
@@ -37,30 +59,36 @@ class PostRemoteDataSource {
         );
       }
 
-      postId = await _uploadFeedPost(payload, userId, productId);
+      final postId = await _uploadFeedPost(payload, userId, productId);
       return postId;
-    } on PostgrestException catch (e) {
-      throw AppException.unexpected(
-        'Supabase error: ${e.message}',
-        code: 'upload_post_error',
-      );
-    } catch (e) {
-      throw AppException.unexpected(
-        'Unexpected error occurred',
-        code: 'upload_post_error',
-      );
+
+    } on PostgrestException catch (e, st) {
+      log('❌ PostgrestException', error: e, stackTrace: st);
+      throw AppException.unexpected('Supabase DB error: ${e.message}', code: 'postgrest_error');
+    } on StorageException catch (e, st) {
+      log('❌ StorageException', error: e, stackTrace: st);
+      throw AppException.unexpected('Storage error: ${e.message}', code: 'storage_error');
+    } on AppException {
+      rethrow; // already structured for UI
+    } catch (e, st) {
+      log('🔥 Unexpected error in uploadPost', error: e, stackTrace: st);
+      throw AppException.unexpected(e.toString(), code: 'unexpected_upload');
     }
   }
 
+
+  // --------------------------------------------------------------------------
+  // Product creation + media + schema-aligned M:N joins (defects/materials/colors)
+  // --------------------------------------------------------------------------
   Future<String> _uploadProduct(
     UploadPostPayload payload,
     String userId,
     void Function(int uploaded, int total)? onMediaUploaded,
     void Function(String mediaPath, UploadMediaStatus status)? onMediaStatusChanged,
   ) async {
-    log('🔄 Attempting to insert product with category ID: ${payload.categoryId}');
-    log('📝 Category ID type: ${payload.categoryId.runtimeType}');
-    
+    log('🔄 Inserting product; category ID: ${payload.categoryId} (${payload.categoryId.runtimeType})');
+
+    // Insert product with new columns aligned to schema
     final productResponse = await client
         .from('products')
         .insert({
@@ -68,18 +96,67 @@ class PostRemoteDataSource {
           'title': payload.productTitle,
           'description': payload.productDescription,
           'price': payload.productPrice,
+          'category_id': payload.categoryId,
+          // Measurements
           'chest': payload.chest,
           'waist': payload.waist,
           'length': payload.length,
-          'category_id': payload.categoryId,
+          'sleeve_length': payload.sleeveLength,
+          'shoulder_width': payload.shoulderWidth,
+          // Brand / Size
+          'brand': payload.brand,
+          'size': payload.size,
+          // Condition code (schema-aligned)
+          'condition_code': payload.conditionCode,
+          // NOTE: materials/colors are saved via join tables (below)
         })
         .select('id')
         .single();
-        
-    log('✅ Product inserted with ID: ${productResponse['id']}');
 
     final productId = productResponse['id'] as String;
+    log('✅ Product inserted: $productId');
 
+    // ---- M:N joins: product_defects / product_materials / product_colors ----
+    final List<String> defects   = payload.defectCodes   ?? const <String>[];
+    final List<String> materials = payload.materialCodes ?? const <String>[];
+    final List<String> colors    = payload.colorCodes    ?? const <String>[];
+
+    // ---- M:N joins: product_defects / product_materials / product_colors ----
+   // product_defects
+if (defects.isNotEmpty) {
+  final List<Map<String, dynamic>> defectRows = defects
+      .map((code) => {
+            'product_id': productId,
+            'defect_code': code,
+          })
+      .toList();
+  await client.from('product_defects').insert(defectRows);
+}
+
+// product_materials
+if (materials.isNotEmpty) {
+  final List<Map<String, dynamic>> materialRows = materials
+      .map((code) => {
+            'product_id': productId,
+            'material_code': code,
+          })
+      .toList();
+  await client.from('product_materials').insert(materialRows);
+}
+
+// product_colors
+if (colors.isNotEmpty) {
+  final List<Map<String, dynamic>> colorRows = colors
+      .map((code) => {
+            'product_id': productId,
+            'color_code': code,
+          })
+      .toList();
+  await client.from('product_colors').insert(colorRows);
+}
+
+
+    // ---- Media upload (order preserved via sort_order; cover should be index 0) ----
     for (int i = 0; i < payload.media.length; i++) {
       final media = payload.media[i];
 
@@ -109,6 +186,7 @@ class PostRemoteDataSource {
         final ext = isVideo ? 'mp4' : 'jpg';
         final uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
         final filename = '${userId}_$uniqueId.$ext';
+        // NOTE: here we prefix with 'media/' because we use .from('media') and want a subfolder path
         final path = 'media/$filename';
 
         final fileBytes = await preparedFile.readAsBytes();
@@ -128,7 +206,7 @@ class PostRemoteDataSource {
             .from('media')
             .insert({
               'media_url': mediaUrl,
-              'media_type': media.type.name,
+              'media_type': media.type.name, // 'image' | 'video' (enum)
             })
             .select('id')
             .single();
@@ -138,18 +216,19 @@ class PostRemoteDataSource {
         await client.from('product_media').insert({
           'product_id': productId,
           'media_id': mediaId,
-          'sort_order': media.sortOrder ?? 0,
+          'sort_order': media.sortOrder ?? i,
         });
 
         onMediaUploaded?.call(i + 1, payload.media.length);
         onMediaStatusChanged?.call(media.path, UploadMediaStatus.uploaded);
       } catch (e) {
         onMediaStatusChanged?.call(media.path, UploadMediaStatus.failed);
+        // continue to next media
         continue;
       }
     }
 
-    // Tags
+    // ---- Tags on product ----
     for (final tag in payload.tags) {
       final tagId = await _getOrCreateTagByName(tag.name);
       await client.from('product_tags').insert({
@@ -161,45 +240,9 @@ class PostRemoteDataSource {
     return productId;
   }
 
-  Future<File> _prepareFileForUpload({
-    required UploadableMedia media,
-    required void Function(String mediaPath, UploadMediaStatus status)? onMediaStatusChanged,
-  }) async {
-    File? file = media.file ?? await media.asset.file;
-    if (file == null) {
-      throw AppException.unexpected("Cannot access media file");
-    }
-
-    // Images: light compression
-    if (media.type == MediaType.image) {
-      onMediaStatusChanged?.call(media.path, UploadMediaStatus.compressing);
-      final result = await MediaCompressor.compressImageFile(file, quality: 88); // ⬆️
-      final prepared = result.fold<File>(
-        (compressed) => compressed,
-        (_) => file, // fallback to original if compression failed
-      );
-      onMediaStatusChanged?.call(media.path, UploadMediaStatus.compressed);
-      return prepared;
-    }
-
-    // Videos: skip tiny files (<8MB) to save time/battery, otherwise compress
-    final originalSize = await file.length();
-    const skipThresholdBytes = 12 * 1024 * 1024;
-
-    if (originalSize <= skipThresholdBytes) {
-      return file;
-    }
-
-    onMediaStatusChanged?.call(media.path, UploadMediaStatus.compressing);
-    final vResult = await MediaCompressor.compressVideoFile(file);
-    final prepared = vResult.fold<File>(
-      (compressed) => compressed,
-      (_) => file, // fallback to original if compression fails
-    );
-    onMediaStatusChanged?.call(media.path, UploadMediaStatus.compressed);
-    return prepared;
-  }
-
+  // --------------------------------------------------------------------------
+  // Feed post + post tags
+  // --------------------------------------------------------------------------
   Future<String> _uploadFeedPost(
     UploadPostPayload payload,
     String userId,
@@ -224,7 +267,7 @@ class PostRemoteDataSource {
         'tag_id': tagId,
       });
     }
-    
+
     return postId;
   }
 
@@ -251,10 +294,10 @@ class PostRemoteDataSource {
     return created['id'] as String;
   }
 
+  // --------------------------------------------------------------------------
+  // Session-based Option A (unchanged, still available if you use the Edge Fn)
+  // --------------------------------------------------------------------------
 
-  // === Option A: upload a single media item under a session prefix ===
-  // Path: media bucket → {userId}/{sessionId}/{index}.jpg|mp4
-  // Returns the filename (e.g., "0.jpg") so the caller can build `expectedFiles` in order.
   Future<String> uploadMediaToSession({
     required String sessionId,
     required UploadableMedia media,
@@ -266,19 +309,14 @@ class PostRemoteDataSource {
       throw AppException.unauthorized('User not logged in');
     }
 
-    // Reuse existing compression/validation logic
     final preparedFile = await _prepareFileForUpload(
       media: media,
       onMediaStatusChanged: onMediaStatusChanged,
     );
 
-    // Determine deterministic filename by index (stable ordering for finalize_post)
     final String filename = _sessionFilename(media, index);
-
-    // IMPORTANT: path is RELATIVE to the 'media' bucket (no 'media/' prefix here)
     final relativePath = '${user.id}/$sessionId/$filename';
 
-    // Upload
     onMediaStatusChanged?.call(media.path, UploadMediaStatus.uploading);
     await client.storage.from('media').uploadBinary(
       relativePath,
@@ -293,17 +331,11 @@ class PostRemoteDataSource {
     return filename;
   }
 
-  // Helper: stable filename for session uploads
   static String _sessionFilename(UploadableMedia media, int index) {
     final ext = media.type == MediaType.video ? 'mp4' : 'jpg';
     return '$index.$ext';
   }
 
-    /// Starts a lean upload session:
-  /// 1) Creates the product (draft) for the current user.
-  /// 2) Returns a new sessionId (uuid) and the productId.
-  ///
-  /// Media uploads should then call `uploadMediaToSession(...)` using this sessionId.
   Future<({String sessionId, String productId})> startUploadSession(
     UploadPostPayload payload,
   ) async {
@@ -322,7 +354,12 @@ class PostRemoteDataSource {
           'chest': payload.chest,
           'waist': payload.waist,
           'length': payload.length,
+          'sleeve_length': payload.sleeveLength,
+          'shoulder_width': payload.shoulderWidth,
           'category_id': payload.categoryId,
+          'brand': payload.brand,
+          'size': payload.size,
+          'condition_code': payload.conditionCode,
         })
         .select('id')
         .single();
@@ -333,16 +370,12 @@ class PostRemoteDataSource {
     return (sessionId: sessionId, productId: productId);
   }
 
-  /// Finalizes the post by calling the `finalize_post` Edge Function.
-  /// - If some files are still missing in Storage, the function returns 202/pending.
-  ///   In that case we throw an AppException with code 'finalize_pending' so the caller can retry.
-  /// - On success returns the created postId.
   Future<String> finalizePostSession({
     required String sessionId,
     required String productId,
     required String? caption,
     required List<String> tagNames,
-    required List<String> expectedFiles, // MUST be in the same order used for filenames
+    required List<String> expectedFiles,
   }) async {
     final userId = client.auth.currentUser?.id;
     if (userId == null) {
@@ -357,13 +390,11 @@ class PostRemoteDataSource {
       'expected_files': expectedFiles,
     });
 
-    // Handle "pending" (some files not uploaded yet)
-    final status = res.status; // present in supabase_dart v2
+    final status = res.status;
     if (status == 202) {
       throw AppException.unexpected('finalize_pending', code: 'finalize_pending');
     }
 
-    // Extra safety if the function encodes status in data
     final data = res.data;
     if (data is Map && data['status'] == 'pending') {
       throw AppException.unexpected('finalize_pending', code: 'finalize_pending');
@@ -375,9 +406,7 @@ class PostRemoteDataSource {
     }
     return postId;
   }
-  /// Discards an in-progress session:
-  /// - Deletes all files under {userId}/{sessionId}/ in the `media` bucket.
-  /// - Optionally deletes the draft product if it's not linked to any post.
+
   Future<void> discardUploadSession({
     required String sessionId,
     String? productId,
@@ -397,73 +426,42 @@ class PostRemoteDataSource {
     }
   }
 
-  /// End-to-end upload using the lean Option A flow:
-  /// 1) Creates a product + sessionId.
-  /// 2) For each media: prepare (compress/validate) and upload to storage under {userId}/{sessionId}/{index}.ext
-  /// 3) Finalizes via Edge Function `finalize_post` with retry if files are still pending.
-  ///
-  /// Returns the created postId on success.
-  Future<String> uploadPostOptionA(
-    UploadPostPayload payload, {
-    void Function(int uploaded, int total)? onMediaUploaded,
-    void Function(String mediaPath, UploadMediaStatus status)? onMediaStatusChanged,
-    Duration retryEvery = const Duration(seconds: 2),
-    int maxFinalizeAttempts = 20, // ~40s
+  // --------------------------------------------------------------------------
+  // Shared helpers
+  // --------------------------------------------------------------------------
+  Future<File> _prepareFileForUpload({
+    required UploadableMedia media,
+    required void Function(String mediaPath, UploadMediaStatus status)? onMediaStatusChanged,
   }) async {
-    final userId = client.auth.currentUser?.id;
-    if (userId == null) {
-      throw AppException.unauthorized('User not logged in');
+    File? file = media.file ?? await media.asset.file;
+    if (file == null) {
+      throw AppException.unexpected("Cannot access media file");
     }
 
-    // 1) Start: create product & get sessionId
-    final start = await startUploadSession(payload);
-    final sessionId = start.sessionId;
-    final productId = start.productId;
-
-    // 2) Upload each media immediately (order matters)
-    final expectedFiles = <String>[];
-    for (int i = 0; i < payload.media.length; i++) {
-      final media = payload.media[i];
-
-      // Reuse the single-item session upload we added earlier
-      final filename = await uploadMediaToSession(
-        sessionId: sessionId,
-        media: media,
-        index: i,
-        onMediaStatusChanged: onMediaStatusChanged,
+    if (media.type == MediaType.image) {
+      onMediaStatusChanged?.call(media.path, UploadMediaStatus.compressing);
+      final result = await MediaCompressor.compressImageFile(file, quality: 88);
+      final prepared = result.fold<File>(
+        (compressed) => compressed,
+        (_) => file,
       );
-      expectedFiles.add(filename);
-
-      onMediaUploaded?.call(i + 1, payload.media.length);
+      onMediaStatusChanged?.call(media.path, UploadMediaStatus.compressed);
+      return prepared;
     }
 
-    // 3) Finalize with retry (handles "pending" 202 from Edge Function)
-    AppException? lastErr;
-    for (int attempt = 0; attempt < maxFinalizeAttempts; attempt++) {
-      try {
-        final postId = await finalizePostSession(
-          sessionId: sessionId,
-          productId: productId,
-          caption: payload.caption,
-          tagNames: payload.tags.map((t) => t.name).toList(),
-          expectedFiles: expectedFiles,
-        );
-        return postId; // ✅ done
-      } on AppException catch (e) {
-        // Function returns 202 → we encode as 'finalize_pending'
-        if (e.code == 'finalize_pending') {
-          await Future.delayed(retryEvery);
-          lastErr = e;
-          continue;
-        }
-        // Any other error = fail fast
-        rethrow;
-      }
+    final originalSize = await file.length();
+    const skipThresholdBytes = 12 * 1024 * 1024;
+    if (originalSize <= skipThresholdBytes) {
+      return file;
     }
 
-    // If we get here, finalize timed out
-    throw lastErr ?? AppException.unexpected('finalize_timeout', code: 'finalize_timeout');
+    onMediaStatusChanged?.call(media.path, UploadMediaStatus.compressing);
+    final vResult = await MediaCompressor.compressVideoFile(file);
+    final prepared = vResult.fold<File>(
+      (compressed) => compressed,
+      (_) => file,
+    );
+    onMediaStatusChanged?.call(media.path, UploadMediaStatus.compressed);
+    return prepared;
   }
-
-
 }

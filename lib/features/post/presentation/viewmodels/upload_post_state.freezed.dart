@@ -17,24 +17,36 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$UploadPostState {
+  // ---------- Basic info ----------
   String? get title => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
-  double? get price => throw _privateConstructorUsedError;
+  double? get productPrice =>
+      throw _privateConstructorUsedError; // ---------- Category ----------
+  String? get categoryId =>
+      throw _privateConstructorUsedError; // ---------- Measurements ----------
   double? get chest => throw _privateConstructorUsedError;
   double? get waist => throw _privateConstructorUsedError;
   double? get length => throw _privateConstructorUsedError;
-  String? get caption => throw _privateConstructorUsedError;
-  String? get categoryId => throw _privateConstructorUsedError;
-  String? get brand => throw _privateConstructorUsedError; // brand of the item
-  String? get material =>
-      throw _privateConstructorUsedError; // material description
-  String? get condition =>
-      throw _privateConstructorUsedError; // item condition (e.g. New, Used)
-  String? get size => throw _privateConstructorUsedError; // item size
+  double? get sleeveLength => throw _privateConstructorUsedError;
+  double? get shoulderWidth =>
+      throw _privateConstructorUsedError; // ---------- New schema codes ----------
+  String? get conditionCode => throw _privateConstructorUsedError;
+  List<String> get defectCodes => throw _privateConstructorUsedError;
+  List<String> get materialCodes => throw _privateConstructorUsedError;
+  List<String> get colorCodes => throw _privateConstructorUsedError;
+  String get statusCode => throw _privateConstructorUsedError;
+  String? get otherMaterial => throw _privateConstructorUsedError;
+  String? get otherDefectNote =>
+      throw _privateConstructorUsedError; // ---------- Legacy display strings ----------
+  String? get brand => throw _privateConstructorUsedError;
+  String? get size =>
+      throw _privateConstructorUsedError; // ---------- Post ----------
+  String? get caption =>
+      throw _privateConstructorUsedError; // ---------- Media & tags ----------
   List<UploadableMedia> get media => throw _privateConstructorUsedError;
   List<String> get tagNames => throw _privateConstructorUsedError;
   int get coverImageIndex =>
-      throw _privateConstructorUsedError; // Index of the selected cover image
+      throw _privateConstructorUsedError; // ---------- UI state ----------
   bool get isSubmitting => throw _privateConstructorUsedError;
   FormStatus get status => throw _privateConstructorUsedError;
   int get uploadedMediaCount => throw _privateConstructorUsedError;
@@ -57,16 +69,23 @@ abstract class $UploadPostStateCopyWith<$Res> {
   $Res call({
     String? title,
     String? description,
-    double? price,
+    double? productPrice,
+    String? categoryId,
     double? chest,
     double? waist,
     double? length,
-    String? caption,
-    String? categoryId,
+    double? sleeveLength,
+    double? shoulderWidth,
+    String? conditionCode,
+    List<String> defectCodes,
+    List<String> materialCodes,
+    List<String> colorCodes,
+    String statusCode,
+    String? otherMaterial,
+    String? otherDefectNote,
     String? brand,
-    String? material,
-    String? condition,
     String? size,
+    String? caption,
     List<UploadableMedia> media,
     List<String> tagNames,
     int coverImageIndex,
@@ -94,16 +113,23 @@ class _$UploadPostStateCopyWithImpl<$Res, $Val extends UploadPostState>
   $Res call({
     Object? title = freezed,
     Object? description = freezed,
-    Object? price = freezed,
+    Object? productPrice = freezed,
+    Object? categoryId = freezed,
     Object? chest = freezed,
     Object? waist = freezed,
     Object? length = freezed,
-    Object? caption = freezed,
-    Object? categoryId = freezed,
+    Object? sleeveLength = freezed,
+    Object? shoulderWidth = freezed,
+    Object? conditionCode = freezed,
+    Object? defectCodes = null,
+    Object? materialCodes = null,
+    Object? colorCodes = null,
+    Object? statusCode = null,
+    Object? otherMaterial = freezed,
+    Object? otherDefectNote = freezed,
     Object? brand = freezed,
-    Object? material = freezed,
-    Object? condition = freezed,
     Object? size = freezed,
+    Object? caption = freezed,
     Object? media = null,
     Object? tagNames = null,
     Object? coverImageIndex = null,
@@ -122,10 +148,14 @@ class _$UploadPostStateCopyWithImpl<$Res, $Val extends UploadPostState>
                 ? _value.description
                 : description // ignore: cast_nullable_to_non_nullable
                       as String?,
-            price: freezed == price
-                ? _value.price
-                : price // ignore: cast_nullable_to_non_nullable
+            productPrice: freezed == productPrice
+                ? _value.productPrice
+                : productPrice // ignore: cast_nullable_to_non_nullable
                       as double?,
+            categoryId: freezed == categoryId
+                ? _value.categoryId
+                : categoryId // ignore: cast_nullable_to_non_nullable
+                      as String?,
             chest: freezed == chest
                 ? _value.chest
                 : chest // ignore: cast_nullable_to_non_nullable
@@ -138,29 +168,53 @@ class _$UploadPostStateCopyWithImpl<$Res, $Val extends UploadPostState>
                 ? _value.length
                 : length // ignore: cast_nullable_to_non_nullable
                       as double?,
-            caption: freezed == caption
-                ? _value.caption
-                : caption // ignore: cast_nullable_to_non_nullable
+            sleeveLength: freezed == sleeveLength
+                ? _value.sleeveLength
+                : sleeveLength // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            shoulderWidth: freezed == shoulderWidth
+                ? _value.shoulderWidth
+                : shoulderWidth // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            conditionCode: freezed == conditionCode
+                ? _value.conditionCode
+                : conditionCode // ignore: cast_nullable_to_non_nullable
                       as String?,
-            categoryId: freezed == categoryId
-                ? _value.categoryId
-                : categoryId // ignore: cast_nullable_to_non_nullable
+            defectCodes: null == defectCodes
+                ? _value.defectCodes
+                : defectCodes // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
+            materialCodes: null == materialCodes
+                ? _value.materialCodes
+                : materialCodes // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
+            colorCodes: null == colorCodes
+                ? _value.colorCodes
+                : colorCodes // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
+            statusCode: null == statusCode
+                ? _value.statusCode
+                : statusCode // ignore: cast_nullable_to_non_nullable
+                      as String,
+            otherMaterial: freezed == otherMaterial
+                ? _value.otherMaterial
+                : otherMaterial // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            otherDefectNote: freezed == otherDefectNote
+                ? _value.otherDefectNote
+                : otherDefectNote // ignore: cast_nullable_to_non_nullable
                       as String?,
             brand: freezed == brand
                 ? _value.brand
                 : brand // ignore: cast_nullable_to_non_nullable
                       as String?,
-            material: freezed == material
-                ? _value.material
-                : material // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            condition: freezed == condition
-                ? _value.condition
-                : condition // ignore: cast_nullable_to_non_nullable
-                      as String?,
             size: freezed == size
                 ? _value.size
                 : size // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            caption: freezed == caption
+                ? _value.caption
+                : caption // ignore: cast_nullable_to_non_nullable
                       as String?,
             media: null == media
                 ? _value.media
@@ -208,16 +262,23 @@ abstract class _$$UploadPostStateImplCopyWith<$Res>
   $Res call({
     String? title,
     String? description,
-    double? price,
+    double? productPrice,
+    String? categoryId,
     double? chest,
     double? waist,
     double? length,
-    String? caption,
-    String? categoryId,
+    double? sleeveLength,
+    double? shoulderWidth,
+    String? conditionCode,
+    List<String> defectCodes,
+    List<String> materialCodes,
+    List<String> colorCodes,
+    String statusCode,
+    String? otherMaterial,
+    String? otherDefectNote,
     String? brand,
-    String? material,
-    String? condition,
     String? size,
+    String? caption,
     List<UploadableMedia> media,
     List<String> tagNames,
     int coverImageIndex,
@@ -244,16 +305,23 @@ class __$$UploadPostStateImplCopyWithImpl<$Res>
   $Res call({
     Object? title = freezed,
     Object? description = freezed,
-    Object? price = freezed,
+    Object? productPrice = freezed,
+    Object? categoryId = freezed,
     Object? chest = freezed,
     Object? waist = freezed,
     Object? length = freezed,
-    Object? caption = freezed,
-    Object? categoryId = freezed,
+    Object? sleeveLength = freezed,
+    Object? shoulderWidth = freezed,
+    Object? conditionCode = freezed,
+    Object? defectCodes = null,
+    Object? materialCodes = null,
+    Object? colorCodes = null,
+    Object? statusCode = null,
+    Object? otherMaterial = freezed,
+    Object? otherDefectNote = freezed,
     Object? brand = freezed,
-    Object? material = freezed,
-    Object? condition = freezed,
     Object? size = freezed,
+    Object? caption = freezed,
     Object? media = null,
     Object? tagNames = null,
     Object? coverImageIndex = null,
@@ -272,10 +340,14 @@ class __$$UploadPostStateImplCopyWithImpl<$Res>
             ? _value.description
             : description // ignore: cast_nullable_to_non_nullable
                   as String?,
-        price: freezed == price
-            ? _value.price
-            : price // ignore: cast_nullable_to_non_nullable
+        productPrice: freezed == productPrice
+            ? _value.productPrice
+            : productPrice // ignore: cast_nullable_to_non_nullable
                   as double?,
+        categoryId: freezed == categoryId
+            ? _value.categoryId
+            : categoryId // ignore: cast_nullable_to_non_nullable
+                  as String?,
         chest: freezed == chest
             ? _value.chest
             : chest // ignore: cast_nullable_to_non_nullable
@@ -288,29 +360,53 @@ class __$$UploadPostStateImplCopyWithImpl<$Res>
             ? _value.length
             : length // ignore: cast_nullable_to_non_nullable
                   as double?,
-        caption: freezed == caption
-            ? _value.caption
-            : caption // ignore: cast_nullable_to_non_nullable
+        sleeveLength: freezed == sleeveLength
+            ? _value.sleeveLength
+            : sleeveLength // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        shoulderWidth: freezed == shoulderWidth
+            ? _value.shoulderWidth
+            : shoulderWidth // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        conditionCode: freezed == conditionCode
+            ? _value.conditionCode
+            : conditionCode // ignore: cast_nullable_to_non_nullable
                   as String?,
-        categoryId: freezed == categoryId
-            ? _value.categoryId
-            : categoryId // ignore: cast_nullable_to_non_nullable
+        defectCodes: null == defectCodes
+            ? _value._defectCodes
+            : defectCodes // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
+        materialCodes: null == materialCodes
+            ? _value._materialCodes
+            : materialCodes // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
+        colorCodes: null == colorCodes
+            ? _value._colorCodes
+            : colorCodes // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
+        statusCode: null == statusCode
+            ? _value.statusCode
+            : statusCode // ignore: cast_nullable_to_non_nullable
+                  as String,
+        otherMaterial: freezed == otherMaterial
+            ? _value.otherMaterial
+            : otherMaterial // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        otherDefectNote: freezed == otherDefectNote
+            ? _value.otherDefectNote
+            : otherDefectNote // ignore: cast_nullable_to_non_nullable
                   as String?,
         brand: freezed == brand
             ? _value.brand
             : brand // ignore: cast_nullable_to_non_nullable
                   as String?,
-        material: freezed == material
-            ? _value.material
-            : material // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        condition: freezed == condition
-            ? _value.condition
-            : condition // ignore: cast_nullable_to_non_nullable
-                  as String?,
         size: freezed == size
             ? _value.size
             : size // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        caption: freezed == caption
+            ? _value.caption
+            : caption // ignore: cast_nullable_to_non_nullable
                   as String?,
         media: null == media
             ? _value._media
@@ -349,36 +445,50 @@ class __$$UploadPostStateImplCopyWithImpl<$Res>
 
 class _$UploadPostStateImpl extends _UploadPostState {
   const _$UploadPostStateImpl({
-    this.title = '',
+    this.title,
     this.description,
-    this.price,
+    this.productPrice,
+    this.categoryId,
     this.chest,
     this.waist,
     this.length,
+    this.sleeveLength,
+    this.shoulderWidth,
+    this.conditionCode,
+    final List<String> defectCodes = const <String>[],
+    final List<String> materialCodes = const <String>[],
+    final List<String> colorCodes = const <String>[],
+    this.statusCode = '',
+    this.otherMaterial,
+    this.otherDefectNote,
+    this.brand,
+    this.size,
     this.caption,
-    this.categoryId,
-    this.brand = '',
-    this.material = '',
-    this.condition = '',
-    this.size = '',
-    final List<UploadableMedia> media = const [],
-    final List<String> tagNames = const [],
+    final List<UploadableMedia> media = const <UploadableMedia>[],
+    final List<String> tagNames = const <String>[],
     this.coverImageIndex = 0,
     this.isSubmitting = false,
     this.status = FormStatus.initial,
     this.uploadedMediaCount = 0,
     this.totalMediaCount = 0,
-  }) : _media = media,
+  }) : _defectCodes = defectCodes,
+       _materialCodes = materialCodes,
+       _colorCodes = colorCodes,
+       _media = media,
        _tagNames = tagNames,
        super._();
 
+  // ---------- Basic info ----------
   @override
-  @JsonKey()
   final String? title;
   @override
   final String? description;
   @override
-  final double? price;
+  final double? productPrice;
+  // ---------- Category ----------
+  @override
+  final String? categoryId;
+  // ---------- Measurements ----------
   @override
   final double? chest;
   @override
@@ -386,27 +496,57 @@ class _$UploadPostStateImpl extends _UploadPostState {
   @override
   final double? length;
   @override
-  final String? caption;
+  final double? sleeveLength;
   @override
-  final String? categoryId;
+  final double? shoulderWidth;
+  // ---------- New schema codes ----------
+  @override
+  final String? conditionCode;
+  final List<String> _defectCodes;
   @override
   @JsonKey()
+  List<String> get defectCodes {
+    if (_defectCodes is EqualUnmodifiableListView) return _defectCodes;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_defectCodes);
+  }
+
+  final List<String> _materialCodes;
+  @override
+  @JsonKey()
+  List<String> get materialCodes {
+    if (_materialCodes is EqualUnmodifiableListView) return _materialCodes;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_materialCodes);
+  }
+
+  final List<String> _colorCodes;
+  @override
+  @JsonKey()
+  List<String> get colorCodes {
+    if (_colorCodes is EqualUnmodifiableListView) return _colorCodes;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_colorCodes);
+  }
+
+  @override
+  @JsonKey()
+  final String statusCode;
+  @override
+  final String? otherMaterial;
+  @override
+  final String? otherDefectNote;
+  // ---------- Legacy display strings ----------
+  @override
   final String? brand;
-  // brand of the item
   @override
-  @JsonKey()
-  final String? material;
-  // material description
-  @override
-  @JsonKey()
-  final String? condition;
-  // item condition (e.g. New, Used)
-  @override
-  @JsonKey()
   final String? size;
-  // item size
+  // ---------- Post ----------
+  @override
+  final String? caption;
+  // ---------- Media & tags ----------
   final List<UploadableMedia> _media;
-  // item size
+  // ---------- Media & tags ----------
   @override
   @JsonKey()
   List<UploadableMedia> get media {
@@ -427,7 +567,7 @@ class _$UploadPostStateImpl extends _UploadPostState {
   @override
   @JsonKey()
   final int coverImageIndex;
-  // Index of the selected cover image
+  // ---------- UI state ----------
   @override
   @JsonKey()
   final bool isSubmitting;
@@ -443,7 +583,7 @@ class _$UploadPostStateImpl extends _UploadPostState {
 
   @override
   String toString() {
-    return 'UploadPostState(title: $title, description: $description, price: $price, chest: $chest, waist: $waist, length: $length, caption: $caption, categoryId: $categoryId, brand: $brand, material: $material, condition: $condition, size: $size, media: $media, tagNames: $tagNames, coverImageIndex: $coverImageIndex, isSubmitting: $isSubmitting, status: $status, uploadedMediaCount: $uploadedMediaCount, totalMediaCount: $totalMediaCount)';
+    return 'UploadPostState(title: $title, description: $description, productPrice: $productPrice, categoryId: $categoryId, chest: $chest, waist: $waist, length: $length, sleeveLength: $sleeveLength, shoulderWidth: $shoulderWidth, conditionCode: $conditionCode, defectCodes: $defectCodes, materialCodes: $materialCodes, colorCodes: $colorCodes, statusCode: $statusCode, otherMaterial: $otherMaterial, otherDefectNote: $otherDefectNote, brand: $brand, size: $size, caption: $caption, media: $media, tagNames: $tagNames, coverImageIndex: $coverImageIndex, isSubmitting: $isSubmitting, status: $status, uploadedMediaCount: $uploadedMediaCount, totalMediaCount: $totalMediaCount)';
   }
 
   @override
@@ -454,19 +594,40 @@ class _$UploadPostStateImpl extends _UploadPostState {
             (identical(other.title, title) || other.title == title) &&
             (identical(other.description, description) ||
                 other.description == description) &&
-            (identical(other.price, price) || other.price == price) &&
+            (identical(other.productPrice, productPrice) ||
+                other.productPrice == productPrice) &&
+            (identical(other.categoryId, categoryId) ||
+                other.categoryId == categoryId) &&
             (identical(other.chest, chest) || other.chest == chest) &&
             (identical(other.waist, waist) || other.waist == waist) &&
             (identical(other.length, length) || other.length == length) &&
-            (identical(other.caption, caption) || other.caption == caption) &&
-            (identical(other.categoryId, categoryId) ||
-                other.categoryId == categoryId) &&
+            (identical(other.sleeveLength, sleeveLength) ||
+                other.sleeveLength == sleeveLength) &&
+            (identical(other.shoulderWidth, shoulderWidth) ||
+                other.shoulderWidth == shoulderWidth) &&
+            (identical(other.conditionCode, conditionCode) ||
+                other.conditionCode == conditionCode) &&
+            const DeepCollectionEquality().equals(
+              other._defectCodes,
+              _defectCodes,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._materialCodes,
+              _materialCodes,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._colorCodes,
+              _colorCodes,
+            ) &&
+            (identical(other.statusCode, statusCode) ||
+                other.statusCode == statusCode) &&
+            (identical(other.otherMaterial, otherMaterial) ||
+                other.otherMaterial == otherMaterial) &&
+            (identical(other.otherDefectNote, otherDefectNote) ||
+                other.otherDefectNote == otherDefectNote) &&
             (identical(other.brand, brand) || other.brand == brand) &&
-            (identical(other.material, material) ||
-                other.material == material) &&
-            (identical(other.condition, condition) ||
-                other.condition == condition) &&
             (identical(other.size, size) || other.size == size) &&
+            (identical(other.caption, caption) || other.caption == caption) &&
             const DeepCollectionEquality().equals(other._media, _media) &&
             const DeepCollectionEquality().equals(other._tagNames, _tagNames) &&
             (identical(other.coverImageIndex, coverImageIndex) ||
@@ -485,16 +646,23 @@ class _$UploadPostStateImpl extends _UploadPostState {
     runtimeType,
     title,
     description,
-    price,
+    productPrice,
+    categoryId,
     chest,
     waist,
     length,
-    caption,
-    categoryId,
+    sleeveLength,
+    shoulderWidth,
+    conditionCode,
+    const DeepCollectionEquality().hash(_defectCodes),
+    const DeepCollectionEquality().hash(_materialCodes),
+    const DeepCollectionEquality().hash(_colorCodes),
+    statusCode,
+    otherMaterial,
+    otherDefectNote,
     brand,
-    material,
-    condition,
     size,
+    caption,
     const DeepCollectionEquality().hash(_media),
     const DeepCollectionEquality().hash(_tagNames),
     coverImageIndex,
@@ -520,16 +688,23 @@ abstract class _UploadPostState extends UploadPostState {
   const factory _UploadPostState({
     final String? title,
     final String? description,
-    final double? price,
+    final double? productPrice,
+    final String? categoryId,
     final double? chest,
     final double? waist,
     final double? length,
-    final String? caption,
-    final String? categoryId,
+    final double? sleeveLength,
+    final double? shoulderWidth,
+    final String? conditionCode,
+    final List<String> defectCodes,
+    final List<String> materialCodes,
+    final List<String> colorCodes,
+    final String statusCode,
+    final String? otherMaterial,
+    final String? otherDefectNote,
     final String? brand,
-    final String? material,
-    final String? condition,
     final String? size,
+    final String? caption,
     final List<UploadableMedia> media,
     final List<String> tagNames,
     final int coverImageIndex,
@@ -540,12 +715,15 @@ abstract class _UploadPostState extends UploadPostState {
   }) = _$UploadPostStateImpl;
   const _UploadPostState._() : super._();
 
+  // ---------- Basic info ----------
   @override
   String? get title;
   @override
   String? get description;
   @override
-  double? get price;
+  double? get productPrice; // ---------- Category ----------
+  @override
+  String? get categoryId; // ---------- Measurements ----------
   @override
   double? get chest;
   @override
@@ -553,23 +731,35 @@ abstract class _UploadPostState extends UploadPostState {
   @override
   double? get length;
   @override
-  String? get caption;
+  double? get sleeveLength;
   @override
-  String? get categoryId;
+  double? get shoulderWidth; // ---------- New schema codes ----------
   @override
-  String? get brand; // brand of the item
+  String? get conditionCode;
   @override
-  String? get material; // material description
+  List<String> get defectCodes;
   @override
-  String? get condition; // item condition (e.g. New, Used)
+  List<String> get materialCodes;
   @override
-  String? get size; // item size
+  List<String> get colorCodes;
+  @override
+  String get statusCode;
+  @override
+  String? get otherMaterial;
+  @override
+  String? get otherDefectNote; // ---------- Legacy display strings ----------
+  @override
+  String? get brand;
+  @override
+  String? get size; // ---------- Post ----------
+  @override
+  String? get caption; // ---------- Media & tags ----------
   @override
   List<UploadableMedia> get media;
   @override
   List<String> get tagNames;
   @override
-  int get coverImageIndex; // Index of the selected cover image
+  int get coverImageIndex; // ---------- UI state ----------
   @override
   bool get isSubmitting;
   @override

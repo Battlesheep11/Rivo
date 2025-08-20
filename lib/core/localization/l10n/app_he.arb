@@ -324,5 +324,18 @@
   "forgotPasswordRemembered": "זכרת את הסיסמה?",
   "permission_camera_explain": "כדי לצלם תמונות או וידאו ב‑RIVO, אפשרי גישה למצלמה (ולמיקרופון לוידאו) בהגדרות.",
   "permission_go_to_settings": "פתח הגדרות",
-  "permission_not_now": "לא עכשיו"
+  "permission_not_now": "לא עכשיו",
+  "materials": "חומרים",
+"other": "אחר",
+"otherMaterial": "חומר אחר",
+"failedToLoad": "טעינה נכשלה",
+"color": "צבעים",
+"defects": "פגמים",
+"otherDefectNote": "הערה על פגם אחר",
+"conditionNeverWorn": "לא נלבש",
+"conditionAsNew": "כמו חדש",
+"conditionGood": "מצב טוב",
+"conditionFair": "מצב סביר",
+"conditionRequired": "נא לבחור את מצב הפריט",
+"conditionRequiredError": "יש לבחור את מצב הפריט"
 }

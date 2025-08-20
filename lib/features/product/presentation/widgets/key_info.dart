@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:rivo_app_beta/features/product/domain/product.dart';
+import 'package:rivo_app_beta/features/product/domain/utils/item_condition_label.dart';
 
 class KeyInfo extends StatelessWidget {
   const KeyInfo({super.key, required this.product});
-
   final Product product;
 
   @override
   Widget build(BuildContext context) {
+    final sizeText = (product.size.trim().isNotEmpty) ? product.size : '—';
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       padding: const EdgeInsets.all(16.0),
@@ -15,42 +17,61 @@ class KeyInfo extends StatelessWidget {
         color: Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
       ),
-      child: GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        childAspectRatio: 4,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
+      child: Table(
+        columnWidths: const {0: FlexColumnWidth(), 1: FlexColumnWidth()},
+        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
         children: [
-          _buildInfoItem('Size', product.size),
-          _buildInfoItem('Fabric', product.fabric),
-          _buildInfoItem('Condition', product.condition),
-          _buildInfoItem('Brand', product.brand),
+          TableRow(children: [
+            _Spec(label: 'Fabric', value: product.fabric.isNotEmpty ? product.fabric : 'N/A'),
+            _Spec(label: 'Size', value: sizeText),
+          ]),
+          const TableRow(children: [SizedBox(height: 12), SizedBox(height: 12)]),
+          TableRow(children: [
+            _Spec(
+              label: 'Condition',
+              value: product.condition.isNotEmpty
+                  ? itemConditionLabel(context, product.condition)
+                  : '—',
+            ),
+            _Spec(label: 'Brand', value: product.brand.trim().isNotEmpty ? product.brand : '—'),
+          ]),
         ],
       ),
     );
   }
+}
 
-  Widget _buildInfoItem(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
+class _Spec extends StatelessWidget {
+  const _Spec({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w600,
+              )),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 3,
+            softWrap: true,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

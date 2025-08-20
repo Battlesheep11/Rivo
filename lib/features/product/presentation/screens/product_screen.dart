@@ -10,7 +10,6 @@ import 'package:rivo_app_beta/features/product/presentation/widgets/seller_info.
 
 class ProductScreen extends ConsumerStatefulWidget {
   const ProductScreen({super.key, required this.productId});
-
   final String productId;
 
   @override
@@ -26,18 +25,9 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
     super.initState();
     _scrollController.addListener(() {
       final galleryHeight = MediaQuery.of(context).size.height * 0.4;
-      if (_scrollController.offset > galleryHeight - kToolbarHeight) {
-        if (!_isTitleVisible) {
-          setState(() {
-            _isTitleVisible = true;
-          });
-        }
-      } else {
-        if (_isTitleVisible) {
-          setState(() {
-            _isTitleVisible = false;
-          });
-        }
+      final show = _scrollController.offset > galleryHeight - kToolbarHeight;
+      if (show != _isTitleVisible) {
+        setState(() => _isTitleVisible = show);
       }
     });
   }
@@ -104,23 +94,28 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                       onBuyNowPressed: () {},
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
+
                     sellerAsync.when(
                       data: (seller) => SellerInfo(seller: seller),
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (error, stack) =>
-                          Center(child: Text('Error: $error')),
+                      loading: () => const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                      error: (error, stack) => Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text('Error: $error'),
+                      ),
                     ),
+
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     const SizedBox(height: 24),
+
                     recommendedProductsAsync.when(
-                      data: (products) =>
-                          RecommendedProducts(products: products),
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (error, stack) =>
-                          Center(child: Text('Error: $error')),
+                      data: (products) => RecommendedProducts(products: products),
+                      loading: () => const Center(child: CircularProgressIndicator()),
+                      error: (error, stack) => Center(child: Text('Error: $error')),
                     ),
+
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -129,9 +124,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(
-          child: Text('Error: $error'),
-        ),
+        error: (error, stackTrace) => Center(child: Text('Error: $error')),
       ),
     );
   }

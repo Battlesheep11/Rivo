@@ -376,5 +376,18 @@
   "forgotPasswordRemembered": "Remember your password?",
    "permission_camera_explain": "To take photos or videos in RIVO, enable camera (and microphone for video) in Settings.",
   "permission_go_to_settings": "Open Settings",
-  "permission_not_now": "Not now"
+  "permission_not_now": "Not now",
+  "materials": "Materials",
+"other": "Other",
+"otherMaterial": "Other material",
+"failedToLoad": "Failed to load",
+"color": "Color",
+"defects": "Defects",
+"otherDefectNote": "Other defect note",
+"conditionGood": "Good",
+"conditionFair": "Fair",
+"conditionNeverWorn": "Never worn",
+"conditionAsNew": "As new",
+"conditionRequired": "Please select a condition",
+"conditionRequiredError": "Please select the item's condition."
 }
