@@ -355,98 +355,46 @@ class FeedRemoteDataSource with RateLimited {
   }
 
   /// Fetches a list of feed posts for the current user.
-  Future<List<FeedPostEntity>> getFeedPosts() async {
-    try {
-      final userId = _client.auth.currentUser?.id;
-      if (userId == null) {
-        throw AppException.unauthorized('User not logged in');
-      }
-
-      await checkRateLimit(
-        key: '${_rateLimitKey}_feed_$userId',
-        maxRequests: _maxRequestsPerMinute,
-      );
-
-      _logger.d('Fetching feed for user: $userId');
-
-      const postQuery = '''
-      id,
-      created_at,
-      like_count,
-      caption,
-      creator_id,
-      product_id,
-      product:product_id (
-        id,
-        title,
-        description,
-        price,
-        product_media:product_media (
-          media_id (
-            media_url
-          ),
-          sort_order
-        )
-      ),
-      creator:creator_id (
-        id,
-        username,
-        avatar_url
-      )
-    ''';
-
-      final postResponse = await _client
-          .from('feed_post')
-          .select(postQuery)
-          .isFilter('deleted_at', null) // exclude soft-deleted
-          .order('created_at', ascending: false);
-
-      final likesResponse = await _client
-          .from('post_likes')
-          .select('post_id')
-          .eq('user_id', userId);
-
-      final likedPostIds =
-          (likesResponse as List).map((e) => e['post_id'] as String).toSet();
-
-      final posts = (postResponse as List).map((json) {
-        final product = json['product'] as Map<String, dynamic>? ?? {};
-        final productMediaList =
-            (product['product_media'] as List<dynamic>? ?? [])
-                .cast<Map<String, dynamic>>();
-
-        final productMediaUrls = productMediaList
-            .map((m) => m['media_id']?['media_url'] as String?)
-            .whereType<String>()
-            .toList();
-
-        final postId = json['id'] as String;
-
-        return FeedPostEntity(
-          id: postId,
-          createdAt: DateTime.parse(json['created_at']),
-          likeCount: (json['like_count'] ?? 0) as int,
-          creatorId: json['creator_id'] as String,
-          caption: json['caption'] as String?,
-          productId: json['product_id'] as String,
-          username: json['creator']?['username'] ?? 'Unknown',
-          avatarUrl: json['creator']?['avatar_url'],
-          productTitle: product['title'] ?? '',
-          productDescription: product['description'],
-          productPrice: (product['price'] ?? 0).toDouble(),
-          mediaUrls: productMediaUrls,
-          tags: [],
-          isLikedByMe: likedPostIds.contains(postId),
-        );
-      }).toList();
-
-      return posts;
-    } on PostgrestException catch (e) {
-      throw AppException.network('Failed to fetch feed: ${e.message}');
-    } catch (e) {
-      throw AppException.unexpected('An unexpected error occurred: $e');
+  Future<List<FeedPostEntity>> getFeedPosts({int limit = 20, int offset = 0}) async {
+  try {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw AppException.unauthorized('User not logged in');
     }
+
+    await checkRateLimit(
+      key: '${_rateLimitKey}_feed_$userId',
+      maxRequests: _maxRequestsPerMinute,
+    );
+
+    _logger.d('Calling Edge Function for feed: limit=$limit offset=$offset');
+
+    final response = await _client.functions.invoke(
+  'get_feed',
+  body: {
+    'user_id': userId,
+    'limit': limit,
+    'offset': offset,
+  },
+);
+
+
+    if (response.status != 200 || response.data == null) {
+      throw AppException.network('Failed to fetch feed');
+    }
+
+    final rawList = response.data as List;
+    final posts = await getPostsByIds(
+      rawList.map((e) => e['post_id'] as String).toList(),
+    );
+
+    return posts;
+  } catch (e, stackTrace) {
+    _logger.e('Error in getFeedPosts: $e', error: e, stackTrace: stackTrace);
+    throw AppException.unexpected('Failed to load feed');
   }
+}
+
 
   Future<bool> isCurrentUserSeller() async {
     try {
