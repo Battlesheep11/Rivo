@@ -210,36 +210,38 @@ class FeedRemoteDataSource with RateLimited {
         maxRequests: _maxRequestsPerMinute,
       );
 
-      _logger.d('Fetching ${validatedPostIds.length} posts by IDs');
+      _logger.d('🐛 Fetching ${validatedPostIds.length} posts by IDs');
+
+      final idsAsString = validatedPostIds.join(','); // ✅ no quotes
 
       final res = await _client
           .from('feed_post')
           .select('''
-          id,
-          created_at,
-          like_count,
-          caption,
-          creator_id,
-          product_id,
-          product:product_id (
             id,
-            title,
-            description,
-            price,
-            product_media:product_media (
-              media_id (
-                media_url
-              ),
-              sort_order
+            created_at,
+            like_count,
+            caption,
+            creator_id,
+            product_id,
+            product:product_id (
+              id,
+              title,
+              description,
+              price,
+              product_media:product_media (
+                media_id (
+                  media_url
+                ),
+                sort_order
+              )
+            ),
+            creator:creator_id (
+              id,
+              username,
+              avatar_url
             )
-          ),
-          creator:creator_id (
-            id,
-            username,
-            avatar_url
-          )
-        ''')
-          .filter('id', 'in', '(${validatedPostIds.map((e) => "'$e'").join(",")})')
+          ''')
+          .filter('id', 'in', '($idsAsString)')
           .order('created_at', ascending: false);
 
       final likesResponse = await _client
@@ -283,6 +285,11 @@ class FeedRemoteDataSource with RateLimited {
       throw AppException.unexpected('Failed to load posts');
     }
   }
+
+  // שאר המתודות שלך (getPostsByTag, getPostsByCollection, getPostsByCreator, likePost, unlikePost, etc.) לא שונו
+
+
+
 
   /// Likes a post on behalf of the current user.
   Future<void> likePost(String postId) async {
@@ -355,45 +362,81 @@ class FeedRemoteDataSource with RateLimited {
   }
 
   /// Fetches a list of feed posts for the current user.
-  Future<List<FeedPostEntity>> getFeedPosts({int limit = 20, int offset = 0}) async {
-  try {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) {
-      throw AppException.unauthorized('User not logged in');
+  /// Fetches a list of feed posts for the current user.
+Future<List<FeedPostEntity>> getFeedPosts({int limit = 20, int offset = 0}) async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) {
+        throw AppException.unauthorized('User not logged in');
+      }
+
+      await checkRateLimit(
+        key: '${_rateLimitKey}_feed_$userId',
+        maxRequests: _maxRequestsPerMinute,
+      );
+
+      _logger.d('🐛 Calling Edge Function for feed: limit=$limit offset=$offset');
+
+      final response = await _client.functions.invoke(
+        'get_feed',
+        body: {
+          'user_id': userId,
+          'limit': limit,
+          'offset': offset,
+        },
+      );
+
+      if (response.status != 200 || response.data == null) {
+        _logger.e('get_feed failed: status=${response.status} data=${response.data}');
+        throw AppException.network('Failed to fetch feed');
+      }
+
+      final dynamic payload = response.data;
+      _logger.d('🔎 get_feed payload: $payload');
+
+      List<String> extractPostIds(dynamic payload) {
+        if (payload is List) {
+          return payload
+              .whereType<Map>()
+              .map((m) => m['post_id'] ?? m['id'])
+              .whereType<String>()
+              .toList();
+        }
+
+        if (payload is Map) {
+          if (payload['post_ids'] is List) {
+            return (payload['post_ids'] as List).whereType<String>().toList();
+          }
+          if (payload['rows'] is List) {
+            return extractPostIds(payload['rows']);
+          }
+          if (payload['data'] is List) {
+            return extractPostIds(payload['data']);
+          }
+          if (payload['post_id'] is String) {
+            return [payload['post_id']];
+          }
+        }
+
+        return [];
+      }
+
+      final postIds = extractPostIds(payload);
+
+      if (postIds.isEmpty) {
+        _logger.w('🐛 No valid post IDs returned from get_feed');
+        return [];
+      }
+
+      _logger.d('🐛 Fetching ${postIds.length} posts by IDs');
+      return await getPostsByIds(postIds);
+    } catch (e, stackTrace) {
+      _logger.e('Error in getFeedPosts: $e', error: e, stackTrace: stackTrace);
+      throw AppException.unexpected('Failed to load feed');
     }
-
-    await checkRateLimit(
-      key: '${_rateLimitKey}_feed_$userId',
-      maxRequests: _maxRequestsPerMinute,
-    );
-
-    _logger.d('Calling Edge Function for feed: limit=$limit offset=$offset');
-
-    final response = await _client.functions.invoke(
-  'get_feed',
-  body: {
-    'user_id': userId,
-    'limit': limit,
-    'offset': offset,
-  },
-);
-
-
-    if (response.status != 200 || response.data == null) {
-      throw AppException.network('Failed to fetch feed');
-    }
-
-    final rawList = response.data as List;
-    final posts = await getPostsByIds(
-      rawList.map((e) => e['post_id'] as String).toList(),
-    );
-
-    return posts;
-  } catch (e, stackTrace) {
-    _logger.e('Error in getFeedPosts: $e', error: e, stackTrace: stackTrace);
-    throw AppException.unexpected('Failed to load feed');
   }
-}
+
+
 
 
   Future<bool> isCurrentUserSeller() async {
