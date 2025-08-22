@@ -6,7 +6,7 @@ import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart
 import 'package:rivo_app_beta/features/discovery/presentation/widgets/trending_tag_grid.dart';
 import 'package:rivo_app_beta/features/discovery/presentation/widgets/curated_collection_grid.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:rivo_app_beta/core/analytics/analytics_service.dart';
 
 class DiscoveryScreen extends ConsumerStatefulWidget {
   const DiscoveryScreen({super.key});
@@ -18,6 +18,13 @@ class DiscoveryScreen extends ConsumerStatefulWidget {
 class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
   String? selectedTagId;
 
+  @override
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    AnalyticsService.logScreenView(screenName: 'discovery_screen');
+  });
+}
 
 
   @override
@@ -26,9 +33,8 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-  title: Text(AppLocalizations.of(context)!.discover),
-),
-
+        title: Text(AppLocalizations.of(context)!.discover),
+      ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,12 +45,15 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
               data: (product) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: FeaturedProductCard(
-  product: product,
-  onTap: () {
-    context.push('/product/${product.id}');
-  },
-),
-
+                  product: product,
+                  onTap: () {
+                    // Log event when featured product is tapped
+                    AnalyticsService.logEvent('featured_product_clicked', parameters: {
+                      'product_id': product.id,
+                    });
+                    context.push('/product/${product.id}?source=discover');
+                  },
+                ),
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => const SizedBox.shrink(),
@@ -53,23 +62,24 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
             const SizedBox(height: 32),
 
             // 🔤 Trending Now – localized
-
-            
-
-           Padding(
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 AppLocalizations.of(context)!.trendingNow,
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
-
             const SizedBox(height: 8),
             SizedBox(
               height: 44,
               child: TrendingTagGrid(
                 onTagTap: (tag) {
-                  context.push('/tag/${tag.id}');
+                  // Log event when tag is clicked
+                  AnalyticsService.logEvent('trending_tag_clicked', parameters: {
+                    'tag_id': tag.id,
+                    'tag_name': tag.name,
+                  });
+                  context.push('/tag/${tag.id}?source=discover');
                 },
               ),
             ),
@@ -85,12 +95,15 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
               ),
             ),
 
-            
-
             const SizedBox(height: 32),
             CuratedCollectionGrid(
               onTap: (collection) {
-                context.push('/collection/${collection.id}');
+                // Log event when collection is tapped
+                AnalyticsService.logEvent('curated_collection_clicked', parameters: {
+                  'collection_id': collection.id,
+                  'collection_name': collection.name,
+                });
+                context.push('/collection/${collection.id}?source=discover');
               },
             ),
 

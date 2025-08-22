@@ -14,6 +14,7 @@ class Product {
     required this.brand,
     required this.sellerId,
     this.postId,
+    this.categoryId,
   });
 
   final String id;
@@ -27,6 +28,7 @@ class Product {
   final String brand;
   final String sellerId;
   final String? postId;
+  final String? categoryId;
 
   @override
   bool operator ==(Object other) =>
@@ -43,7 +45,8 @@ class Product {
           condition == other.condition &&
           brand == other.brand &&
           sellerId == other.sellerId &&
-          postId == other.postId;
+          postId == other.postId &&
+          categoryId == other.categoryId;
 
   @override
   int get hashCode =>
@@ -57,7 +60,8 @@ class Product {
       condition.hashCode ^
       brand.hashCode ^
       sellerId.hashCode ^
-      postId.hashCode;
+      postId.hashCode ^
+      categoryId.hashCode;
 
   Product copyWith({
     String? id,
@@ -71,6 +75,7 @@ class Product {
     String? brand,
     String? sellerId,
     String? postId,
+    String? categoryId,
   }) {
     return Product(
       id: id ?? this.id,
@@ -84,6 +89,7 @@ class Product {
       brand: brand ?? this.brand,
       sellerId: sellerId ?? this.sellerId,
       postId: postId ?? this.postId,
+      categoryId: categoryId ?? this.categoryId,
     );
   }
 }

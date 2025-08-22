@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "381603215112",
+    "project_id": "rivo-app-2e30a",
+    "storage_bucket": "rivo-app-2e30a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:381603215112:android:26be7ada70639ac3699ebd",
+        "android_client_info": {
+          "package_name": "com.rivo.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsHeMJgQMFKMGPodAtjiglLaaN7PvExyY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

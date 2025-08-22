@@ -47,6 +47,9 @@ android {
     // }
 }
 
+apply(plugin = "com.google.gms.google-services")
+
+
 kotlin {
     jvmToolchain(21)
 }

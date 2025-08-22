@@ -9,7 +9,7 @@ import 'package:rivo_app_beta/features/feed/presentation/widgets/caption_glass_b
 import 'package:rivo_app_beta/features/feed/presentation/widgets/post_action_column.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rivo_app_beta/core/utils/price_formatter.dart';
-
+import 'package:rivo_app_beta/core/analytics/analytics_service.dart'; // <-- Analytics
 
 class FilteredFeedScreen extends ConsumerStatefulWidget {
   final String? tagId;
@@ -35,6 +35,13 @@ class _FilteredFeedScreenState extends ConsumerState<FilteredFeedScreen> {
   void initState() {
     super.initState();
     final viewModel = ref.read(feedViewModelProvider.notifier);
+
+    // Analytics: log screen view (tag or collection)
+    final screenName = widget.tagId != null
+        ? 'filtered_feed_by_tag'
+        : 'filtered_feed_by_collection';
+    AnalyticsService.logScreenView(screenName: screenName);
+
     if (widget.tagId != null) {
       _postsFuture = viewModel.loadPostsByTag(widget.tagId!);
     } else {
@@ -67,7 +74,16 @@ class _FilteredFeedScreenState extends ConsumerState<FilteredFeedScreen> {
             controller: _pageController,
             itemCount: posts.length,
             itemBuilder: (context, index) {
-              return _buildPostItem(posts[index], context);
+              final post = posts[index];
+
+              // Analytics: log post viewed
+              AnalyticsService.logEvent('post_viewed', parameters: {
+                'post_id': post.id,
+                'product_id': post.productId,
+                'source': widget.tagId != null ? 'tag' : 'collection',
+              });
+
+              return _buildPostItem(post, context);
             },
             key: const PageStorageKey('filtered_feed_page_view'),
           );
@@ -87,6 +103,13 @@ class _FilteredFeedScreenState extends ConsumerState<FilteredFeedScreen> {
       },
       onDoubleTap: () {
         if (post.productId != null) {
+          // Analytics: product opened from filtered feed
+          AnalyticsService.logEvent('post_opened', parameters: {
+            'post_id': post.id,
+            'product_id': post.productId,
+            'source': widget.tagId != null ? 'tag' : 'collection',
+          });
+
           context.push('/product/${post.id}');
         }
       },
@@ -134,11 +157,19 @@ class _FilteredFeedScreenState extends ConsumerState<FilteredFeedScreen> {
                   duration: const Duration(milliseconds: 200),
                   child: CaptionGlassBox(
                     title: post.productTitle,
-                    caption: post.caption, // optional
+                    caption: post.caption,
                     seller: post.username,
                     price: formatPrice(post.productPrice),
                     height: MediaQuery.of(context).size.height / 5,
-                    onUsernameTap: () => context.push('/profile/${post.creatorId}'),
+                    onUsernameTap: () {
+                      // Analytics: user tapped profile from filtered feed
+                      AnalyticsService.logEvent('profile_opened', parameters: {
+                        'user_id': post.creatorId,
+                        'source': widget.tagId != null ? 'tag' : 'collection',
+                      });
+
+                      context.push('/profile/${post.creatorId}');
+                    },
                   ),
                 ),
               ),

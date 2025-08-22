@@ -13,6 +13,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:rivo_app_beta/core/media/data/media_compressor.dart';
 import 'package:rivo_app_beta/core/localization/locale_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:rivo_app_beta/core/analytics/analytics_service.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -24,25 +25,47 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _controller = PageController();
   int _currentPage = 0;
-  
-  // Profile info controllers (all optional)
+
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
-  // Avatar state: local file, uploaded URL, and loading indicator
-  File? _avatarFile; // locally picked image file for avatar
-  String? _avatarUrl; // uploaded public URL (if any)
-  bool _isUploadingAvatar = false; // show progress when uploading
+
+  File? _avatarFile;
+  String? _avatarUrl;
+  bool _isUploadingAvatar = false;
+
+  String? _selectedSource;
+  final List<String> _referralOptions = [
+    'Instagram',
+    'TikTok',
+    'Google',
+    'Friend',
+    'Other',
+  ];
 
   @override
-  void initState() {
-    super.initState();
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    ref.read(onboardingViewModelProvider.notifier).loadTags();
+    AnalyticsService.logScreenView(screenName: 'onboarding_profile_info');
 
-   
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(onboardingViewModelProvider.notifier).loadTags();
-    });
-  }
+    // UTM: קליטת פרמטרים מה-URL
+    final uri = GoRouterState.of(context).uri;
+
+    final Map<String, String> utmParams = {
+      'utm_source': uri.queryParameters['utm_source'] ?? '',
+      'utm_medium': uri.queryParameters['utm_medium'] ?? '',
+      'utm_campaign': uri.queryParameters['utm_campaign'] ?? '',
+      'utm_term': uri.queryParameters['utm_term'] ?? '',
+      'utm_content': uri.queryParameters['utm_content'] ?? '',
+      'referral_code': uri.queryParameters['ref'] ?? '',
+    };
+
+    ref.read(onboardingViewModelProvider.notifier).setUTMParams(utmParams);
+  });
+}
+
 
   @override
   void dispose() {
@@ -65,7 +88,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
-    // Whether tag selection has at least one item — used to enable Finish button on page 2
     final hasSelectedTags =
         ref.watch(onboardingViewModelProvider.select((s) => s.selectedTags.isNotEmpty));
 
@@ -76,23 +98,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           if (_currentPage == 0)
             TextButton(
               onPressed: _goToNextPage,
-              // Use explicit onboarding skip localization key
               child: Text(t.onboardingSkip),
             ),
         ],
       ),
-      // Ensure body resizes with keyboard and the bottom action stays visible
       resizeToAvoidBottomInset: true,
       body: PageView(
         controller: _controller,
         physics: const NeverScrollableScrollPhysics(),
         onPageChanged: (index) {
-          // Avoid setState during layout/paint. Defer to next frame to prevent
-          // 'Build scheduled during frame' when focus/keyboard changes overlap.
           if (!mounted) return;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
             setState(() => _currentPage = index);
+            if (index == 1) {
+              AnalyticsService.logScreenView(screenName: 'onboarding_tags');
+            }
           });
         },
         children: [
@@ -105,8 +126,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _buildProfileInfoPage(AppLocalizations t) {
-    // Keep it simple: rely on Scaffold's resizeToAvoidBottomInset.
-    // A plain scroll view avoids double insetting and tiny overflows.
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -120,36 +139,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          Text(
-            t.onboardingWelcomeSubtitle,
-            textAlign: TextAlign.center,
-          ),
+          Text(t.onboardingWelcomeSubtitle, textAlign: TextAlign.center),
           const SizedBox(height: 24),
-          // Avatar picker UI — optional
           Center(
             child: Stack(
               alignment: Alignment.bottomRight,
               children: [
                 CircleAvatar(
                   radius: 48,
-                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest, // updated per deprecation
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                   backgroundImage: _avatarFile != null
                       ? FileImage(_avatarFile!)
-                      : (_avatarUrl != null
-                          ? NetworkImage(_avatarUrl!) as ImageProvider
-                          : null),
+                      : (_avatarUrl != null ? NetworkImage(_avatarUrl!) as ImageProvider : null),
                   child: (_avatarFile == null && _avatarUrl == null)
                       ? const Icon(Icons.person, size: 48)
                       : null,
                 ),
-                // Centered circular edit icon (no text) to avoid clipping
                 Positioned(
                   left: 0,
                   right: 0,
                   bottom: 0,
                   child: Center(
                     child: Tooltip(
-                      message: t.selectMedia, // accessible hint
+                      message: t.selectMedia,
                       child: Material(
                         color: Theme.of(context).colorScheme.primary,
                         shape: const CircleBorder(),
@@ -162,21 +174,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             height: 40,
                             child: Center(
                               child: _isUploadingAvatar
-                                  ? SizedBox(
+                                  ? const SizedBox(
                                       width: 18,
                                       height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation(
-                                          Theme.of(context).colorScheme.onPrimary,
-                                        ),
-                                      ),
+                                      child: CircularProgressIndicator(strokeWidth: 2),
                                     )
-                                  : Icon(
-                                      Icons.edit,
-                                      size: 18,
-                                      color: Theme.of(context).colorScheme.onPrimary,
-                                    ),
+                                  : Icon(Icons.edit, size: 18, color: Theme.of(context).colorScheme.onPrimary),
                             ),
                           ),
                         ),
@@ -190,28 +193,35 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           const SizedBox(height: 16),
           Text(t.authFirstName),
           const SizedBox(height: 8),
-          // Optional first name
-          AppTextField(
-            controller: _firstNameController,
-            hintText: t.authFirstNameHint,
-          ),
+          AppTextField(controller: _firstNameController, hintText: t.authFirstNameHint),
           const SizedBox(height: 16),
           Text(t.authLastName),
           const SizedBox(height: 8),
-          // Optional last name
-          AppTextField(
-            controller: _lastNameController,
-            hintText: t.authLastNameHint,
-          ),
+          AppTextField(controller: _lastNameController, hintText: t.authLastNameHint),
           const SizedBox(height: 16),
           Text(t.bioHint),
           const SizedBox(height: 8),
-          // Optional bio (multi-line)
-          AppTextField(
-            controller: _bioController,
-            hintText: t.bioHint,
-            maxLines: 4,
-            maxLength: 500,
+          AppTextField(controller: _bioController, hintText: t.bioHint, maxLines: 4, maxLength: 500),
+          const SizedBox(height: 16),
+          Text(t.onboardingHowDidYouHear),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedSource,
+            items: _referralOptions
+                .map((source) => DropdownMenuItem(value: source, child: Text(source)))
+                .toList(),
+            onChanged: (value) {
+              setState(() => _selectedSource = value);
+              if (value != null) {
+                AnalyticsService.logEvent('onboarding_source_selected', parameters: {
+                  'source': value,
+                });
+              }
+            },
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              hintText: t.onboardingHowDidYouHearHint,
+            ),
           ),
         ],
       ),
@@ -246,6 +256,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   );
 
   if (source == null) return; // user dismissed
+
+AnalyticsService.logEvent('avatar_selected', parameters: {
+  'source': source.name, // camera or gallery
+});
+
+
 
   // Request/check permissions for the chosen source before proceeding
   final granted = await _ensurePermissionForSource(source);
@@ -424,6 +440,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           if (mounted) setState(() => _isUploadingAvatar = false);
         }
       }
+      final utm = ref.read(onboardingViewModelProvider).utmParams;
+
 
       final user = UserProfileEntity(
         id: userId,
@@ -436,9 +454,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         language: locale.languageCode, // dynamic from localeProvider
         lastSeenAt: null,
         createdAt: null,
+        onboardingSource: _selectedSource,
+        utmSource: utm['utm_source'],
+        utmMedium: utm['utm_medium'],
+        utmCampaign: utm['utm_campaign'],
+        utmTerm: utm['utm_term'],
+        utmContent: utm['utm_content'],
+        referralCode: utm['referral_code'],
       );
       try {
         await saveProfileInfoUseCase.execute(user);
+        AnalyticsService.logEvent('onboarding_profile_completed', parameters: {
+  'has_avatar': _avatarUrl != null,
+});
       } catch (_) {
         // Silent fail — optional step
       }
@@ -450,6 +478,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _onFinishTags() async {
     final viewModel = ref.read(onboardingViewModelProvider.notifier);
     await viewModel.submitTags();
+    final count = ref.read(onboardingViewModelProvider).selectedTags.length;
+AnalyticsService.logEvent('onboarding_tags_completed', parameters: {
+  'selected_tag_count': count,
+});
     if (!mounted) return;
     context.go('/home');
   }

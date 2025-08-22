@@ -4,6 +4,7 @@ import 'package:rivo_app_beta/features/auth/presentation/providers/auth_session_
 import 'package:rivo_app_beta/core/localization/generated/app_localizations.dart';
 import 'package:rivo_app_beta/features/settings/presentation/widgets/settings_section.dart';
 import 'package:rivo_app_beta/features/settings/presentation/widgets/delete_account_dialog.dart';
+import 'package:rivo_app_beta/core/analytics/analytics_service.dart'; // ← NEW
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -14,6 +15,17 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late AppLocalizations l10n;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Log screen view when settings screen is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AnalyticsService.logScreenView(screenName: 'settings_screen');
+    });
+  }
+
   @override
   void didChangeDependencies() {
     l10n = AppLocalizations.of(context)!;
@@ -22,6 +34,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   /// Shows the delete account confirmation dialog
   void _showDeleteAccountDialog(BuildContext context) {
+    // Log delete account dialog opened
+    AnalyticsService.logEvent('open_delete_account_dialog');
+
     showDialog<void>(
       context: context,
       builder: (context) => const DeleteAccountDialog(),
@@ -55,9 +70,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Account section with delete account option
           SettingsSection(
-            title: l10n.authCreateAccount, // Using existing localization for "Account"
+            title: l10n.authCreateAccount,
             children: [
               SettingsItem(
                 title: l10n.deleteAccount,

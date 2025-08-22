@@ -10,6 +10,7 @@ import '../widgets/post_action_column.dart';
 import 'package:rivo_app_beta/core/presentation/providers/nav_bar_provider.dart';
 import 'custom_page_scroll_physics.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rivo_app_beta/core/analytics/analytics_service.dart'; // <-- Analytics
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({
@@ -29,40 +30,71 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   double _lastScrollPosition = 0;
   bool _isUserDragging = false;
   bool _isGalleryScrolling = false;
-  
+  int _refreshCount = 0;
+  final Set<int> _scrollMilestonesReached = {};
+
+
 
   @override
   void initState() {
     super.initState();
     _pageController.addListener(_handleScroll);
+
+    // Analytics: track screen view
+    AnalyticsService.logScreenView(screenName: 'feed_screen');
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    if (_refreshCount > 0) {
+      AnalyticsService.logEvent('refresh_feed_session', parameters: {
+        'count': _refreshCount,
+        'source': 'feed',
+      });
+    }
     super.dispose();
   }
 
-  
   void _handleScroll() {
-    if (!_pageController.hasClients) return;
+  if (!_pageController.hasClients) return;
 
-    final currentPage = _pageController.page ?? _lastScrollPosition;
-    final scrollDelta = currentPage - _lastScrollPosition;
-    const scrollThreshold = 0.01;
+  final currentPage = _pageController.page ?? _lastScrollPosition;
+  final scrollDelta = currentPage - _lastScrollPosition;
+  const scrollThreshold = 0.01;
 
-    final isNavBarVisible = ref.read(navBarVisibilityProvider);
+  final isNavBarVisible = ref.read(navBarVisibilityProvider);
 
-    if (_isUserDragging && !_isGalleryScrolling) {
-      if (scrollDelta > scrollThreshold && isNavBarVisible) {
-        ref.read(navBarVisibilityProvider.notifier).state = false;
-      } else if (scrollDelta < -scrollThreshold && !isNavBarVisible) {
-        ref.read(navBarVisibilityProvider.notifier).state = true;
-      }
+  if (_isUserDragging && !_isGalleryScrolling) {
+    if (scrollDelta > scrollThreshold && isNavBarVisible) {
+      ref.read(navBarVisibilityProvider.notifier).state = false;
+    } else if (scrollDelta < -scrollThreshold && !isNavBarVisible) {
+      ref.read(navBarVisibilityProvider.notifier).state = true;
     }
-
-    _lastScrollPosition = currentPage;
   }
+
+  // calculate scroll percentage
+  final totalPages = _pageController.positions.first.viewportDimension == 0
+      ? 1
+      : (_pageController.positions.first.maxScrollExtent /
+              _pageController.positions.first.viewportDimension)
+          .ceil();
+
+  final percentScrolled = (currentPage / totalPages * 100).clamp(0, 100).round();
+
+  // log scroll milestones
+  for (final threshold in [25, 50, 75, 100]) {
+    if (percentScrolled >= threshold && !_scrollMilestonesReached.contains(threshold)) {
+      _scrollMilestonesReached.add(threshold);
+      AnalyticsService.logEvent('feed_scroll_depth', parameters: {
+        'percentage': threshold,
+      });
+    }
+  }
+
+  _lastScrollPosition = currentPage;
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -143,14 +175,29 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           return false;
         },
         child: RefreshIndicator(
-          onRefresh: viewModel.loadFeed,
+          onRefresh: () async {
+            _refreshCount++;
+            AnalyticsService.logEvent('feed_refreshed', parameters: {
+              'count': _refreshCount,
+              'source': 'feed',
+            });
+            await viewModel.loadFeed();
+},
           child: PageView.builder(
             scrollDirection: Axis.vertical,
             itemCount: state.posts?.length ?? 0,
             controller: _pageController,
             physics: const CustomPageScrollPhysics(),
             itemBuilder: (context, index) {
-              return _buildPostItem(state.posts![index], context);
+              final post = state.posts![index];
+
+              // Analytics: log that post was viewed
+              AnalyticsService.logEvent('post_viewed', parameters: {
+                'post_id': post.id,
+                'product_id': post.productId,
+              });
+
+              return _buildPostItem(post, context);
             },
             key: const PageStorageKey('feed_page_view'),
           ),
@@ -160,105 +207,131 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _buildPostItem(FeedPostEntity post, BuildContext context) {
-  final isVisible = _postTextBoxVisibility.putIfAbsent(post.id, () => true);
+    final isVisible = _postTextBoxVisibility.putIfAbsent(post.id, () => true);
 
-  return GestureDetector(
-    onTap: () {
-      setState(() {
-        _postTextBoxVisibility[post.id] = !isVisible;
-      });
-    },
-    onDoubleTap: () {
-      if (post.productId != null) {
-        // Use productId, not post.id
-        context.push('/product/${post.productId}');
-      }
-    },
-    child: Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withAlpha(13), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(26),
-            blurRadius: 25,
-            offset: const Offset(0, 10),
-          ),
-          BoxShadow(
-            color: Colors.black.withAlpha(26),
-            blurRadius: 10,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // --- Media layer ---
-            if (post.mediaUrls.length > 1)
-              Positioned.fill(
-                child: ImageGallery(
-                  urls: post.mediaUrls.reversed.toList(),
-                  onUserScroll: () {
-                    _isGalleryScrolling = true;
-                    Future.delayed(const Duration(milliseconds: 600), () {
-                      if (mounted) setState(() => _isGalleryScrolling = false);
-                    });
-                  },
-                ),
-              )
-            else
-              Positioned.fill(
-                child: MediaRendererWidget(
-                  urls: post.mediaUrls,
-                ),
-              ),
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _postTextBoxVisibility[post.id] = !isVisible;
+        });
+      },
+      onDoubleTap: () {
+        if (post.productId != null) {
+          // Analytics: log product opened from post
+          AnalyticsService.logEvent('post_opened', parameters: {
+            'post_id': post.id,
+            'product_id': post.productId,
+          });
 
-            // --- Caption overlay (glass box) ---
-            // --- Caption overlay (glass box) ---
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: AnimatedOpacity(
-                opacity: isVisible ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 300),
-                child: CaptionGlassBox(
-                  title: post.productTitle,
-                  seller: post.username,
-                  price: '₪${post.productPrice.toStringAsFixed(2)}',
-                  height: MediaQuery.of(context).size.height / 3.5,
-                  caption: post.caption,
-                )
-              ),
+          context.push('/product/${post.productId}?source=feed');
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.black.withAlpha(13), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(26),
+              blurRadius: 25,
+              offset: const Offset(0, 10),
             ),
-
-
-            // --- Action column (like, etc.) ---
-            Positioned(
-              right: 10,
-              bottom: 20,
-              child: PostActionColumn(
-                isLikedByMe: post.isLikedByMe,
-                likeCount: post.likeCount,
-                onLike: () => ref.read(feedViewModelProvider.notifier).toggleLike(post.id),
-                onComment: () {},
-                onAdd: () {},
-                avatarUrl: post.avatarUrl,
-                onAvatarTap: () => context.push('/profile/${post.creatorId}'),
-              ),
+            BoxShadow(
+              color: Colors.black.withAlpha(26),
+              blurRadius: 10,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
-      ),
-    ),
-  );
-}
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (post.mediaUrls.length > 1)
+                Positioned.fill(
+                  child: ImageGallery(
+                    urls: post.mediaUrls.reversed.toList(),
+                    onUserScroll: () {
+                      _isGalleryScrolling = true;
+                      Future.delayed(const Duration(milliseconds: 600), () {
+                        if (mounted) setState(() => _isGalleryScrolling = false);
+                      });
+                    },
+                  ),
+                )
+              else
+                Positioned.fill(
+                  child: MediaRendererWidget(
+                    urls: post.mediaUrls,
+                  ),
+                ),
 
-      
+              // Caption glass box
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: AnimatedOpacity(
+                  opacity: isVisible ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: CaptionGlassBox(
+                    title: post.productTitle,
+                    seller: post.username,
+                    price: '₪${post.productPrice.toStringAsFixed(2)}',
+                    height: MediaQuery.of(context).size.height / 3.5,
+                    caption: post.caption,
+                  ),
+                ),
+              ),
+
+              // Action buttons
+              Positioned(
+                right: 10,
+                bottom: 20,
+                child: PostActionColumn(
+                  isLikedByMe: post.isLikedByMe,
+                  likeCount: post.likeCount,
+                  onLike: () {
+                      final wasLiked = post.isLikedByMe;
+
+                      // Track like or unlike BEFORE toggling
+                      AnalyticsService.logEvent(
+                        wasLiked ? 'unlike_post' : 'like_post',
+                        parameters: {
+                          'post_id': post.id,
+                          'product_id': post.productId,
+                        },
+                      );
+
+                      // Then perform the toggle
+                      ref.read(feedViewModelProvider.notifier).toggleLike(post.id);
+                    },
+                  onComment: () {},
+                  onAdd: () {
+                    AnalyticsService.logEvent('save_post', parameters: {
+                      'post_id': post.id,
+                      'product_id': post.productId,
+                    });
+                    // your actual save logic here (if any)
+                  },
+                  avatarUrl: post.avatarUrl,
+                  onAvatarTap: () {
+                    // Analytics: track profile opened
+                    AnalyticsService.logEvent('profile_opened', parameters: {
+                      'user_id': post.creatorId,
+                    });
+                    context.push('/profile/${post.creatorId}?source=feed');
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
+import 'package:firebase_core/firebase_core.dart';
+import 'package:rivo_app_beta/core/analytics/route_observer.dart';
+import 'package:rivo_app_beta/core/analytics/analytics_service.dart'; 
 import 'app.dart';
 import 'package:rivo_app_beta/core/toast/toast_service.dart';
 
@@ -33,13 +35,19 @@ Future<void> main() async {
       anonKey: supabaseAnonKey,
     );
 
+    await Firebase.initializeApp();
 
+    await AnalyticsService.logAppOpened();
 
     ToastService().init(messengerKey);
 
     runApp(
-      const ProviderScope(
-        child: App(),
+      ProviderScope(
+        child: MaterialApp(
+          scaffoldMessengerKey: messengerKey,
+          navigatorObservers: [analyticsObserver],
+          home: App(),
+        ),
       ),
     );
   } catch (e) {

@@ -353,5 +353,7 @@
   "itemDetailsDescription" : "פרטי הפריט",
   "measurementsLabel" : "מידות",
   "tagsAndStyleDescription" : "הוסף תגיות סגנון שיעזרו לקונים למצוא את הפריט שלך",
-  "noInternetConnection": "אין חיבור לאינטרנט. אנא בדקו את החיבור ונסו שוב."
+  "noInternetConnection": "אין חיבור לאינטרנט. אנא בדקו את החיבור ונסו שוב.",
+  "onboardingHowDidYouHear": "איך שמעת על באזר?",
+"onboardingHowDidYouHearHint": "בחר מקור הגעה"
 }

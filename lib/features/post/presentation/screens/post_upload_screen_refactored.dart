@@ -20,6 +20,7 @@ import 'package:rivo_app_beta/features/post/presentation/widgets/condition_dropd
 import 'package:rivo_app_beta/features/post/presentation/widgets/materials_selector.dart';
 import 'package:rivo_app_beta/features/post/presentation/widgets/color_selector.dart';
 import 'package:rivo_app_beta/features/post/presentation/widgets/defects_selector.dart';
+import 'package:rivo_app_beta/core/analytics/analytics_service.dart';
 
 class PostUploadScreenRefactored extends ConsumerStatefulWidget {
   const PostUploadScreenRefactored({super.key});
@@ -32,49 +33,74 @@ class _PostUploadScreenRefactoredState extends ConsumerState<PostUploadScreenRef
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
+@override
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    AnalyticsService.logScreenView(screenName: 'upload_step_0_photos');
+  });
+}
+
+
+
   void _nextPage() {
-    if (!mounted) return;
-    final state = ref.read(uploadPostViewModelProvider);
-    final l10n = AppLocalizations.of(context)!;
+if (!mounted) return;
+final state = ref.read(uploadPostViewModelProvider);
+final l10n = AppLocalizations.of(context)!;
 
-    if (_currentPage == 0 && state.media.isEmpty) {
-      _snack(context, l10n.uploadPhotoRequired, orange: true);
-      return;
-    }
-    if (_currentPage == 1) {
-      if (state.title == null || state.title!.trim().isEmpty) {
-        _snack(context, 'Please add a title', orange: true);
-        return;
-      }
-      if (state.description == null || state.description!.trim().isEmpty) {
-        _snack(context, 'Please add a description', orange: true);
-        return;
-      }
-      if (state.caption == null || state.caption!.trim().isEmpty) {
-        _snack(context, l10n.uploadCaptionRequired, orange: true);
-        return;
-      }
-      if (state.productPrice == null) {
-        _snack(context, l10n.uploadPriceRequired, orange: true);
-        return;
-      }
-    }
-    if (_currentPage == 2) {
-      if (state.categoryId == null || state.categoryId!.isEmpty) {
-        _snack(context, l10n.uploadCategoryRequired, orange: true);
-        return;
-      }
-    }
 
-    if (_currentPage < 3) {
-      setState(() => _currentPage++);
-      _pageController.animateToPage(
-        _currentPage,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
+if (_currentPage == 0 && state.media.isEmpty) {
+_snack(context, l10n.uploadPhotoRequired, orange: true);
+return;
+}
+if (_currentPage == 1) {
+if (state.title == null || state.title!.trim().isEmpty) {
+_snack(context, 'Please add a title', orange: true);
+return;
+}
+if (state.description == null || state.description!.trim().isEmpty) {
+_snack(context, 'Please add a description', orange: true);
+return;
+}
+if (state.caption == null || state.caption!.trim().isEmpty) {
+_snack(context, l10n.uploadCaptionRequired, orange: true);
+return;
+}
+if (state.productPrice == null) {
+_snack(context, l10n.uploadPriceRequired, orange: true);
+return;
+}
+}
+if (_currentPage == 2) {
+if (state.categoryId == null || state.categoryId!.isEmpty) {
+_snack(context, l10n.uploadCategoryRequired, orange: true);
+return;
+}
+}
+
+
+if (_currentPage < 3) {
+setState(() => _currentPage++);
+_pageController.animateToPage(
+_currentPage,
+duration: const Duration(milliseconds: 300),
+curve: Curves.easeInOut,
+);
+
+// Log screen views
+switch (_currentPage) {
+case 1:
+AnalyticsService.logScreenView(screenName: 'upload_step_1_caption');
+break;
+case 2:
+AnalyticsService.logScreenView(screenName: 'upload_step_2_details');
+break;
+case 3:
+AnalyticsService.logScreenView(screenName: 'upload_step_3_tags');
+break;
+}
+}
+}
 
   void _previousPage() {
     if (!mounted) return;
@@ -1148,41 +1174,52 @@ class _PostUploadScreenRefactoredState extends ConsumerState<PostUploadScreenRef
   }
 
   Future<void> _publishItem(UploadPostViewModel viewModel, AppLocalizations l10n) async {
-    try {
-      await viewModel.submit();
-      if (!mounted) return;
-      context.go('/home');
-    } on AppException catch (e) {
-      if (!mounted) return;
-      String errorMessage;
-      switch (e.message) {
-        case 'price_must_be_above_min':
-          errorMessage = 'Price must be greater than 1 ILS';
-          break;
-        case 'uploadTitleRequiredBackend':
-          errorMessage = 'Title is required';
-          break;
-        case 'uploadDescriptionRequiredBackend':
-          errorMessage = 'Description is required';
-          break;
-        case 'uploadCaptionRequiredBackend':
-          errorMessage = l10n.uploadCaptionRequiredBackend;
-          break;
-        case 'uploadPriceRequiredBackend':
-          errorMessage = l10n.uploadPriceRequiredBackend;
-          break;
-        case 'upload.required_fields_missing':
-          errorMessage = l10n.fieldRequired;
-          break;
-        default:
-          errorMessage = l10n.failed_to_publish_item(e.message);
-      }
-      _snack(context, errorMessage, red: true);
-    } catch (e) {
-      if (!mounted) return;
-      _snack(context, l10n.failed_to_publish_item(e.toString()), red: true);
-    }
-  }
+try {
+await viewModel.submit();
+
+final currentState = ref.read(uploadPostViewModelProvider);
+AnalyticsService.logEvent('upload_post_published', parameters: {
+  'media_count': currentState.media.length,
+  'has_caption': currentState.caption?.isNotEmpty ?? false,
+  'price': currentState.productPrice,
+  'tag_count': currentState.tagNames.length,
+});
+
+
+if (!mounted) return;
+context.go('/home');
+} on AppException catch (e) {
+if (!mounted) return;
+String errorMessage;
+switch (e.message) {
+case 'price_must_be_above_min':
+errorMessage = 'Price must be greater than 1 ILS';
+break;
+case 'uploadTitleRequiredBackend':
+errorMessage = 'Title is required';
+break;
+case 'uploadDescriptionRequiredBackend':
+errorMessage = 'Description is required';
+break;
+case 'uploadCaptionRequiredBackend':
+errorMessage = l10n.uploadCaptionRequiredBackend;
+break;
+case 'uploadPriceRequiredBackend':
+errorMessage = l10n.uploadPriceRequiredBackend;
+break;
+case 'upload.required_fields_missing':
+errorMessage = l10n.fieldRequired;
+break;
+default:
+errorMessage = l10n.failed_to_publish_item(e.message);
+}
+_snack(context, errorMessage, red: true);
+} catch (e) {
+if (!mounted) return;
+_snack(context, l10n.failed_to_publish_item(e.toString()), red: true);
+}
+}
+
 
   void _snack(BuildContext context, String msg, {bool orange = false, bool red = false}) {
     ScaffoldMessenger.of(context).showSnackBar(

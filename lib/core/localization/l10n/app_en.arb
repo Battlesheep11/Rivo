@@ -391,5 +391,7 @@
 "conditionRequired": "Please select a condition",
 "conditionRequiredError": "Please select the item's condition.",
   "onboardingSkip": "Skip",
-  "noInternetConnection": "No internet connection. Please check your connection and try again."
+  "noInternetConnection": "No internet connection. Please check your connection and try again.",
+  "onboardingHowDidYouHear": "How did you hear about Bazzar?",
+"onboardingHowDidYouHearHint": "Select source"
 }

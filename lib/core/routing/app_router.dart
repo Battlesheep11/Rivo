@@ -100,7 +100,8 @@ class AppRouter {
           path: '/product/:productId',
           builder: (context, state) {
             final productId = state.pathParameters['productId']!;
-            return ProductScreen(productId: productId);
+            final source = state.uri.queryParameters['source']; // ✅ חדש!
+            return ProductScreen(productId: productId, source: source); // ✅ שולחים למסך
           },
         ),
         ShellRoute(

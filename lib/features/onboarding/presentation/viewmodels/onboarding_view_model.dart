@@ -45,17 +45,26 @@ class OnboardingViewModel extends StateNotifier<OnboardingState> {
     if (state.selectedTags.isEmpty) return;
     await submitTagsUseCase.execute(state.selectedTags);
   }
+
+void setUTMParams(Map<String, String> params) {
+  state = state.copyWith(utmParams: params);
+}
+
+
 }
 
 class OnboardingState {
   final List<String> allTags;
   final List<String> selectedTags;
   final bool isLoading;
+  final Map<String, String> utmParams;
+
 
   const OnboardingState({
     required this.allTags,
     required this.selectedTags,
     required this.isLoading,
+    required this.utmParams,
   });
 
   factory OnboardingState.initial() {
@@ -63,6 +72,7 @@ class OnboardingState {
       allTags: [],
       selectedTags: [],
       isLoading: false,
+      utmParams: {},
     );
   }
 
@@ -70,11 +80,13 @@ class OnboardingState {
     List<String>? allTags,
     List<String>? selectedTags,
     bool? isLoading,
+    Map<String, String>? utmParams,
   }) {
     return OnboardingState(
       allTags: allTags ?? this.allTags,
       selectedTags: selectedTags ?? this.selectedTags,
       isLoading: isLoading ?? this.isLoading,
+      utmParams: utmParams ?? this.utmParams,
     );
   }
 }

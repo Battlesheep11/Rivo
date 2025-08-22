@@ -14,8 +14,7 @@ import 'package:rivo_app_beta/features/auth/presentation/viewmodels/signup_form_
 import 'package:rivo_app_beta/features/auth/presentation/widgets/password_strength_indicator.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/password.dart';
 import 'package:rivo_app_beta/features/auth/presentation/forms/confirmed_password.dart';
-
-// ⬇️ Apple Sign-In provider (from v2)
+import 'package:rivo_app_beta/core/analytics/analytics_service.dart';
 import 'package:rivo_app_beta/features/auth/presentation/providers/apple_signin_provider.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
@@ -46,6 +45,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   @override
   void initState() {
     super.initState();
+
+     // Log screen view when auth screen is opened
+    AnalyticsService.logScreenView(screenName: 'auth_screen');
 
     // Initialize focus node for username and set listener for availability check
     _usernameFocus = FocusNode();
@@ -196,13 +198,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
     ref.listen(signinFormViewModelProvider, (previous, next) {
       if (next.isSuccess && context.mounted) {
+        AnalyticsService.logEvent('signin_success'); // Log successful sign-in
         context.go('/redirect');
       }
     });
-
     final VoidCallback? onSubmit = !isSubmitting
-        ? () => ref.read(signinFormViewModelProvider.notifier).submit(context)
+        ? () {
+            AnalyticsService.logEvent('signin_attempt');
+            ref.read(signinFormViewModelProvider.notifier).submit(context);
+          }
         : null;
+
+    
 
     return Column(
       key: const ValueKey('signInForm'),
@@ -265,6 +272,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 localizations.authGoogle,
                 'assets/icons/google_logo.svg',
                 () {
+                  AnalyticsService.logEvent('signin_google_clicked');
                   ref.read(googleSignInViewModelProvider(context).notifier).signInWithGoogle();
                 },
                 isLoading: googleLoading,
@@ -277,6 +285,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 'assets/icons/apple_logo.svg',
                 // ⬇️ from v2: actual Apple call + loading
                 () {
+                  AnalyticsService.logEvent('signin_apple_clicked');
                   ref.read(appleSignInViewModelProvider(context).notifier).signInWithApple();
                 },
                 isLoading: appleLoading,
@@ -352,6 +361,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       _signupStep = _SignupStep.createPassword;
                       _attemptedCreate = false; // reset error reveal flag entering password step
                     });
+                    AnalyticsService.logEvent('signup_step_1_completed'); // Log successful step 1
                   } else {
                     if (!context.mounted) return;
                     final currentState = ref.read(signupFormViewModelProvider);
@@ -451,8 +461,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final VoidCallback? onSubmit = !isSubmitting
         ? () async {
             if (isValid && _termsAccepted) {
+              AnalyticsService.logEvent('signup_attempt'); // Log attempt to create account
               final success = await ref.read(signupFormViewModelProvider.notifier).submit(context);
               if (success && context.mounted) {
+                AnalyticsService.logEvent('signup_success'); // Log success
                 context.go('/redirect');
               }
             } else {
@@ -660,6 +672,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           _signupStep = _SignupStep.userDetails; // Reset to first step
           _attemptedCreate = false; // reset error reveal flag when switching modes
         });
+AnalyticsService.logEvent(
+  _authMode == AuthMode.signIn ? 'auth_switch_to_signup' : 'auth_switch_to_signin',
+);
+// Log toggle between modes
       },
       child: RichText(
         text: TextSpan(

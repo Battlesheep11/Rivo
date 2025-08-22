@@ -7,10 +7,18 @@ import 'package:rivo_app_beta/features/product/presentation/widgets/product_gall
 import 'package:rivo_app_beta/features/product/presentation/widgets/product_info.dart';
 import 'package:rivo_app_beta/features/product/presentation/widgets/recommended_products.dart';
 import 'package:rivo_app_beta/features/product/presentation/widgets/seller_info.dart';
+import 'package:rivo_app_beta/core/analytics/analytics_service.dart'; // <- added
+import 'package:rivo_app_beta/features/product/domain/providers/category_providers.dart';
 
 class ProductScreen extends ConsumerStatefulWidget {
-  const ProductScreen({super.key, required this.productId});
   final String productId;
+  final String? source; 
+
+  const ProductScreen({
+    super.key,
+    required this.productId,
+    this.source,
+  });
 
   @override
   ConsumerState<ProductScreen> createState() => _ProductScreenState();
@@ -23,6 +31,12 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Log screen view when the product screen is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AnalyticsService.logScreenView(screenName: 'product_screen');
+    });
+
     _scrollController.addListener(() {
       final galleryHeight = MediaQuery.of(context).size.height * 0.4;
       final show = _scrollController.offset > galleryHeight - kToolbarHeight;
@@ -40,11 +54,34 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // אנליטיקה - רישום כניסה למסך מוצר
+    AnalyticsService.logEvent('view_product_detail', parameters: {
+  'product_id': widget.productId,
+  'source': widget.source ?? 'unknown',
+});
+
     final productAsync = ref.watch(productProvider(widget.productId));
+    // Load category name if available
+    final categoryAsync = productAsync.when(
+      data: (product) => product.categoryId != null
+          ? ref.watch(categoryNameProvider(product.categoryId!))
+          : const AsyncValue<String>.data('Unknown'),
+      loading: () => const AsyncValue<String>.data('Loading...'),
+      error: (error, stackTrace) => const AsyncValue<String>.data('Error'),
+    );
 
     return Scaffold(
       body: productAsync.when(
         data: (product) {
+          // Log event when product is successfully loaded
+          AnalyticsService.logEvent('view_product', parameters: {
+            'product_id': product.id,
+            'name': product.name,
+            'price': product.price,
+            'category_id': product.categoryId,
+            'category_name': categoryAsync.asData?.value, // safe fallback
+          });
+
           final sellerAsync = ref.watch(sellerProvider(product.sellerId));
           final recommendedProductsAsync =
               ref.watch(recommendedProductsProvider(widget.productId));
@@ -89,9 +126,22 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                     ProductInfo(product: product),
                     KeyInfo(product: product),
                     ActionButtons(
-                      onSavePressed: () {},
-                      onSharePressed: () {},
-                      onBuyNowPressed: () {},
+                      onSavePressed: () {
+                        AnalyticsService.logEvent('save_product', parameters: {
+                          'product_id': product.id,
+                        });
+                      },
+                      onSharePressed: () {
+                        AnalyticsService.logEvent('share_product', parameters: {
+                          'product_id': product.id,
+                        });
+                      },
+                      onBuyNowPressed: () {
+                        AnalyticsService.logEvent('buy_product_clicked', parameters: {
+                          'product_id': product.id,
+                          'price': product.price,
+                        });
+                      },
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
 

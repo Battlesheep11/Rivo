@@ -86,6 +86,14 @@ Future<List<FeedPostEntity>> getMyDesignPosts(String userId) async {
       'language': updated.language,
       if (updated.avatarUrl != null) 'avatar_url': updated.avatarUrl,
       'last_seen_at': DateTime.now().toIso8601String(),
+   
+      if (updated.onboardingSource != null) 'onboarding_source': updated.onboardingSource,
+      if (updated.utmSource != null) 'utm_source': updated.utmSource,
+      if (updated.utmMedium != null) 'utm_medium': updated.utmMedium,
+      if (updated.utmCampaign != null) 'utm_campaign': updated.utmCampaign,
+      if (updated.utmTerm != null) 'utm_term': updated.utmTerm,
+      if (updated.utmContent != null) 'utm_content': updated.utmContent,
+      if (updated.referralCode != null) 'referral_code': updated.referralCode,   
     };
 
     await _client.from('profiles').update(updateData).eq('id', updated.id);
